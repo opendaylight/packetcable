@@ -1,0 +1,573 @@
+
+== Name  ==
+
+=== PacketCable PCMM ===
+
+Develop a PacketCable PCMM/COPS southbound plugin and supporting modules to allow the OpenDayLight controller to provision CMTS as a network element that manages service flows with dynamic QoS. 
+
+== Repo Name ==
+
+packetcable
+
+== Description  ==
+
+Packet Cable MultiMedia (PCMM) provides an interface to control and management service flow for CMTS network elements. A service flows constitute a DOCSIS data path between a CMTS and a subscriber's cable modem (CM) guaranteed application specific quality of service (QoS), known as Dynamic Quality of Service (DQoS). PCMM offers (MSOs) the ability to deliver new services using existing cable infrastructure. MSOs have already begun to apply PCMM technology for expanding their multimedia service offerings.
+The PCMM architecture comprises the following components: 
+
+* The Application Manager, which specifies QoS requirements to the Policy Server on a per-application basis. 
+* The Policy Server, which allocates network resources per subscriber and per application, ensuring that consumption meets MSO priorities. 
+* The Cable Modem Termination System (CMTS), which enforces policies according to bandwidth capacity. 
+* The Cable Modem, which resides on the client side and connects the client's network to the cable system.
+
+PacketCable Multimedia defines a service delivery framework that provides general-purpose QoS, event-based accounting, and security functionality founded upon the mechanisms defined in PacketCable 1.x. However, due to the broader spectrum of applications and services addressed by this initiative, each of these functional areas has been revisited and generalized for the present purposes. Telephony-specific requirements and interfaces (e.g., call signaling, PSTN interconnection and electronic surveillance) are not part of PacketCable Multimedia, while core functionality such as QoS resource management mechanisms, has been enhanced. Throughout this process, one of the primary objectives of this work has been to leverage and reuse as much of the existing body of PacketCable 1.x investment, knowledge base, and technical functionality as possible.  Key features of the described Multimedia service delivery framework include: 
+
+* Simple, powerful access to DOCSIS QoS mechanisms supporting both time and volume-based network resource authorizations, 
+* Abstract, event-based network resource auditing and management mechanisms, 
+* A robust security infrastructure that provides integrity and appropriate levels of protection across all interfaces. 
+
+The goal of this project is to utilizes the OpenDayLight controller platform as for the Application Manager and parts of the Policy Server and leverage the as many existing components offered by the platform.
+
+The initial southbound transport has been written to the following version of the specification:
+http://www.cablelabs.com/wp-content/uploads/specdocs/PKT-SP-MM-I05-091029.pdf
+
+== Scope  ==
+
+* Provision a CMTS and an associated Cable Modem to form a Subscriber service for which (service) flows can be established and metered.
+* Flow Programmer match-only for managing DOCSIS (service) flows  
+* Northbound APIs for provisioning CMTS network elements
+** HTML Provisioning Interface
+* Northbound APIs for provisioning Service Flow values and types
+* Northbound APIs for provisioning QoS (or metering) parameters
+* SAL extensions for DOCSIS specific data model and configuration APIs
+* Southbound PCMM/COPS transport plugin
+
+== Detailed Design  ==
+
+==== DOCSIS SDN Application Logic ====
+
+This component is introduced at the Network Applications Orchestrations and Services layer. The component is proposed as an application responsible for the workflow logic that represents the use cases of interest: L2VPN, Buffer Management, Service Flow QoS Management, and general configuration automation.
+
+==== Flow Programmer ====
+
+This standard components exists at the Controller Platform layer and is responsible for programming flows at network elements that register support for flow management. It adheres to this [https://jenkins.opendaylight.org/controller/job/controller-merge/ws/opendaylight/northbound/flowprogrammer/target/site/wsdocs/resource_FlowProgrammerNorthbound.html FlowProgrammer Restful API].
+
+==== PacketCable Manager ====
+
+This component is introduced at the Controller Platform layer. This component manages the PCMM/DOCSIS specific attributes that are applied to an existing Service Flow, configuration, and addition and removal of CMTS elements. It should export a PacketCable Manager RESTful API as part of ODL architecture.
+
+==== PCMM/COPS ====
+
+This component is introduced at the Southbound Interfaces &amp; Protocol Plugins layer. This component is responsible for the PCMM/COPS/PDP functionality required to service requests from PacketCable Manager and FlowManager. Requests are transposed into PCMM Gate Control messages and transmitted via COPS to the CMTS. This plugin adheres to the PCMM/COPS/PDP functionality defined in the [http://www.cablelabs.com/wp-content/uploads/specdocs/PKT-SP-MM-I06-110629.pdf CableLabs specification]. 
+
+== Information and Data Models ==
+
+==== CCAP and DOCSIS 3.1 CMTS YANG Model Support ====
+
+Since both devices optionally support the NETCONF protocol, these cable devices also ''optionally'' support YANG data models which are translated into mandatory supported XML Schema data models. The OpenDaylight framework also uses YANG models for their data model representation and tooling.
+
+==== CCAP PCMM Configuration Management Information Model ====
+
+The CableLabs CCAP specification defines a UML Class Diagram Information Model for configuration management of PCMM in the CCAP device. This is represented in the figure below.
+
+[[Image:PKT-CFG Class Diagram.png]]
+
+The above Information Model is translated into the YANG configuration management data module and corresponding XML Schema. Therefore, these objects and attributes can be provisioned via XML configuration files and ''optionally'', if supported, via NETCONF messaging.
+
+
+==== Openflow Match Action and PCMM Service Flow Comparison ====
+
+===== Openflow Match =====
+{| 
+|-
+!| OpenFlow|
+!|PCMM Service Flow
+|-
+| dlDst (MAC address)||no
+|-
+| dlSrc (MAC address)||no
+|-
+| vlanId||no
+|-
+| vlanPri||no
+|-
+| tosBits||nwDscp
+|-
+| ||SF Type
+|-
+| nwProto (TCP or UDP protocol)||yes
+|-
+| ingressPort||CMIM
+|-
+| priority||yes
+|-
+| etherType||no
+|-
+| nwDst (Dest IP Address)||yes
+|-
+| nwDstMask||yes
+|-
+| nwSrc (Src IP Address)||yes
+|-
+| nwSrcMask||yes
+|-
+| tpSrc (Source Port)||sourcePortStart
+|-
+| ||sourcePortEnd
+|-
+| tpDst (Destiation Port)||sourcePortStart
+|-
+| ||sourcePortEnd
+|-
+| hardTimeout||no
+|-
+| idleTimeout||Timeout active QoS parameters
+|-
+| cookie||no
+|-
+| ||Activation State
+|-
+| ||IPv6: Next Header Type, Flow Label, Flags,
+
+
+|}
+
+===== Openflow Action =====
+
+{|
+|-
+!| OpenFlow|
+!|PCMM Service Flow
+|-
+| ||
+|-
+| drop||yes UDC
+|-
+| loopback||
+|-
+| flood||
+|-
+| floodAll||
+|-
+| controller||
+|-
+| interface||
+|-
+| software path||
+|-
+| hardware path||
+|-
+| output||
+|-
+| enqueue||
+|-
+| setDlSrc||
+|-
+| setDlDst||
+|-
+| setVlan||In L2VPN, but not in PCMM
+|-
+| setVlanPcp||
+|-
+| setVlanCif||
+|-
+| stripVlan||
+|-
+| pushVlan||
+|-
+| setDlType||
+|-
+| setNwSrc||
+|-
+| setNwDst||
+|-
+| setNwTos||
+|-
+| setTpSrc||
+|-
+| setTpDst||
+|-
+| setNextHop||
+|-
+| pushMpls||
+|-
+| popMpls||
+|}
+
+==== PCMM COPS Information Model ====
+
+The [http://www.cablelabs.com/specifications/PKT-SP-MM-I06-110629.pdf CableLabs PCMM Specification] defines the COPS PDP to PEP interface via a message set and set of object definitions. The objects carried in the COPS message set can be viewed as the PCMM COPS Information Model for the PCMM COPS interface between the Policy Manager and CMTS. The objects are represented in the table below.
+
+{|   
+!    | Object Name
+!    | Description
+!    | ODL YANG Exist?
+|-
+|    | TransactionID
+|    | Transaction Identifier used by the Policy Server to match responses from the CMTS to the previous requests.
+|    |
+|-
+|    | AMID
+|    | Application Manager ID including the Application Manager Tag (Application responsible for handling the session) and Application Type (Type of application this gate is associated with).
+|    |
+|-
+|    | SubscriberID
+|    | IPv4 or IPv6 address of the Subscriber for the service request (i.e., CM or CPE of Subscriber)
+|    |
+|-
+|    | GateID
+|    | Gate Identifier referenced in the command message or referenced by the CMTS for a response message.
+|    |
+|-
+|    | GateSpec
+|    |
+Defines the following attributes:
+
+* Direction 
+** Downstream Gate
+** Upstream Gate
+* DSCP/TOS
+** Enabled/Disabled
+* SessionClassID
+** Defines the proper admission control policy or parameters to be applied for this gate. Attributes include:
+*** Priority
+*** Preemption
+*** Configurable
+* DSCP/TOS Overwrite
+** Used to identify particular bits within the IPv4 DSCP/TOS byte
+* DSCP/TOS Mask
+** Used in conjunction with the DSCP/TOS Overwrite
+* Timer T1
+* Timer T2
+* Timer T3
+* Timer T4
+** Timers defined per Gate Transition Diagram
+|    |
+|-
+|    | Classifiers
+|    | Classifier, Extended Classifier or IPv6 Classifier
+|    |
+|-
+|    | Classifier
+|    |
+* Procotol ID
+* DSCP/TOS Field
+* DSCP/TOS Mask
+* Source IPv4 Address
+* Destination IPv4 Address
+* Source Port
+* Destination Port
+* Priority
+|    |
+|-
+|    | Extended Classifier
+|    |
+* Protocol ID
+* DSCP/TOS Field
+* DSCP/TOS Mask
+* IPv4 Source Address
+* IPv4 Source Mask
+* IPv4 Destination Address
+* IPv4 Destination Mask
+* Source Port Start
+* Source Port End
+* Destination Port Start
+* Destination Port End
+* ClassifierID
+* Priority
+* Activation State
+* Action
+|    |
+|-
+|    | IPv6 Classifier
+|    |
+* Flags
+* tc-low
+* tc-high
+* tc-mask
+* Flow Label
+* Next Header Type
+* Source Prefix Length
+* Destination Prefix Length
+* IPv6 Source Address
+* IPv6 Destination Address
+* Source Port Start
+* Source Port End
+* Destination Port Start
+* Destination Port End
+* ClassifierID
+* Priority
+* Activation State
+* Action
+|    |
+|-
+|    | Traffic Profiles
+|    | FlowSpec, DOCSIS Service Class Name, DOCSIS-specific parameters or Upstream Drop
+|    |
+|-
+|    | Flow Spec
+|    |
+* Envelope
+* Service Number
+* Authorized Envelope
+** Token Bucket Rate (r)
+** Token Bucket Size (b)
+** Peak Data Rate (p)
+** Minimum Policed Unit (m)
+** Maximum Packet Size (M)
+** Rate (R)
+** Slack Term (S)
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | DOCSIS Service Class Name
+|    |
+* Envelope
+* Service Class Name
+|    | No
+|-
+|    | Best Effort Service
+|    |
+* Envelope
+* Authorized Envelope
+** Traffic Priority
+** Request Transmission Policy
+** Maximum Sustained Traffic Rate
+** Maximum Traffic Burst
+** Minimum Reserved Traffic Rate
+** Assumed Minimum Reserved Traffic Rate Packet Size
+** Maximum Concatenated Burst
+** Upstream Peak Traffic Rate
+** Required Attribute Mask
+** Forbidden Attribute Mask
+** Attribute Aggregation Rule Mask
+** Minimum Buffer
+** Target Buffer
+** Maximum Buffer
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | Non-Real-Time Polling Service
+|    |
+* Envelope
+* Authorized Envelope
+** Traffic Priority
+** Request Transmission Policy
+** Maximum Sustained Traffic Rate
+** Maximum Traffic Burst
+** Minimum Reserved Traffic Rate
+** Assumed Minimum Reserved Traffic Rate Packet Size
+** Maximum Concatenated Burst
+** Nominal Polling Interval
+** Upstream Peak Traffic Rate
+** Required Attribute Mask
+** Forbidden Attribute Mask
+** Attribute Aggregation Rule Mask
+** Minimum Buffer
+** Target Buffer
+** Maximum Buffer
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | Real-Time Polling Service
+|    |
+* Envelope
+* Authorized Envelope
+** Request Transmission Policy
+** Maximum Sustained Traffic Rate
+** Maximum Traffic Burst
+** Minimum Reserved Traffic Rate
+** Assumed Minimum Reserved Traffic Rate Packet Size
+** Maximum Concatenated Burst
+** Nominal Polling Interval
+** Tolerated Poll Jitter
+** Upstream Peak Traffic Rate
+** Required Attribute Mask
+** Forbidden Attribute Mask
+** Attribute Aggregation Rule Mask
+** Minimum Buffer
+** Target Buffer
+** Maximum Buffer
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | Unsolicited Grant Service
+|    |
+* Envelope
+* Authorized Envelope
+** Request Transmission Policy
+** Unsolicited Grant Size
+** Grants/Interval
+** Nominal Grant Interval
+** Tolerated Grant Interval
+** Upstream Peak Traffic Rate
+** Required Attribute Mask
+** Forbidden Attribute Mask
+** Attribute Aggregation Rule Mask
+** Minimum Buffer
+** Target Buffer
+** Maximum Buffer
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | Unsolicited Grant Service with Activity Detection
+|    |
+* Envelope
+* Authorized Envelope
+** Request Transmission Policy
+** Unsolicited Grant Size
+** Grants/Interval
+** Nominal Grant Interval
+** Tolerated Grant Jitter
+** Nominal Polling Interval
+** Tolerated Poll Jitter
+** Upstream Peak Traffic Rate
+** Required Attribute Mask
+** Forbidden Attribute Mask
+** Attribute Aggregation Rule Mask
+** Minimum Buffer
+** Target Buffer
+** Maximum Buffer
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | Downstream Service
+|    |
+* Envelope
+* Authorized Envelope
+** Traffic Priority
+** Downstream Resequencing
+** <Maximum Sustained Traffic Rate
+** Maximum Traffic Burst
+** Minimum Reserved Traffic Rate
+** Assumed Minimum Reserved Traffic Rate Packet Size
+** Maximum Downstream Latency
+** Downstream Peak Traffic Rate
+** Required Attribute Mask
+** Forbidden Attribute Mask
+** Attribute Aggregation Rule Mask
+** Minimum Buffer
+** Target Buffer
+** Maximum Buffer
+* ''Optional'' Reserved Envelope
+* ''Optional'' Committed Envelope
+|    | No
+|-
+|    | Upstream Drop
+|    |
+* Envelope
+|    | No
+|-
+|    | IPv4 Event Generation Info
+|    |
+* Primary Record Keeping Server IPv4 Address
+* Primary Record Keeping Server Port
+* Secondary Record Keeping Server IPv4 Address
+* Secondary Record Keeping Server Port
+* Billing Correlation ID
+|    | No
+|-
+|    | IPv6 Event Generation Info
+|    |
+* Primary Record Keeping Server IPv6 Address
+* Primary Record Keeping Server Port
+* Secondary Record Keeping Server IPv6 Address
+* Secondary Record Keeping Server Port
+* Billing Correlation ID
+|    | No
+|-
+|    | Volume-Based Usage Limit
+|    |
+* Usage Limit (Kb)
+|    | No
+|-
+|    | Time-Based Usage Limit
+|    |
+* Time Limit (Sec)
+|    | No
+|-
+|    | Opaque Data
+|    |
+* Opaque Data
+** Information the Policy Server or Application Manager might store on a CMTS.
+|    | No
+|-
+|    | Gate Time Info
+|    |
+* Time Committed (Sec)
+|    |
+|-
+|    | Gate Usage Info
+|    |
+* Octet Count (bytes)
+|    |
+|-
+|    | PacketCable Error
+|    |
+* Error-Code
+** Pre-defined error code
+|    | No
+|-
+|    | Gate State
+|    |
+* State
+* Reason
+|    |
+|-
+|    | Version Info
+|    |
+* Major Version Number
+* Minor Version Number
+|    | No
+|-
+|  | PSID
+|    |
+* PSID which uniquely identifies the Policy Server
+|    |
+|-
+|    | Synch Options
+|    |
+* Report Type
+* Synch Type
+|    |
+|-
+|    | Msg Receipt Key
+|    |
+* Msg Receipt Key
+|    |
+|-
+|    | UserID
+|    |
+* UserID which identifies the user associated with the gate
+|    | No
+|-
+|    | SharedResourceID
+|    |
+* SharedResourceID is assigned by the CMTS for Multicast Gate requests.
+|    |
+|}
+ 
+
+== Resources Committed (developers committed to working)  ==
+
+* [mailto:xsited@yahoo.com Thomas Kee irc:xsited]
+* [mailto:user@example.com Example irc:]
+
+== Initial Committers  ==
+
+* [mailto:xsited@yahoo.com Thomas Kee irc:xsited]
+* [mailto:user@example.com Example irc:]
+
+== Vendor Neutral  ==
+
+* No vendor package names in code
+* No vendor branding / trademark present in code or output of build
+* No vendor branding / trademark present in documentation
+
+== Meets Board Policy (including IPR)  ==
+

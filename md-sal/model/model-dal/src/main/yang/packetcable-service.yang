@@ -1,0 +1,380 @@
+module packetcable-service {
+    namespace "urn:opendaylight:packetcable:service";
+    prefix pcmm;
+
+    import yang-ext {prefix ext; revision-date "2013-07-09";}
+    import opendaylight-inventory {prefix inv;revision-date "2013-08-19";}
+    import ietf-inet-types {prefix inet;revision-date 2010-09-24;}
+    import packetcable-cmts {prefix cmts; }
+    import packetcable-traffic-profile {prefix tp; }
+    import flow-capable-transaction {prefix tr;}
+
+
+    revision "2014-01-20" {
+        description "Initial revision of packetcable service";
+    }        
+    
+    grouping node-cmts {
+        uses "inv:node-context-ref";        
+        uses cmts:cmts-instance;
+    }
+
+    /** Base configuration structure **/
+    grouping update-cmts {
+        uses "inv:node-context-ref";
+        
+        container original-cmts {
+            uses cmts:cmts-instance;
+        }
+        container updated-cmts {
+            uses cmts:cmts-instance;
+        }
+    }
+
+    rpc cmts-add {
+        input {
+            uses tr:transaction-metadata;
+            leaf cmts-ref {
+                type cmts:cmts-reference;
+            }
+            uses node-cmts;            
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    }
+
+    rpc cmts-remove {
+        input {
+            uses tr:transaction-metadata;
+            leaf cmts-ref {
+                type cmts:cmts-reference;
+            }
+            uses node-cmts;            
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    }
+
+    rpc cmts-update {
+        input {
+            uses tr:transaction-metadata;
+            leaf cmts-ref {
+                type cmts:cmts-reference;
+            }
+            uses update-cmts;            
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    notification cmts-added {
+        uses tr:transaction-metadata;
+        leaf cmts-ref {
+            type cmts:cmts-reference;
+        }
+        uses node-cmts;
+        uses tr:transaction-aware;
+    }
+
+    notification cmts-updated {
+        uses tr:transaction-metadata;
+        leaf cmts-ref {
+            type cmts:cmts-reference;
+        }
+        uses node-cmts;
+        uses tr:transaction-aware;
+    }
+
+    notification cmts-removed {
+        uses tr:transaction-metadata;
+        leaf cmts-ref {
+            type cmts:cmts-reference;
+        }
+        uses node-cmts;
+        uses tr:transaction-aware;
+    }    
+
+    grouping update-tp-defaults-flowspec {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:flowspec-envelope;
+	}
+        container update-tp {
+    	    uses tp:flowspec-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-flowspec {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-flowspec;            
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-flowspec {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-flowspec;            
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    grouping update-tp-defaults-docsis-service-class-name {
+       //  uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:flowspec-envelope;
+	}
+        container update-tp {
+    	    uses tp:flowspec-envelope;
+	}
+    }
+
+    grouping update-tp-defaults-best-effort {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:default-envelope;
+	}
+        container update-tp {
+    	    uses tp:default-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-best-effort {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-best-effort;            
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-best-effort {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-best-effort;            
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    
+    grouping update-tp-defaults-non-real-time-polling-service {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:default-envelope;
+	}
+        container update-tp {
+    	    uses tp:default-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-non-real-time-polling-service {
+
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-non-real-time-polling-service;
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-non-real-time-polling-service {
+
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-non-real-time-polling-service;
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+
+    grouping update-tp-defaults-real-time-polling-service {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:default-envelope;
+	}
+        container update-tp {
+    	    uses tp:default-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-real-time-polling-service {
+
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-real-time-polling-service;
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-real-time-polling-service {
+
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-real-time-polling-service;
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    grouping update-tp-defaults-unsolicited-grant-service {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:ugs-envelope;
+	}
+        container update-tp {
+    	    uses tp:ugs-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-unsolicited-grant-service {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-unsolicited-grant-service;
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-unsolicited-grant-service {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-unsolicited-grant-service;
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    grouping update-tp-defaults-unsolicited-grant-service-with-actvity-detection {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:ugs-envelope;
+	}
+        container update-tp {
+    	    uses tp:ugs-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-unsolicited-grant-service-with-actvity-detection {
+
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-unsolicited-grant-service-with-actvity-detection;
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-unsolicited-grant-service-with-actvity-detection {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-unsolicited-grant-service-with-actvity-detection;
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    
+    grouping update-tp-defaults-downstream-service {
+        // uses "tp:tp-context-ref";
+        
+        container original-tp {
+    	    uses tp:us-envelope;
+	}
+
+        container update-tp {
+    	    uses tp:us-envelope;
+	}
+    }
+
+    rpc traffic-profile-get-defaults-downstream-service {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+        }
+        output {
+            uses update-tp-defaults-downstream-service;
+            uses tr:transaction-aware;
+        }
+    } 
+
+    rpc traffic-profile-update-defaults-downstream-service {
+        input {
+            uses tr:transaction-metadata;
+            leaf tp-ref {
+                type tp:tp-reference;
+            }
+            uses update-tp-defaults-downstream-service;
+        }
+        output {
+            uses tr:transaction-aware;
+        }
+    } 
+
+    
+}
