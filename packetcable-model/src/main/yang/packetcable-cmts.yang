@@ -1,0 +1,190 @@
+module packetcable-cmts
+{
+    namespace "urn:opendaylight:node:cmts";
+    prefix "cmts";
+
+    import ietf-yang-types 	{ prefix yang; }
+    import ietf-inet-types 	{ prefix inet; }
+//    import ietf-interfaces 	{ prefix if;   }
+//    import ietf-snmp    	{ prefix snmp; }
+//    import ietf-reverse-ssh    	{ prefix rssh; }
+
+    description "This module contains a collection of CMTS definitions";
+    organization "OpenDaylight Project";
+    contact "TBD";
+    revision "2014-01-20" {
+        description "Initial revision of packetcable cmts";
+    }        
+    
+
+typedef pcmm-version
+{
+    type enumeration {
+        enum "1";
+        enum "2";
+        enum "3";
+        enum "4";
+        enum "5";
+    }
+    description "This enumeration contains the all PCMM versions released so far.";
+}
+typedef up-down-state-type {
+    type enumeration {
+        enum up;
+        enum down;
+    }
+    description "Type to specify state information for a port or a connection.";
+}
+
+grouping cable-modem-subscriber-grouping
+{
+    description "A cable modem subscriber terminated by CMTS instance and it's configuration resources.";
+    leaf enabled {
+        type boolean;
+        mandatory true;
+        description "Specifies if the CM is enabled.";
+    }
+
+    leaf subscriber-id {
+            type inet:ip-address;
+            mandatory true;
+            description "An identifier that identifies a cable modem. The IP address of the CM.";
+    }
+    leaf mac-address {
+            type yang:mac-address;
+            description "The MAC address of the CM.";
+    }
+}
+
+typedef cmts-reference {
+    type instance-identifier;
+}
+
+
+grouping cmts-instance
+{
+    description "A PCMM capable CMTS and other available configuration resources.";
+    leaf id {
+        type inet:ip-address;
+        mandatory true;
+        description
+        "An unique but locally arbitrary identifier that identifies a PCMM capable CMTS
+        towards the management system and is persistent across reboots of the system.";
+    }
+
+    leaf enabled {
+        type boolean;
+        mandatory true;
+        description "Specifies if the CMTS is enabled.";
+    }
+
+    container managed-cable-modem-subscribers {
+        list managed-cable-modem-subscribers {
+            key "subscriber-id";
+            unique "subscriber-id";
+            description
+            "The list of all cable modems managed by CMTS instance.";
+            uses cable-modem-subscriber-grouping;
+        }
+    }
+
+    container configuration-points {
+        list configuration-points {
+            key "id";
+            unique "id";
+            description
+            "The list of all configuration points known to the PCMM capable CMTS.";
+            uses cmts-configuration-point-grouping;
+        }
+    }
+}
+
+grouping cmts-configuration-point-grouping
+{
+    description "Representation of a PCMM Configuration Point.";
+    leaf id {
+        type inet:uri;
+        description "An identifier that identifies a configuration point of the PCMM capable CMTS.";
+    }
+    leaf uri {
+        type inet:uri;
+        description
+        "A locator of the Configuration Point. This element MAY contain a locator
+        of the Configuration Point including, for example, an IP address and a port number.";
+    }
+    leaf protocols-supported {
+        type enumeration {
+            enum "pcmm";
+            enum "snmp";
+            enum "ssh";
+            enum "telnet";
+            enum "netconf";
+        }
+    default "pcmm";
+        description "The protocols that can used to configure the CMTS.";
+    }
+    leaf mac-address {
+            type yang:mac-address;
+            description "The MAC address of the CMTS for the NODE ID.";
+    }
+    container pcmm-configuration {
+        leaf ip-address {
+            type inet:ip-address;
+            mandatory true;
+            description "The IP address of the controller to connect to.";
+        }
+        leaf port {
+            type inet:port-number;
+            default 3918;
+            description "The port number at the controller to connect to.";
+        }
+    }
+    container snmp-configuration {
+/*
+        leaf snmp-version {
+            type snmp:security-model;
+            default "v2c";
+        }
+*/
+        reference "Sort out the SNMP yang declaration";
+        leaf community-public {
+            type string;
+            description
+            "A community name that can be represented as a YANG string.";
+        }
+    }
+    container shell-configuration {
+        leaf username {
+            type string;
+            description
+            "SSH or telnet username.";
+        }
+        reference "Sort out how to hide.";
+        leaf password {
+            type string;
+            description
+            "SSH or telnet password.";
+        }
+    }
+    container state {
+        description
+        "This container holds connection state information that indicate if the CMTS
+        is connected, what versions are supported, and which one is used.";
+        leaf connection-state {
+            type up-down-state-type;
+            description
+            "This object indicates if the Logical Switch is connected to the controller.";
+        }
+        leaf current-version {
+            type pcmm-version;
+            description
+            "This object contains the current PCMM version used between CMTS and Controller.";
+        }
+        leaf-list supported-versions {
+            type pcmm-version;
+            description
+            "This list of objects contains all the PCMM versions supported the controller.";
+        }
+    }
+}
+}
