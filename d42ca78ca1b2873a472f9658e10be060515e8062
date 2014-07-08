@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa82b9bf_ac8bd6c1",
+        "filename": "pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 9
+      },
+      "writtenOn": "2014-07-08T19:16:25Z",
+      "side": 1,
+      "message": "Updated to latest controller pom.  I highly recommend in the medium term moving away from using the controller parent pom, as it is not intended for that purpose, but for now, this gets you moving :)",
+      "revId": "d42ca78ca1b2873a472f9658e10be060515e8062",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa82b9bf_0ca3e24f",
+        "filename": "pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 9
+      },
+      "writtenOn": "2014-07-08T19:16:25Z",
+      "side": 1,
+      "message": "You need to use your projects groupid or you can\u0027t push to nexus.",
+      "revId": "d42ca78ca1b2873a472f9658e10be060515e8062",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa82b9bf_cc889ac7",
+        "filename": "pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 9
+      },
+      "writtenOn": "2014-07-08T19:16:25Z",
+      "side": 1,
+      "message": "Because you are no longer in the controller source tree... you need a pointer to the repos so you can retrieve the controllers pom file you are using as a parent :)",
+      "revId": "d42ca78ca1b2873a472f9658e10be060515e8062",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa82b9bf_6c914ef0",
+        "filename": "pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 9
+      },
+      "writtenOn": "2014-07-08T19:16:25Z",
+      "side": 1,
+      "message": "0.5.1-SNAPSHOT was so old its no longer retrievable from the nexus repo.  So I moved you to the most recent version.",
+      "revId": "d42ca78ca1b2873a472f9658e10be060515e8062",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa82b9bf_8c8e12cf",
+        "filename": "src/main/java/org/opendaylight/controller/protocol_plugin/packetcable/internal/InventoryService.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 9
+      },
+      "writtenOn": "2014-07-08T19:16:25Z",
+      "side": 1,
+      "message": "This was a new method... added a stub so we would build.  Probably need to do something here... but this got you building :)",
+      "revId": "d42ca78ca1b2873a472f9658e10be060515e8062",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
