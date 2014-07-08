@@ -5,12 +5,68 @@
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>commons.opendaylight</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
-    <relativePath>../../commons/opendaylight</relativePath>
+    <version>1.4.2-SNAPSHOT</version>
   </parent>
+  <groupId>org.opendaylight.packetcable</groupId>
   <artifactId>protocol_plugins.packetcable</artifactId>
   <version>0.5.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
+
+    <pluginRepositories>
+    <!-- OpenDayLight Repo Mirror -->
+    <pluginRepository>
+      <id>opendaylight-mirror</id>
+      <name>opendaylight-mirror</name>
+      <url>http://nexus.opendaylight.org/content/groups/public/</url>
+      <snapshots>
+          <enabled>false</enabled>
+      </snapshots>
+      <releases>
+          <enabled>true</enabled>
+          <updatePolicy>never</updatePolicy>
+      </releases>
+    </pluginRepository>
+    <!-- OpenDayLight Snapshot artifact -->
+    <pluginRepository>
+      <id>opendaylight-snapshot</id>
+      <name>opendaylight-snapshot</name>
+      <url>http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/</url>
+      <snapshots>
+          <enabled>true</enabled>
+      </snapshots>
+      <releases>
+          <enabled>false</enabled>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <repositories>
+    <!-- OpenDayLight Repo Mirror -->
+    <repository>
+      <id>opendaylight-mirror</id>
+      <name>opendaylight-mirror</name>
+      <url>http://nexus.opendaylight.org/content/groups/public/</url>
+      <snapshots>
+          <enabled>false</enabled>
+      </snapshots>
+      <releases>
+          <enabled>true</enabled>
+          <updatePolicy>never</updatePolicy>
+      </releases>
+    </repository>
+    <!-- OpenDayLight Snapshot artifact -->
+    <repository>
+      <id>opendaylight-snapshot</id>
+      <name>opendaylight-snapshot</name>
+      <url>http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/</url>
+      <snapshots>
+          <enabled>true</enabled>
+      </snapshots>
+      <releases>
+          <enabled>false</enabled>
+      </releases>
+    </repository>
+  </repositories>
   <build>
     <plugins>
       <plugin>
@@ -52,14 +108,14 @@
     <dependency>
       <groupId>org.opendaylight.controller</groupId>
       <artifactId>sal</artifactId>
-      <version>0.5.1-SNAPSHOT</version>
+      <version>0.8.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
-<dependency>
-<groupId>javax.sip</groupId>
+    <dependency>
+  <groupId>javax.sip</groupId>
 <artifactId>jain-sip-ri</artifactId>
 <version>1.2.158</version>
 </dependency>
