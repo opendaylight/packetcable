@@ -40,7 +40,7 @@
   </scm>
 
     <pluginRepositories>
-    <!-- OpenDayLight Repo Mirror -->
+    <!-- OpenDayLight Repo Mirror  -->
     <pluginRepository>
       <id>opendaylight-mirror</id>
       <name>opendaylight-mirror</name>
