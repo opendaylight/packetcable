@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa82b9bf_f014304e",
+        "filename": "features/pom.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1788
+      },
+      "writtenOn": "2014-07-30T15:48:13Z",
+      "side": 1,
+      "message": "Missing .KAR generation piece in pom file.",
+      "revId": "56ec8f5534a80d86f9b5562c8d77e44ce960b0f2",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
