@@ -1,4 +1,4 @@
-module packetcable-service {
+module packetcable-service{
     namespace "urn:opendaylight:packetcable:service";
     prefix pcmm;
 
@@ -299,7 +299,7 @@ module packetcable-service {
         }
     } 
 
-    grouping update-tp-defaults-unsolicited-grant-service-with-actvity-detection {
+    grouping update-tp-defaults-unsolicited-grant-service-with-activity-detection {
         // uses "tp:tp-context-ref";
         
         container original-tp {
@@ -310,7 +310,7 @@ module packetcable-service {
 	}
     }
 
-    rpc traffic-profile-get-defaults-unsolicited-grant-service-with-actvity-detection {
+    rpc traffic-profile-get-defaults-unsolicited-grant-service-with-activity-detection {
 
         input {
             uses tr:transaction-metadata;
@@ -319,18 +319,18 @@ module packetcable-service {
             }
         }
         output {
-            uses update-tp-defaults-unsolicited-grant-service-with-actvity-detection;
+            uses update-tp-defaults-unsolicited-grant-service-with-activity-detection;
             uses tr:transaction-aware;
         }
     } 
 
-    rpc traffic-profile-update-defaults-unsolicited-grant-service-with-actvity-detection {
+    rpc traffic-profile-update-defaults-unsolicited-grant-service-with-activity-detection {
         input {
             uses tr:transaction-metadata;
             leaf tp-ref {
                 type tp:tp-reference;
             }
-            uses update-tp-defaults-unsolicited-grant-service-with-actvity-detection;
+            uses update-tp-defaults-unsolicited-grant-service-with-activity-detection;
         }
         output {
             uses tr:transaction-aware;

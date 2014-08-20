@@ -1,0 +1,5 @@
+gitdir=$(git rev-parse --git-dir); scp -p -P 29418 xsited@git.opendaylight.org:hooks/commit-msg ${gitdir}/hooks/
+git add .
+git commit --signoff -m "comment"
+git push origin HEAD:refs/for/master
+
