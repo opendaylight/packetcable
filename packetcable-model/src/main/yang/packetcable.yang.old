@@ -1,0 +1,86 @@
+  module packetcable {
+
+   namespace "urn:opendaylight:node:packetcable";
+   prefix packetcable;
+
+
+    import ietf-yang-types 	{ prefix yang; }
+    import ietf-inet-types 	{ prefix inet; }
+    import packetcable-cmts {prefix cmts; }
+
+ 
+
+    organization "Packetcabel ODL";
+
+    contact
+      "Thomas Kee <xsited@yahoo.com>";
+
+    description
+      "Packetcable plugin for the PCMM driver";
+
+    revision "2014-07-23" {
+      description
+        "Packetcable module.";
+    }
+
+	typdef pcmm-configuration 
+	{
+        leaf ip-address {
+            type inet:ip-address;
+            mandatory true;
+            description "The IP address of the controller to connect to.";
+        }
+        leaf port {
+            type inet:port-number;
+            default 3918;
+            description "The port number at the controller to connect to.";
+        }
+     }//typdef pcmm-configuration
+        
+    rpc init-connection 
+    {
+	      description
+	        "Request connection with the CMTS";
+	      input 
+	      {
+		        leaf connectionConf 
+		        {
+		          type  pcmm-configuration ;
+		          description
+		            "cmts configuration";
+		        }
+	        }
+      } // rpc init-connection
+
+    rpc disconnect {
+	     input 
+		      {
+			        leaf connectionConf 
+			        {
+			          type  pcmm-configuration ;
+			          description
+			            "cmts configuration";
+			        }
+		        }
+	      description
+	        "Disconnect from CMTS.
+	           A 'resource-denied' error will be returned 
+	           if the packetcable service is disabled.";
+    }  // rpc disconnect
+
+  
+    notification connectedToCMTS {
+      description
+        "Indicates that the toaster has run of out bread.";
+    }  // notification connectedToCMTS
+    
+    notification desconnectedFromCMTS {
+      description
+        "Indicates that the toaster has run of out bread.";
+      leaf connectionConf {
+        type  pcmm-configuration ;
+		 description "cmts configuration";
+      }
+    }  // notification desconnectedFromCMTS
+    
+  }  // module packetcable

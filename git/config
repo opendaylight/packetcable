@@ -1,0 +1,23 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	logallrefupdates = true
+	precomposeunicode = true
+[remote "origin"]
+	url = ssh://xsited@git.opendaylight.org:29418/packetcable.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+	fetch = +refs/notes/*:refs/notes/*
+	push = HEAD:refs/for/master
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[gerrit]
+	createchangeid = true
+[remote "github"]
+	url = https://github.com/xsited/packetcable.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[remote "odl"]
+	url = ssh://xsited@git.opendaylight.org:29418/packetcable.git
+	fetch = +refs/heads/*:refs/remotes/odl-origin/*
+	push = HEAD:refs/for/master
+
