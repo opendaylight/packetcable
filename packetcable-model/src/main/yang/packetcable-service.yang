@@ -374,7 +374,7 @@ module packetcable-service{
         output {
             uses tr:transaction-aware;
         }
-    } 
+    }
 
     
 }
