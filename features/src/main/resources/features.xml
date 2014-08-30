@@ -9,8 +9,9 @@
       <feature>yangtools-all</feature>
       <feature>odl-mdsal-models</feature>
       <feature>odl-adsal-all</feature>
-      <bundle>mvn:org.opendaylight.packetcable/packetcable-model/1.0.0-SNAPSHOT</bundle>
-      <bundle>mvn:org.opendaylight.packetcable/protocol_plugins.packetcable/0.5.1-SNAPSHOT</bundle>
+      <bundle>mvn:org.opendaylight.packetcable/packetcable-model/1.1-SNAPSHOT</bundle>
+      <bundle>mvn:org.opendaylight.packetcable/packetcable-consumer/1.1-SNAPSHOT</bundle>
+      <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/1.1-SNAPSHOT</bundle>
     </feature>
 
 </features>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+ This program and the accompanying materials are made available under the
+ terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-packetcable-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+    <!--
+        Please read the features guidelines:
+        https://wiki.opendaylight.org/view/Runtime:Karaf_Features_Guidelines#Feature_Best_Practices
+    -->
+    <!--
+    Add repo entries for the repositories of features you refer to in this feature file but do not define here.
+    <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/0.0.3-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-adsal/${feature.adsal.version}/xml/features</repository>	
+    <repository>mvn:org.opendaylight.controller/features-adsal-compatibility/1.4.2-SNAPSHOT/xml/features</repository>
+    -->
+    <repository>mvn:org.opendaylight.controller/features-flow/${mdsal.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/0.0.3-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/0.6.2-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/1.1-SNAPSHOT/xml/features</repository>
+
+    <feature name='odl-packetcable-all' version='${project.version}' description='OpenDaylight :: packetcable :: All'>
+            <feature version='${project.version}'>odl-packetcable-consumer</feature>
+            <feature version='${project.version}'>odl-packetcable-provider</feature>
+            <feature version='${project.version}'>odl-packetcable-model</feature>
+    </feature>
+    <!--
+        Define your features.  It is useful to list then in order of dependency.  So if A depends on B, list A first.
+        It's also nice to list inside a feature, first the features it needs, then the bundles it needs, then the configfiles.
+            <feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature>
+	    <bundle>mvn:com.google.common.collect/collect/14.0</bundle>
+    -->
+            <!--feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature-->
+        <!--- * Basic MD-SAL Consumer -->
+        <feature name='odl-packetcable-consumer' version='${project.version}' description='OpenDaylight :: packetcable :: Consumer '>
+            <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
+            <feature version='${project.version}'>odl-packetcable-model</feature>
+            <feature version='${project.version}'>odl-packetcable-provider</feature>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-consumer/${project.version}</bundle>
+        </feature>
+
+        <!--- * Basic MD-SAL Model feature -->
+        <feature name='odl-packetcable-model' version='${project.version}' description='OpenDaylight :: packetcable :: Model'>
+            <feature version='0.6.2-SNAPSHOT'>odl-yangtools-binding</feature>
+            <feature version='0.6.2-SNAPSHOT'>odl-yangtools-models</feature>
+            <!--feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature-->
+<feature version='${project.version}'>odl-flow-model</feature>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-model/${project.version}</bundle>
+        </feature>
+
+        <!--- * Basic MD-SAL Provider that uses openflowplugin-flow-services (which brings along odl-mdsal-broker) -->
+        <feature name='odl-packetcable-provider' version='${project.version}' description='OpenDaylight :: packetcable :: Provider'>
+            <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-provider/${project.version}</bundle>
+            <!--feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature-->
+<feature version='${project.version}'>odl-flow-model</feature>
+            <feature version='${project.version}'>odl-packetcable-model</feature>
+        </feature>
+
+</features>
