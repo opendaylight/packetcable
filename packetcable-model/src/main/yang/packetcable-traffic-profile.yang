@@ -2,10 +2,18 @@ module packetcable-traffic-profile
 {
     namespace "urn:opendaylight:flow:traffic-profile";
     prefix traffic;
+    
+    import flow-node-inventory {prefix fni; revision-date 2013-08-19; }
+    import opendaylight-inventory {prefix inv;revision-date "2013-08-19";}
+    import sal-flow {prefix sal-flow;revision-date "2013-08-19";}
+    import sal-group {prefix sal-group;revision-date "2013-09-18";}
+    import packet-processing {prefix sal-packet;revision-date "2013-07-09";}
+    import opendaylight-flow-statistics {prefix odl-flow-stats;revision-date "2013-08-19";}
+    import opendaylight-group-statistics {prefix odl-group-stats;revision-date "2013-11-11";}
 
     organization "OpenDaylight Project";
     contact "TBD";
-
+    
     description
          "This module contains a collection of groupings and
          data definition statements related to the configuration
@@ -14,7 +22,6 @@ module packetcable-traffic-profile
     revision "2014-08-08" {
         description "Initial revision of packetcable traffic profile";
     }        
-    
 
 
     typedef tp-reference {
@@ -72,7 +79,7 @@ module packetcable-traffic-profile
 
     }
 
-    grouping flowspec-envelope {
+    grouping flowspec-envelope-attributes {
     description "
 The values r, b, p, m, M, R, and s are defined and described 
 
@@ -169,7 +176,7 @@ Slack Term [S]
     }
     }
 
-    grouping default-envelope {
+    grouping default-envelope-attributes {
     leaf traffic-priority {
         type uint8;
         description 
@@ -298,7 +305,7 @@ Maximum Buffer is a 4-byte unsigned integer parameter that defines an upper limi
     }
 
 
-    grouping ugs-envelope {
+    grouping ugs-envelope-attributes {
     leaf request-transmission-policy {
         type uint32;
         description "
@@ -366,7 +373,7 @@ Attribute Masks define a specific set of attributes associated with a DOCSIS 3.0
     }
 
 
-    grouping us-envelope {
+    grouping us-envelope-attributes {
     leaf us-traffic-priority {
         type uint8;
         description "
@@ -473,23 +480,23 @@ Attribute Masks define a specific set of attributes associated with a DOCSIS 3.0
     }
 
 
-    grouping traffic-profile-flowspec {
+    grouping traffic-profile-flowspec-attributes {
     container f-authorized-envelope {
-        uses flowspec-envelope;
+        uses flowspec-envelope-attributes;
                 description "mandatory";
     }
     container f-reserved-envelope {
-        uses flowspec-envelope;
+        uses flowspec-envelope-attributes;
                 description "optional";
     }
     container f-committed-envelope {
-        uses flowspec-envelope;
+        uses flowspec-envelope-attributes;
                 description "optional";
     }
     }
 
 
-    grouping traffic-profile-docsis-service-class-name {
+    grouping traffic-profile-docsis-service-class-name-attributes {
     leaf service-class-name {
         type string;
                 description 
@@ -504,127 +511,348 @@ Attribute Masks define a specific set of attributes associated with a DOCSIS 3.0
     }
 
 
-    grouping traffic-profile-best-effort {
+    grouping traffic-profile-best-effort-attributes {
     container be-authorized-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "mandatory";
     }
     container bereserved-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "optional";
     }
     container be-committed-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "optional";
     }
     }
 
-    grouping traffic-profile-non-real-time-polling-service {
+    grouping traffic-profile-non-real-time-polling-service-attributes {
     container nrtp-authorized-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "mandatory";
     }
     container nrtp-reserved-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "optional";
     }
     container nrtp-committed-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "optional";
     }
     }
 
 
-    grouping traffic-profile-real-time-polling-service {
+    grouping traffic-profile-real-time-polling-service-attributes {
     container rtp-authorized-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "mandatory";
     }
     container rtp-reserved-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "optional";
     }
     container rtp-committed-envelope {
-        uses default-envelope;
+        uses default-envelope-attributes;
                 description "optional";
     }
     }
 
-    grouping traffic-profile-unsolicited-grant-service {
+    grouping traffic-profile-unsolicited-grant-service-attributes {
     container ugs-authorized-envelope {
-        uses ugs-envelope;
+        uses ugs-envelope-attributes;
                 description "mandatory";
     }
     container ugs-reserved-envelope {
-        uses ugs-envelope;
+        uses ugs-envelope-attributes;
                 description "optional";
     }
     container ugs-committed-envelope {
-        uses ugs-envelope;
+        uses ugs-envelope-attributes;
                 description "optional";
     }
     }
 
-    grouping traffic-profile-unsolicited-grant-service-with-activity-detection {
+    grouping traffic-profile-unsolicited-grant-service-with-activity-detection-attributes {
     container usga-authorized-envelope {
-        uses ugs-envelope;
+        uses ugs-envelope-attributes;
                 description "mandatory";
     }
     container usga-reserved-envelope {
-        uses ugs-envelope;
+        uses ugs-envelope-attributes;
                 description "optional";
     }
     container usga-committed-envelope {
-        uses ugs-envelope;
+        uses ugs-envelope-attributes;
                 description "optional";
     }
     }
 
 
-    grouping traffic-profile-downstream-service {
+    grouping traffic-profile-downstream-service-attributes {
     container ds-authorized-envelope {
-        uses us-envelope;
+        uses us-envelope-attributes;
                 description "mandatory";
     }
     container ds-reserved-envelope {
-        uses us-envelope;
+        uses us-envelope-attributes;
                 description "optional";
     }
     container ds-committed-envelope {
-        uses us-envelope;
+        uses us-envelope-attributes;
                 description "optional";
     }
     }
 
 
-    grouping traffic-profile-upstream-drop {
+    grouping traffic-profile-upstream-drop-attributes {
     }
 
-    grouping traffic-profile-docsis-specific-parameterization {
+    grouping traffic-profile-docsis-specific-parameterization-attributes {
     }
 
 
     
-    grouping traffic-profile-grouping {
+    grouping traffic-profile-grouping-attributes {
         leaf tp-type {
                 type traffic-profile-type;
                 default  best-effort;
                 description "This attribute contains the type of upstream flow scheduling type.";
         }
-    choice tp-type-choice {
-           case "flowspec" { uses traffic-profile-flowspec; }
-           case "docsis-service-class-name" { uses traffic-profile-docsis-service-class-name; }
-           case "docsis-specific-parameterization" { uses traffic-profile-docsis-specific-parameterization; }
-           case "upstream-drop" { uses traffic-profile-upstream-drop; }
-           case "best-effort" { uses traffic-profile-best-effort; }
-           case "unsolicited-grant-service" { uses traffic-profile-unsolicited-grant-service; }
-           case "unsolicited-grant-service-with-activity-detection" { uses traffic-profile-unsolicited-grant-service-with-activity-detection; }
-           case "non-real-time-polling-service" { uses traffic-profile-non-real-time-polling-service; }
-           case "real-time-polling-service" { uses traffic-profile-real-time-polling-service; }
-           case "downstream-service" { uses traffic-profile-downstream-service; }
-        }   
     }
 
+//  ACTION augmentations
+
+    augment "/sal-flow:add-flow/sal-flow:input/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:write-actions-case/sal-flow:write-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+
+    augment "/sal-flow:add-flow/sal-flow:input/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:apply-actions-case/sal-flow:apply-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-flow:remove-flow/sal-flow:input/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:write-actions-case/sal-flow:write-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-flow:remove-flow/sal-flow:input/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:apply-actions-case/sal-flow:apply-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-flow:update-flow/sal-flow:input/sal-flow:original-flow/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:write-actions-case/sal-flow:write-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+
+    augment "/sal-flow:update-flow/sal-flow:input/sal-flow:original-flow/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:apply-actions-case/sal-flow:apply-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+
+    augment "/sal-flow:update-flow/sal-flow:input/sal-flow:updated-flow/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:write-actions-case/sal-flow:write-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-flow:update-flow/sal-flow:input/sal-flow:updated-flow/sal-flow:instructions/sal-flow:instruction/sal-flow:instruction/sal-flow:apply-actions-case/sal-flow:apply-actions/sal-flow:action/sal-flow:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-group:add-group/sal-group:input/sal-group:buckets/sal-group:bucket/sal-group:action/sal-group:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-group:remove-group/sal-group:input/sal-group:buckets/sal-group:bucket/sal-group:action/sal-group:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-group:update-group/sal-group:input/sal-group:original-group/sal-group:buckets/sal-group:bucket/sal-group:action/sal-group:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-group:update-group/sal-group:input/sal-group:updated-group/sal-group:buckets/sal-group:bucket/sal-group:action/sal-group:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/sal-packet:transmit-packet/sal-packet:input/sal-packet:action/sal-packet:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/inv:nodes/inv:node/fni:table/fni:flow/fni:instructions/fni:instruction/fni:instruction/fni:write-actions-case/fni:write-actions/fni:action/fni:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/inv:nodes/inv:node/fni:table/fni:flow/fni:instructions/fni:instruction/fni:instruction/fni:apply-actions-case/fni:apply-actions/fni:action/fni:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/inv:nodes/inv:node/fni:group/fni:buckets/fni:bucket/fni:action/fni:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/odl-flow-stats:flows-statistics-update/odl-flow-stats:flow-and-statistics-map-list/odl-flow-stats:instructions/odl-flow-stats:instruction/odl-flow-stats:instruction/odl-flow-stats:write-actions-case/odl-flow-stats:write-actions/odl-flow-stats:action/odl-flow-stats:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/odl-flow-stats:flows-statistics-update/odl-flow-stats:flow-and-statistics-map-list/odl-flow-stats:instructions/odl-flow-stats:instruction/odl-flow-stats:instruction/odl-flow-stats:apply-actions-case/odl-flow-stats:apply-actions/odl-flow-stats:action/odl-flow-stats:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
+    augment "/odl-group-stats:group-desc-stats-updated/odl-group-stats:group-desc-stats/odl-group-stats:buckets/odl-group-stats:bucket/odl-group-stats:action/odl-group-stats:action" {
+        case "flowspec-case" { container flowspec {uses traffic-profile-flowspec-attributes; } }
+        case "docsis-service-class-name-case" { container docsis-service-class-name {uses traffic-profile-docsis-service-class-name-attributes; } }
+        case "docsis-specific-parameterization-case" { container docsis-specific-parameterization {uses traffic-profile-docsis-specific-parameterization-attributes; }}
+        case "upstream-drop-case" { container upstream-drop {uses traffic-profile-upstream-drop-attributes; } }
+        case "best-effort-case" { container best-effort {uses traffic-profile-best-effort-attributes; } }
+        case "unsolicited-grant-service-case" { container unsolicited-grant-service {uses traffic-profile-unsolicited-grant-service-attributes; } }
+        case "unsolicited-grant-service-with-activity-detection-case" { container unsolicited-grant-service-with-activity-detection {uses traffic-profile-unsolicited-grant-service-with-activity-detection-attributes; } }
+        case "non-real-time-polling-service-case" { container non-real-time-polling-service {uses traffic-profile-non-real-time-polling-service-attributes; } }
+        case "real-time-polling-service-case" { container real-time-polling-service {uses traffic-profile-real-time-polling-service-attributes; } }
+        case "downstream-service-case" { container downstream-service {uses traffic-profile-downstream-service-attributes; }}
+    }
 
 //    grouping taffic-profile-default-singleton-grouping {
 //        grouping flowspec { uses traffic-profile-flowspec; }
