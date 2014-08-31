@@ -19,7 +19,6 @@
     <repository>mvn:org.opendaylight.controller/features-adsal-compatibility/1.4.2-SNAPSHOT/xml/features</repository>
     -->
     <repository>mvn:org.opendaylight.controller/features-flow/${mdsal.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/0.0.3-SNAPSHOT/xml/features</repository>
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/0.6.2-SNAPSHOT/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-mdsal/1.1-SNAPSHOT/xml/features</repository>
 
@@ -35,13 +34,15 @@
             <feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature>
 	    <bundle>mvn:com.google.common.collect/collect/14.0</bundle>
     -->
-            <!--feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature-->
         <!--- * Basic MD-SAL Consumer -->
         <feature name='odl-packetcable-consumer' version='${project.version}' description='OpenDaylight :: packetcable :: Consumer '>
             <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-provider</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-model/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-provider/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-driver/${project.version}</bundle>
         </feature>
 
         <!--- * Basic MD-SAL Model feature -->
@@ -52,7 +53,7 @@
             <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-model/${project.version}</bundle>
         </feature>
 
-        <!--- * Basic MD-SAL Provider that uses openflowplugin-flow-services (which brings along odl-mdsal-broker) -->
+        <!--- * Basic MD-SAL Provider -->
         <feature name='odl-packetcable-provider' version='${project.version}' description='OpenDaylight :: packetcable :: Provider'>
             <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
             <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-provider/${project.version}</bundle>
