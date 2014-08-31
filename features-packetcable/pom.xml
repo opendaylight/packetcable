@@ -60,13 +60,6 @@
           <classifier>features</classifier>
           <type>xml</type>
         </dependency>
-        <dependency>
-          <groupId>org.opendaylight.openflowplugin</groupId>
-          <artifactId>features-openflowplugin</artifactId>
-          <version>0.0.3-SNAPSHOT</version>
-          <classifier>features</classifier>
-          <type>xml</type>
-        </dependency>
       <dependency>
       <groupId>org.opendaylight.controller</groupId>
       <artifactId>features-flow</artifactId>
@@ -99,9 +92,14 @@
         <artifactId>packetcable-model</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.opendaylight.controller.packetcable</groupId>
+        <artifactId>packetcable-driver</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
     <!--
-      Necessary TODO: Put dependencies for configfiles directly referenced
+      Put dependencies for configfiles directly referenced
       in your features.xml file.  For every <configfile> reference in your
       features.xml file, you need a corresponding dependency here.
 

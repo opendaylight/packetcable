@@ -12,6 +12,7 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>packetcable-driver</module>
 		<module>packetcable-model</module>
 		<module>packetcable-consumer</module>
 		<module>packetcable-provider</module>
