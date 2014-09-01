@@ -3,8 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.opendaylight.controller.packetcable</groupId>
-		<artifactId>packetcable-plugin</artifactId>
+		<groupId>org.opendaylight.packetcable</groupId>
+		<artifactId>packetcable</artifactId>
 		<version>1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>packetcable-model</artifactId>
