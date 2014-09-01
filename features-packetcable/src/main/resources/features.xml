@@ -40,9 +40,9 @@
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-provider</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-model/${project.version}</bundle>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/${project.version}</bundle>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-model/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-provider/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-driver/${project.version}</bundle>
         </feature>
 
         <!--- * Basic MD-SAL Model feature -->
@@ -50,14 +50,14 @@
             <feature version='0.6.2-SNAPSHOT'>odl-yangtools-binding</feature>
             <feature version='0.6.2-SNAPSHOT'>odl-yangtools-models</feature>
 	    <feature version='${project.version}'>odl-flow-model</feature>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-model/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-model/${project.version}</bundle>
         </feature>
 
         <!--- * Basic MD-SAL Provider -->
         <feature name='odl-packetcable-provider' version='${project.version}' description='OpenDaylight :: packetcable :: Provider'>
             <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/${project.version}</bundle>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-provider/${project.version}</bundle>
+            <bundle>mvn:org.opendaylight.controller.packetcable/packetcable-driver/${project.version}</bundle>
 	    <feature version='${project.version}'>odl-flow-model</feature>
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>

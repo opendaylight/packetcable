@@ -6,8 +6,8 @@
 --><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
    <parent>
-    <artifactId>packetcable</artifactId>
-    <groupId>org.opendaylight.packetcable</groupId>
+    <artifactId>packetcable-plugin</artifactId>
+    <groupId>org.opendaylight.controller.packetcable</groupId>
     <version>1.1-SNAPSHOT</version>
   </parent>
    <!--
@@ -17,14 +17,14 @@
     not be correct.
   -->
    <artifactId>features-packetcable</artifactId>
-   <groupId>org.opendaylight.packetcable</groupId>
-   <!-- Optional Uncomment version if you are not using a parent pom.xml
+   <groupId>org.opendaylight.controller.packetcable</groupId>
+   <!-- Optional TODO: Uncomment version if you are not using a parent pom.xml
    <version>1.1-SNAPSHOT</version>
    -->
    <packaging>jar</packaging>
    <properties>
       <features.file>features.xml</features.file>
-      <!-- Optional: Move these properties to your parent pom and possibly
+      <!-- Optional TODO: Move these properties to your parent pom and possibly
             DependencyManagement section of your parent pom -->
       <branding.version>1.0.0-SNAPSHOT</branding.version>
       <karaf.resources.version>1.4.2-SNAPSHOT</karaf.resources.version>
@@ -35,7 +35,7 @@
    </properties>
    <dependencies>
     <!--
-      Necessary: Put dependencies on any feature repos
+      Necessary TODO: Put dependencies on any feature repos
       you use in your features.xml file.
 
       Note: they will need to be <type>xml</xml>
@@ -78,22 +78,22 @@
       Examples:
     -->
       <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
+        <groupId>org.opendaylight.controller.packetcable</groupId>
         <artifactId>packetcable-consumer</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
+        <groupId>org.opendaylight.controller.packetcable</groupId>
         <artifactId>packetcable-provider</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
+        <groupId>org.opendaylight.controller.packetcable</groupId>
         <artifactId>packetcable-model</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
+        <groupId>org.opendaylight.controller.packetcable</groupId>
         <artifactId>packetcable-driver</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -105,7 +105,7 @@
 
       Example (presuming here version is coming from the parent pom):
       <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
+        <groupId>org.opendaylight.controller.packetcable</groupId>
         <artifactId>packetcable-config</artifactId>
         <version>${project.version}</version>
         <type>xml</type>
