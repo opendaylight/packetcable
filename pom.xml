@@ -7,8 +7,8 @@
 		<version>1.1-SNAPSHOT</version>
 	</parent>
 
-	<groupId>org.opendaylight.controller.packetcable</groupId>
-	<artifactId>packetcable-plugin</artifactId>
+	<groupId>org.opendaylight.packetcable</groupId>
+	<artifactId>packetcable</artifactId>
 	<packaging>pom</packaging>
 
 	<modules>
