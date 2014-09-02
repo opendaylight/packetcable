@@ -7,7 +7,6 @@ import java.util.concurrent.Executors;
 
 import org.opendaylight.controller.org.pcmm.api.PcmmService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.node.cmts.rev140120.CmtsReference;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsAdded;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsRemoved;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsUpdated;

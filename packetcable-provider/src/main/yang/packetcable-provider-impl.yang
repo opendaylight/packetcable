@@ -1,12 +1,13 @@
 module packetcable-provider-impl {
 
     yang-version 1;
-    namespace "urn:opendaylight:params:xml:ns:yang:controller:config:packetcable-provider:impl";
+    namespace "urn:opendaylight:params:xml:ns:yang:packetcable:packetcable-provider:impl";
     prefix "packetcable-provider-impl";
 
     import config { prefix config; revision-date 2013-04-05; }
     import rpc-context { prefix rpcx; revision-date 2013-06-17; }
     import opendaylight-md-sal-binding { prefix mdsal; revision-date 2013-10-28; }
+    import packetcable-provider { prefix pcp; revision-date 2014-01-31; }
     import ietf-inet-types {prefix inet;revision-date 2010-09-24;}
 
     description
@@ -21,7 +22,7 @@ module packetcable-provider-impl {
     // This is the definition of the service implementation as a module identity.
     identity packetcable-provider-impl {
             base config:module-type;
-            
+            config:provided-service pcp:packetcable-provider;
             // Specifies the prefix for generated java classes.
             config:java-name-prefix PacketcableProvider;
     }
@@ -30,58 +31,12 @@ module packetcable-provider-impl {
     augment "/config:modules/config:module/config:configuration" {
         case packetcable-provider-impl {
             when "/config:modules/config:module/config:type = 'packetcable-provider-impl'";
-
-            container rpc-registry {
+            container broker {
                 uses config:service-ref {
                     refine type {
                         mandatory true;
-                        config:required-identity mdsal:binding-rpc-registry;
+                        config:required-identity mdsal:binding-broker-osgi-registry;
                     }
-                }
-            }
-
-            container notification-service {
-                uses config:service-ref {
-                    refine type {
-                        mandatory true;
-                        config:required-identity mdsal:binding-notification-service;
-                    }
-                }
-            }
-
-            container data-broker {
-                uses config:service-ref {
-                    refine type {
-                        mandatory false;
-                        config:required-identity mdsal:binding-async-data-broker;
-                    }
-                }
-            }
-        }
-    }
-
-    augment "/config:modules/config:module/config:state" {
-        case packetcable-provider-impl {
-            when "/config:modules/config:module/config:type = 'packetcable-provider-impl'";
-            
-            leaf connection-state {
-                type boolean;
-            }
-            
-            rpcx:rpc-context-instance "close-cmts-connection-rpc";
-        }
-    }
-
-    identity close-cmts-connection-rpc;
-
-    rpc close-cmts-connection  {
-        description
-          "JMX call to close the cmts connection.";
-          
-        input {
-            uses rpcx:rpc-context-ref {
-                refine context-instance {
-                    rpcx:rpc-context-instance close-cmts-connection-rpc;
                 }
             }
         }
