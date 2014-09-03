@@ -8,7 +8,7 @@
 	</parent>
 
 	<groupId>org.opendaylight.packetcable</groupId>
-	<artifactId>packetcable-parent</artifactId>
+	<artifactId>packetcable</artifactId>
 	<packaging>pom</packaging>
 
    <distributionManagement>
