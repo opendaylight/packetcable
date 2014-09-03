@@ -8,8 +8,21 @@
 	</parent>
 
 	<groupId>org.opendaylight.packetcable</groupId>
-	<artifactId>packetcable</artifactId>
+	<artifactId>packetcable-parent</artifactId>
 	<packaging>pom</packaging>
+
+   <distributionManagement>
+        <!-- OpenDayLight Released artifact -->
+        <repository>
+            <id>opendaylight-release</id>
+            <url>${nexusproxy}/repositories/opendaylight.release</url>
+        </repository>
+        <!-- OpenDayLight Snapshot artifact -->
+        <snapshotRepository>
+            <id>opendaylight-snapshot</id>
+            <url>${nexusproxy}/repositories/opendaylight.snapshot</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 	<modules>
 		<module>packetcable-driver</module>
@@ -19,10 +32,10 @@
                 <module>features-packetcable</module>
         </modules>
 	<scm>
-		<connection>scm:git:ssh://git.opendaylight.org:29418/controller.git</connection>
-		<developerConnection>scm:git:ssh://git.opendaylight.org:29418/controller.git</developerConnection>
+		<connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
+		<developerConnection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://wiki.opendaylight.org/view/OpenDaylight_Controller:MD-SAL</url>
+		<url>https://wiki.opendaylight.org/view/PacketCablePCMM:Main</url>
 	</scm>
 <repositories>
 <!-- OpenDaylight releases -->
