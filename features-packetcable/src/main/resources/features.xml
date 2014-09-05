@@ -23,7 +23,6 @@
     <repository>mvn:org.opendaylight.controller/features-mdsal/1.1-SNAPSHOT/xml/features</repository>
 
     <feature name='odl-packetcable-all' version='${project.version}' description='OpenDaylight :: packetcable :: All'>
-            <feature version='${project.version}'>odl-packetcable-consumer</feature>
             <feature version='${project.version}'>odl-packetcable-provider</feature>
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>
@@ -33,8 +32,6 @@
         It's also nice to list inside a feature, first the features it needs, then the bundles it needs, then the configfiles.
             <feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature>
 	    <bundle>mvn:com.google.common.collect/collect/14.0</bundle>
-    -->
-        <!--- * Basic MD-SAL Consumer -->
         <feature name='odl-packetcable-consumer' version='${project.version}' description='OpenDaylight :: packetcable :: Consumer '>
             <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
             <feature version='${project.version}'>odl-packetcable-model</feature>
@@ -44,6 +41,7 @@
             <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/${project.version}</bundle>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
         </feature>
+    -->
 
         <!--- * Basic MD-SAL Model feature -->
         <feature name='odl-packetcable-model' version='${project.version}' description='OpenDaylight :: packetcable :: Model'>
