@@ -27,7 +27,6 @@
 	<modules>
 		<module>packetcable-driver</module>
 		<module>packetcable-model</module>
-		<module>packetcable-consumer</module>
 		<module>packetcable-provider</module>
                 <module>features-packetcable</module>
         </modules>

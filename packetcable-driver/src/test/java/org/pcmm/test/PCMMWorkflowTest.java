@@ -31,22 +31,30 @@ public class PCMMWorkflowTest {
 
 	private static IPCMMPolicyServer server;
 	private static IPSCMTSClient client;
+	private static boolean real_cmts = false;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		// comment this when using real CMTS
-		// ###################################
-		cmts = new CMTS();
-		cmts.startServer();
-		// ###################################
+		if (real_cmts == true) {
+		     cmts = null;
+		} else {
+		     cmts = new CMTS();
+	             cmts.startServer();
+		}
 
 		server = new PCMMPolicyServer();
 		try {
-			// this should be set to the cmts host ex :
-			// InetAddress.getByName("10.10.10.10") or
-			// InetAddress.getByName("my-cmts-host-name")
-			host = InetAddress.getLocalHost();
+			if (real_cmts == true) {
+			     // this should be set to the cmts host ex :
+			     // host = InetAddress.getByName(PCMMGlobalConfig.DefaultCMTS);
+			     host = InetAddress.getByName("10.200.90.3");
+			     host = InetAddress.getByName("127.0.0.1");
+			     // InetAddress.getByName("my-cmts-host-name");
+			} else {
+			     host = InetAddress.getLocalHost();
+			}
 			assertNotNull(host);
+
 		} catch (UnknownHostException uhe) {
 			fail("could not get host address ");
 		}
