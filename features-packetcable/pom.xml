@@ -60,6 +60,13 @@
           <classifier>features</classifier>
           <type>xml</type>
         </dependency>
+        <dependency>
+          <groupId>org.opendaylight.packetcable</groupId>
+          <artifactId>packetcable-config</artifactId>
+          <version>${project.version}</version>
+          <classifier>config</classifier>
+          <type>xml</type>
+        </dependency>
       <dependency>
       <groupId>org.opendaylight.controller</groupId>
       <artifactId>features-flow</artifactId>
@@ -77,6 +84,13 @@
 
       Examples:
     -->
+      <!--
+      <dependency>
+        <groupId>org.opendaylight.packetcable</groupId>
+        <artifactId>packetcable-consumer</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      -->
       <dependency>
         <groupId>org.opendaylight.packetcable</groupId>
         <artifactId>packetcable-provider</artifactId>
