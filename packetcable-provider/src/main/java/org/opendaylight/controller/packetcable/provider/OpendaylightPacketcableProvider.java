@@ -1,81 +1,88 @@
 package org.opendaylight.controller.packetcable.provider;
 
-import java.util.Iterator;
-import java.util.List;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.opendaylight.controller.config.yang.config.packetcable_provider.impl.PacketcableProviderRuntimeMXBean;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
+import org.opendaylight.controller.md.sal.common.api.data.AsyncDataBroker.DataChangeScope;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.packetcable.provider.processors.PCMMDataProcessor;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ConsumerContext;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
+import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv6Address;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.AddFlowInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.AddFlowOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.AddFlowOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.RemoveFlowInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.RemoveFlowOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.UpdateFlowInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.UpdateFlowOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.flow.update.OriginalFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.flow.update.UpdatedFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.TrafficProfileBestEffortAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.TrafficProfileDocsisServiceClassNameAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.TrafficProfileFlowspecAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.add.flow.input.instructions.instruction.instruction.apply.actions._case.apply.actions.action.action.BestEffortCase;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.add.flow.input.instructions.instruction.instruction.apply.actions._case.apply.actions.action.action.DocsisServiceClassNameCase;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.add.flow.input.instructions.instruction.instruction.apply.actions._case.apply.actions.action.action.FlowspecCase;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.transaction.rev131103.TransactionId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.node.cmts.rev140120.CmtsInstance;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsAddInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsAddOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsAddOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsAdded;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsAddedBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsRemoveInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsRemoveOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsRemoveOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsRemoved;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsRemovedBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsUpdateInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsUpdateOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsUpdateOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsUpdated;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.CmtsUpdatedBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.PacketcableServiceService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsBestEffortInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsBestEffortOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsDownstreamServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsDownstreamServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsFlowspecInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsFlowspecOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsNonRealTimePollingServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsNonRealTimePollingServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsRealTimePollingServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsRealTimePollingServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsUnsolicitedGrantServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsUnsolicitedGrantServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsUnsolicitedGrantServiceWithActivityDetectionInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileGetDefaultsUnsolicitedGrantServiceWithActivityDetectionOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsBestEffortInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsBestEffortOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsDownstreamServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsDownstreamServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsFlowspecInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsFlowspecOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsNonRealTimePollingServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsNonRealTimePollingServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsRealTimePollingServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsRealTimePollingServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsUnsolicitedGrantServiceInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsUnsolicitedGrantServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsUnsolicitedGrantServiceWithActivityDetectionInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.service.rev140120.TrafficProfileUpdateDefaultsUnsolicitedGrantServiceWithActivityDetectionOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.ApplyActionsCase;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.Instruction;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.node.cmts.rev140120.CmtsCapableNode;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.node.cmts.rev140120.nodes.node.CmtsNode;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.SubscriberIdRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.TcpMatchRangesAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.TcpMatchRangesRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesRpcRemoveFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesRpcUpdateFlowOriginal;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesRpcUpdateFlowUpdated;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.tcp.match.ranges.attributes.TcpMatchRanges;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.udp.match.ranges.attributes.UpdMatchRanges;
+import org.opendaylight.yangtools.concepts.CompositeObjectRegistration;
+import org.opendaylight.yangtools.concepts.CompositeObjectRegistration.CompositeObjectRegistrationBuilder;
+import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.RpcService;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+import org.pcmm.gates.IClassifier;
+import org.pcmm.gates.IExtendedClassifier;
+import org.pcmm.gates.ITrafficProfile;
+import org.pcmm.gates.impl.ExtendedClassifier;
+import org.pcmm.rcd.IPCMMPolicyServer;
+import org.pcmm.rcd.IPCMMPolicyServer.IPSCMTSClient;
+import org.pcmm.rcd.impl.PCMMPolicyServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 
 @SuppressWarnings("unused")
-public class OpendaylightPacketcableProvider implements
-		PacketcableServiceService, PacketcableProviderRuntimeMXBean,
-		DataChangeListener, AutoCloseable {
+public class OpendaylightPacketcableProvider implements DataChangeListener,
+		SalFlowService, OpenDaylightPacketCableProviderService,
+		BindingAwareProvider, AutoCloseable {
 
 	private static final Logger logger = LoggerFactory.getLogger(OpendaylightPacketcableProvider.class);
 	private NotificationProviderService notificationProvider;
@@ -86,13 +93,18 @@ public class OpendaylightPacketcableProvider implements
 	// The following holds the Future for the current make toast task.
 	// This is used to cancel the current toast.
 	private final AtomicReference<Future<?>> currentConnectionsTasks = new AtomicReference<>();
-
-	private List<InstanceIdentifier<CmtsInstance>> cmtsInstances;
+	private ProviderContext providerContext;
+	private NotificationProviderService notificationService;
+	private DataBroker dataBroker;
+	private ListenerRegistration<DataChangeListener> listenerRegistration;
+	private PCMMDataProcessor pcmmDataProcessor;
+	private IPCMMPolicyServer policyServer;
 
 	public OpendaylightPacketcableProvider() {
 		executor = Executors.newCachedThreadPool();
-		cmtsInstances = Lists.newArrayList();
-
+		pcmmDataProcessor = new PCMMDataProcessor();
+		policyServer=new PCMMPolicyServer();
+		policyServer.startServer();
 	}
 
 	public void setNotificationProvider(final NotificationProviderService salService) {
@@ -109,36 +121,25 @@ public class OpendaylightPacketcableProvider implements
 	@Override
 	public void close() throws ExecutionException, InterruptedException {
 		executor.shutdown();
-		if (dataProvider != null) {
-			for (Iterator<InstanceIdentifier<CmtsInstance>> iter = cmtsInstances.iterator(); iter.hasNext();) {
-				WriteTransaction tx = dataProvider.newWriteOnlyTransaction();
-				tx.delete(LogicalDatastoreType.OPERATIONAL, iter.next());
-				Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
-					@Override
-					public void onSuccess(final Void result) {
-						logger.debug("Delete commit result: " + result);
-					}
-
-					@Override
-					public void onFailure(final Throwable t) {
-						logger.error("Delete operation failed", t);
-					}
-				});
-			}
-		}
+		// if (dataProvider != null) {
+		// for (Iterator<InstanceIdentifier<CmtsInstance>> iter =
+		// cmtsInstances.iterator(); iter.hasNext();) {
+		// WriteTransaction tx = dataProvider.newWriteOnlyTransaction();
+		// tx.delete(LogicalDatastoreType.OPERATIONAL, iter.next());
+		// Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
+		// @Override
+		// public void onSuccess(final Void result) {
+		// logger.debug("Delete commit result: " + result);
+		// }
+		//
+		// @Override
+		// public void onFailure(final Throwable t) {
+		// logger.error("Delete operation failed", t);
+		// }
+		// });
+		// }
+		// }
 	}
-
-	// private CmtsInstance buildCmtsConnection(final String host) {
-	// InetAddress address = InetAddress.getByName(host);
-	// IpAddress ipAddress =
-	// IpAddressBuilder.getDefaultInstance(address.getHostAddress());
-	// PcmmConfigurationBuilder pcmmConfigurationBuilder = new
-	// PcmmConfigurationBuilder().setIpAddress(ipAddress);
-	// org.opendaylight.yang.gen.v1.urn.opendaylight.node.cmts.rev140120.cmts.instance.ConfigurationPointsBuilder
-	// configurationPointsBuilder = new
-	// org.opendaylight.yang.gen.v1.urn.opendaylight.node.cmts.rev140120.cmts.instance.ConfigurationPointsBuilder().build();
-	// return new CmtsAddedBuilder().setConfigurationPoints().build();
-	// }
 
 	/**
 	 * Implemented from the DataChangeListener interface.
@@ -150,141 +151,125 @@ public class OpendaylightPacketcableProvider implements
 	}
 
 	@Override
-	public Boolean getConnectionState() {
-		return null;
-	}
-
-	@Override
-	public void closeCmtsConnection() {
-		for (Iterator<InstanceIdentifier<CmtsInstance>> iter = cmtsInstances.iterator(); iter.hasNext();) {
-
-			// notificationProvider.publish(paramNotification)
-			// iter.next().getId()
+	public Future<RpcResult<AddFlowOutput>> addFlow(AddFlowInput input) {
+		Match match = input.getMatch();
+		//XXX this wrong fix it  
+		CmtsNode cmts = (CmtsNode) input.getNode();
+		///end wrong
+		IClassifier classifier = buildClassifier(match);
+		ITrafficProfile trafficProfie = null;
+		for (Instruction i : input.getInstructions().getInstruction()) {
+			if (i.getInstruction() instanceof ApplyActionsCase) {
+				ApplyActionsCase aac = (ApplyActionsCase) i.getInstruction();
+				for (Action a : aac.getApplyActions().getAction()) {
+					if (a.getAction() instanceof FlowspecCase) {
+						// not implemented
+						// trafficProfie = buildTrafficProfile(((FlowspecCase) a.getAction()).getFlowspec());
+					} else if (a.getAction() instanceof BestEffortCase) {
+						trafficProfie = buildTrafficProfile(((BestEffortCase) a.getAction()).getBestEffort());
+						break;
+					} else if (a.getAction() instanceof DocsisServiceClassNameCase) {
+						trafficProfie = buildTrafficProfile(((DocsisServiceClassNameCase) a.getAction()).getDocsisServiceClassName());
+						break;
+					}
+				}
+			}
 		}
-	}
-
-	@Override
-	public Future<RpcResult<CmtsAddOutput>> cmtsAdd(CmtsAddInput input) {
-		//TODO how to get this transaction id ???
-		TransactionId transactionId = null;
-		if (transactionId != null) {
-			CmtsAdded cmtsAdded = new CmtsAddedBuilder().setCmtsRef(input.getCmtsRef()).setId(input.getId()).setConfigurationPoints(input.getConfigurationPoints()).setTransactionUri(input.getTransactionUri()).setTransactionId(transactionId).setNode(input.getNode()).setManagedCableModemSubscribers(input.getManagedCableModemSubscribers()).build();
-			notificationProvider.publish(cmtsAdded);
-			CmtsAddOutput output = new CmtsAddOutputBuilder().setTransactionId(transactionId).build();
-			return Futures.immediateFuture(RpcResultBuilder.success(output).build());
-		} else {
-			return Futures.immediateFuture(RpcResultBuilder.<CmtsAddOutput> failed().build());
+		TransactionId transactionId=null;
+		try {
+			IPSCMTSClient requestCMTSConnection = policyServer.requestCMTSConnection(InetAddress.getByName(cmts.getAddress().getIpv4Address().getValue()));
+			transactionId=new TransactionId(new BigInteger(String.valueOf(requestCMTSConnection.getTransactionId())));
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public Future<RpcResult<CmtsRemoveOutput>> cmtsRemove(CmtsRemoveInput input) {
-		TransactionId transactionId = null;
-		if (transactionId != null) {
-			CmtsRemoved cmtsRemoved = new CmtsRemovedBuilder().setCmtsRef(input.getCmtsRef()).setId(input.getId()).setConfigurationPoints(input.getConfigurationPoints()).setTransactionUri(input.getTransactionUri()).setTransactionId(transactionId).setNode(input.getNode()).setManagedCableModemSubscribers(input.getManagedCableModemSubscribers()).build();
-			notificationProvider.publish(cmtsRemoved);
-			CmtsRemoveOutput output = new CmtsRemoveOutputBuilder().setTransactionId(transactionId).build();
-			return Futures.immediateFuture(RpcResultBuilder.success(output).build());
-		} else {
-			return Futures.immediateFuture(RpcResultBuilder.<CmtsRemoveOutput> failed().build());
+		if(transactionId==null)
+		{
+			return Futures.immediateFuture(RpcResultBuilder.<AddFlowOutput>failed().build());
 		}
+		return Futures.immediateFuture(
+				RpcResultBuilder.success(
+						new AddFlowOutputBuilder().setTransactionId(transactionId).build()
+						).build()
+						);
 	}
 
 	@Override
-	public Future<RpcResult<CmtsUpdateOutput>> cmtsUpdate(CmtsUpdateInput input) {
-		TransactionId transactionId = null;
-		if (transactionId != null) {
-			CmtsUpdated cmtsUpdated = new CmtsUpdatedBuilder().setCmtsRef(input.getCmtsRef()).setId(input.getOriginalCmts().getId()).setConfigurationPoints(input.getOriginalCmts().getConfigurationPoints()).setTransactionUri(input.getTransactionUri()).setTransactionId(transactionId).setNode(input.getNode()).setManagedCableModemSubscribers(input.getOriginalCmts().getManagedCableModemSubscribers()).build();
-			notificationProvider.publish(cmtsUpdated);
-			CmtsUpdateOutput output = new CmtsUpdateOutputBuilder().setTransactionId(transactionId).build();
-			return Futures.immediateFuture(RpcResultBuilder.success(output).build());
-		} else {
-			return Futures.immediateFuture(RpcResultBuilder.<CmtsUpdateOutput> failed().build());
-		}
+	public ITrafficProfile buildTrafficProfile(TrafficProfileDocsisServiceClassNameAttributes docsis) {
+		return pcmmDataProcessor.process(docsis);
 	}
 
 	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsBestEffortOutput>> trafficProfileGetDefaultsBestEffort(TrafficProfileGetDefaultsBestEffortInput input) {
+	public ITrafficProfile buildTrafficProfile(TrafficProfileBestEffortAttributes bestEffort) {
+		return pcmmDataProcessor.process(bestEffort);
+	}
+
+	@Override
+	public ITrafficProfile buildTrafficProfile(TrafficProfileFlowspecAttributes flowSpec) {
+		return pcmmDataProcessor.process(flowSpec);
+	}
+
+	@Override
+	public IClassifier buildClassifier(Match match) {
+		return pcmmDataProcessor.process(match);
+	}
+
+	@Override
+	public Future<RpcResult<RemoveFlowOutput>> removeFlow(RemoveFlowInput input) {
+		UdpMatchRangesRpcRemoveFlow updRange = input.getMatch().getAugmentation(UdpMatchRangesRpcRemoveFlow.class);
+		return null;
+	}
+
+	@Override
+	public Future<RpcResult<UpdateFlowOutput>> updateFlow(UpdateFlowInput input) {
+		OriginalFlow foo = input.getOriginalFlow();
+		UdpMatchRangesRpcUpdateFlowOriginal bar = foo.getMatch().getAugmentation(UdpMatchRangesRpcUpdateFlowOriginal.class);
+		UpdatedFlow updated = input.getUpdatedFlow();
+		UdpMatchRangesRpcUpdateFlowUpdated updatedRange = updated.getMatch().getAugmentation(UdpMatchRangesRpcUpdateFlowUpdated.class);
+
+		return null;
+	}
+
+	@Override
+	public Collection<? extends RpcService> getImplementations() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsDownstreamServiceOutput>> trafficProfileGetDefaultsDownstreamService(TrafficProfileGetDefaultsDownstreamServiceInput input) {
+	public Collection<? extends ProviderFunctionality> getFunctionality() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsFlowspecOutput>> trafficProfileGetDefaultsFlowspec(TrafficProfileGetDefaultsFlowspecInput input) {
-		// TODO Auto-generated method stub
-		return null;
+	public void onSessionInitiated(ProviderContext session) {
+		providerContext = session;
+		notificationService = session.getSALService(NotificationProviderService.class);
+		dataBroker = session.getSALService(DataBroker.class);
+		InstanceIdentifier<CmtsNode> listenTo = InstanceIdentifier.create(Nodes.class).child(Node.class).augmentation(CmtsCapableNode.class).child(CmtsNode.class);
+		listenerRegistration = dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, listenTo, this, DataChangeScope.BASE);
 	}
 
 	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsNonRealTimePollingServiceOutput>> trafficProfileGetDefaultsNonRealTimePollingService(TrafficProfileGetDefaultsNonRealTimePollingServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
+	public void onSessionInitialized(ConsumerContext session) {
+		// Noop
+
 	}
 
-	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsRealTimePollingServiceOutput>> trafficProfileGetDefaultsRealTimePollingService(TrafficProfileGetDefaultsRealTimePollingServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsUnsolicitedGrantServiceOutput>> trafficProfileGetDefaultsUnsolicitedGrantService(TrafficProfileGetDefaultsUnsolicitedGrantServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileGetDefaultsUnsolicitedGrantServiceWithActivityDetectionOutput>> trafficProfileGetDefaultsUnsolicitedGrantServiceWithActivityDetection(TrafficProfileGetDefaultsUnsolicitedGrantServiceWithActivityDetectionInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsBestEffortOutput>> trafficProfileUpdateDefaultsBestEffort(TrafficProfileUpdateDefaultsBestEffortInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsDownstreamServiceOutput>> trafficProfileUpdateDefaultsDownstreamService(TrafficProfileUpdateDefaultsDownstreamServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsFlowspecOutput>> trafficProfileUpdateDefaultsFlowspec(TrafficProfileUpdateDefaultsFlowspecInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsNonRealTimePollingServiceOutput>> trafficProfileUpdateDefaultsNonRealTimePollingService(TrafficProfileUpdateDefaultsNonRealTimePollingServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsRealTimePollingServiceOutput>> trafficProfileUpdateDefaultsRealTimePollingService(TrafficProfileUpdateDefaultsRealTimePollingServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsUnsolicitedGrantServiceOutput>> trafficProfileUpdateDefaultsUnsolicitedGrantService(TrafficProfileUpdateDefaultsUnsolicitedGrantServiceInput input) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<RpcResult<TrafficProfileUpdateDefaultsUnsolicitedGrantServiceWithActivityDetectionOutput>> trafficProfileUpdateDefaultsUnsolicitedGrantServiceWithActivityDetection(TrafficProfileUpdateDefaultsUnsolicitedGrantServiceWithActivityDetectionInput input) {
-		// TODO Auto-generated method stub
-		return null;
+	public void onSessionAdded(/* Whatever you need per CmtsConnection */) {
+		CompositeObjectRegistrationBuilder<OpendaylightPacketcableProvider> builder = CompositeObjectRegistration.<OpendaylightPacketcableProvider> builderFor(this);
+		/*
+		 * You will need a routedRpc registration per Cmts... I'm not doing the
+		 * accounting of storing them here, but you will need to so you can
+		 * close them when your provider is closed
+		 */
+		RoutedRpcRegistration<SalFlowService> registration = providerContext.addRoutedRpcImplementation(SalFlowService.class, this);
+		/*
+		 * You will need to get your identifier somewhere... this is your
+		 * nodeId. I would recommend adoption a convention like
+		 * "cmts:<ipaddress>" for CmtsCapableNodes
+		 * registration.registerPath(NodeContext.class, getIdentifier());
+		 */
 	}
 
 }

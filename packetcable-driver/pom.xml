@@ -10,7 +10,7 @@
 	</parent>
 	<artifactId>packetcable-driver</artifactId>
 	<packaging>bundle</packaging>
-	
+
 	<description>
         A lightweight implementation of PCMM COPS PDP client
     </description>
@@ -62,32 +62,18 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
-			<version>1.0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>13.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.sip</groupId>
-			<artifactId>jain-sip-ri</artifactId>
-			<version>1.2.158</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-primitives</groupId>
-			<artifactId>commons-primitives</artifactId>
-			<version>20041207.202534</version>
 		</dependency>
 	</dependencies>
 
@@ -112,8 +98,16 @@
 		</testResources>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<configuration>
+					<instructions>
+						<Export-Package>org.pcmm*, org.umu.cops*</Export-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.0</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>

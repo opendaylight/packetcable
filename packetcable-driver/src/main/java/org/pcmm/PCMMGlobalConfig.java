@@ -51,10 +51,30 @@ public class PCMMGlobalConfig {
 */
 
 /*  LAB Bench Layout */
+/*  Sunnyvale Lab
+*/
+    public static String DefaultCMTS = "10.200.90.3";
+    public static String SubscriberID = "10.50.201.51";
+    public static String dstIP = "10.200.90.10";
+    public static String srcIP = "10.50.201.51";
+
+ /*  Demo Kit Layout
+     public static String DefaultCMTS = "10.32.4.3";
+     public static String SubscriberID = "10.32.104.2";
+     public static String srcIP = "10.32.154.2";
+ */
+ 
+/*  LAB Bench Layout 
+     public static String DefaultCMTS = "10.32.15.3";
+     public static String SubscriberID = "10.32.115.143";
+     public static String dstIP = "10.32.0.234";
+     public static String srcIP = "10.32.215.111";
+
     public static String DefaultCMTS = "10.32.15.3";
     public static String SubscriberID = "10.32.115.143";
     public static String dstIP = "10.32.0.234";
     public static String srcIP = "10.32.215.111";
+*/
 
     public static String DefautRadius = "192.168.50.2";
     public static short srcPort = 8081;

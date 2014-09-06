@@ -1,0 +1,46 @@
+{
+    "flow": {
+        "cookie": "101",
+        "cookie_mask": "255",
+        "flow-name": "set-field-ipv6-dest-addr",
+        "hard-timeout": "1200",
+        "id": "256",
+        "idle-timeout": "3400",
+        "installHw": "false",
+        "instructions": {
+            "instruction": {
+                "apply-actions": {
+                    "action": {
+                        "order": "0",
+                        "set-field": {
+                            "ipv6-destination": "2160:2160:216::6431"
+                        }
+                    }
+                },
+                "order": "0"
+            }
+        },
+        "match": {
+            "ethernet-match": {
+                "ethernet-type": {
+                    "type": "34525"
+                }
+            },
+            "ip-match": {
+                "ip-dscp": "60",
+                "ip-ecn": "3",
+                "ip-protocol": "6"
+            },
+            "ipv6-destination": "fe80:2acf:e9ff:fe21::6431/94",
+            "ipv6-source": "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76",
+            "metadata": {
+                "metadata": "12345"
+            },
+            "tcp-destination-port": "8080",
+            "tcp-source-port": "183"
+        },
+        "priority": "2",
+        "strict": "false",
+        "table_id": "2"
+    }
+}

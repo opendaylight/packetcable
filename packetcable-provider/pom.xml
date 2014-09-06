@@ -17,6 +17,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>packetcable-driver</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>packetcable-model</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -52,12 +57,12 @@
 
 	<build>
 		<plugins>
- 			<plugin>
-			        <artifactId>maven-checkstyle-plugin</artifactId>
-			        <configuration>
-			          <skip>true</skip>
-			        </configuration>
-   			</plugin>
+			<plugin>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.felix</groupId>

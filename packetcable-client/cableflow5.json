@@ -1,0 +1,50 @@
+{
+    "flow": {
+        "cookie": "27",
+        "cookie_mask": "255",
+        "flow-name": "FooXf27",
+        "hard-timeout": "1200",
+        "id": "150",
+        "idle-timeout": "3400",
+        "installHw": "false",
+        "instructions": {
+            "instruction": {
+                "apply-actions": {
+                    "action": {
+                        "dec-nw-ttl": null,
+                        "order": "0"
+                    }
+                },
+                "order": "0"
+            }
+        },
+        "match": {
+            "ethernet-match": {
+                "ethernet-type": {
+                    "type": "34525"
+                }
+            },
+            "ip-match": {
+                "ip-dscp": "60",
+                "ip-ecn": "3",
+                "ip-protocol": "6"
+            },
+            "ipv6-destination": "fe80:2acf:e9ff:fe21::6431/94",
+            "ipv6-ext-header": {
+                "ipv6-exthdr": "0"
+            },
+            "ipv6-label": {
+                "ipv6-flabel": "33"
+            },
+            "ipv6-source": "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76",
+            "metadata": {
+                "metadata": "12345"
+            },
+            "tcp-destination-port": "8080",
+            "tcp-source-port": "183"
+        },
+        "priority": "2",
+        "strict": "false",
+        "table_id": "2"
+    }
+}

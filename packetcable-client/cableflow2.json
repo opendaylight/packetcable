@@ -1,0 +1,36 @@
+{
+    "flow": {
+        "barrier": "false",
+        "cookie": "10",
+        "cookie_mask": "10",
+        "flow-name": "FooXf22",
+        "hard-timeout": "0",
+        "id": "111",
+        "idle-timeout": "0",
+        "installHw": "false",
+        "instructions": {
+            "instruction": {
+                "apply-actions": {
+                    "action": {
+                        "flood-all-action": null,
+                        "order": "1"
+                    }
+                },
+                "order": "1"
+            }
+        },
+        "match": {
+            "ethernet-match": {
+                "ethernet-type": {
+                    "type": "2048"
+                }
+            },
+            "ipv4-destination": "10.0.0.1/24"
+        },
+        "out_group": "2",
+        "out_port": "10",
+        "priority": "2",
+        "strict": "true",
+        "table_id": "2"
+    }
+}

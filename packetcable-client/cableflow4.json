@@ -1,0 +1,34 @@
+{
+    "flow": {
+        "barrier": "false",
+        "cookie": "10",
+        "cookie_mask": "10",
+        "flow-name": "FooXf45",
+        "hard-timeout": "12",
+        "id": "168",
+        "idle-timeout": "34",
+        "installHw": "false",
+        "instructions": {
+            "instruction": {
+                "apply-actions": {
+                    "action": {
+                        "drop-action": null,
+                        "order": "0"
+                    }
+                },
+                "order": "0"
+            }
+        },
+        "match": {
+            "metadata": {
+                "metadata": "500",
+                "metadata-mask": "[B@46645a66"
+            }
+        },
+        "out_group": "2",
+        "out_port": "10",
+        "priority": "2",
+        "strict": "false",
+        "table_id": "2"
+    }
+}

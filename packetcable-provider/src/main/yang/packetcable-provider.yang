@@ -1,0 +1,25 @@
+module packetcable-provider {
+
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:packetcable:packetcable-provider";
+    prefix "packetcable-provider";
+
+    import config { prefix config; revision-date 2013-04-05; }
+    import rpc-context { prefix rpcx; revision-date 2013-06-17; }
+    import opendaylight-md-sal-binding { prefix mdsal; revision-date 2013-10-28; }
+    import ietf-inet-types {prefix inet;revision-date 2010-09-24;}
+
+    description
+        "This module contains the base YANG definitions for
+        packetcable-provider.";
+
+    revision "2014-01-31" {
+        description
+            "Initial revision.";
+    }
+
+    identity packetcable-provider{
+        base config:service-type;
+        config:java-class "org.opendaylight.controller.packetcable.provider.OpenDaylightPacketCableProviderService";
+    }
+}
