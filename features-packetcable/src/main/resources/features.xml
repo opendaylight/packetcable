@@ -27,22 +27,25 @@
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>
     </feature>
+
     <!--
         Define your features.  It is useful to list then in order of dependency.  So if A depends on B, list A first.
         It's also nice to list inside a feature, first the features it needs, then the bundles it needs, then the configfiles.
             <feature version='0.0.3-SNAPSHOT'>odl-openflowplugin-flow-services</feature>
 	    <bundle>mvn:com.google.common.collect/collect/14.0</bundle>
-        <feature name='odl-packetcable-consumer' version='${project.version}' description='OpenDaylight :: packetcable :: Consumer '>
-            <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
-            <feature version='${project.version}'>odl-packetcable-model</feature>
-            <feature version='${project.version}'>odl-packetcable-provider</feature>
-            <feature version='${project.version}'>odl-packetcable-driver</feature>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-model/${project.version}</bundle>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/${project.version}</bundle>
-            <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
-        </feature>
-    -->
 
+    -->
+        <!--- * Basic MD-SAL Consumer -->
+<!--         <feature name='odl-packetcable-consumer' version='${project.version}' description='OpenDaylight :: packetcable :: Consumer '> -->
+<!--             <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature> -->
+<!--             <feature version='${project.version}'>odl-packetcable-model</feature> -->
+<!--             <feature version='${project.version}'>odl-packetcable-consumer</feature> -->
+<!--             <feature version='${project.version}'>odl-packetcable-driver</feature> -->
+<!--             <bundle>mvn:org.opendaylight.packetcable/packetcable-model/${project.version}</bundle> -->
+<!--             <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle> -->
+<!--             <bundle>mvn:org.opendaylight.packetcable/packetcable-consumer/${project.version}</bundle> -->
+<!--         </feature> -->
+    
         <!--- * Basic MD-SAL Model feature -->
         <feature name='odl-packetcable-model' version='${project.version}' description='OpenDaylight :: packetcable :: Model'>
             <feature version='0.6.2-SNAPSHOT'>odl-yangtools-binding</feature>
@@ -56,9 +59,10 @@
             <feature version='1.1-SNAPSHOT'>odl-mdsal-broker</feature>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/${project.version}</bundle>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
-	    <feature version='${project.version}'>odl-flow-model</feature>
+	        <feature version='${project.version}'>odl-flow-model</feature>
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>
+            <configfile finalname="etc/opendaylight/karaf/80-packetcable.xml">mvn:org.opendaylight.packetcable/packetcable-config/${project.version}/xml/config</configfile>
         </feature>
 
         <!--- * * -->

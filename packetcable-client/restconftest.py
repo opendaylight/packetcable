@@ -422,6 +422,15 @@ class CableflowTests(object):
                             # pprint (self.flows[filename], width=4)
                             json.dumps(json.loads(data), indent=4)
 
+	# print flow dictionary
+	l = self.flows.items()
+	l.sort()
+        #for k,v in self.flows.items():
+        for k,v in l:
+            print k
+
+
+
     def exit_app():
         print "Quit           "
         exit(0)
