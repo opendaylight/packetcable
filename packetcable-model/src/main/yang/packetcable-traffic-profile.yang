@@ -19,7 +19,7 @@ module packetcable-traffic-profile
          data definition statements related to the configuration
          of Traffic Profiles.";
 
-    revision "2014-08-08" {
+    revision 2014-09-08 {
         description "Initial revision of packetcable traffic profile";
     }        
 
@@ -516,7 +516,7 @@ Attribute Masks define a specific set of attributes associated with a DOCSIS 3.0
         uses default-envelope-attributes;
                 description "mandatory";
     }
-    container bereserved-envelope {
+    container be-reserved-envelope {
         uses default-envelope-attributes;
                 description "optional";
     }

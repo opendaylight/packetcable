@@ -1,0 +1,394 @@
+<< [[PacketCablePCMM:Main | Main]] 
+
+[[Project_Proposals:PacketCablePCMM| Project Proposal]] >>
+
+[[Project_Proposals:PacketCablePCMM|Release_Plan_Helium]] >>
+
+
+=Developer and Testing (*Preliminary*)=
+== Specification ==
+
+[http://www.cablelabs.com/wp-content/uploads/specdocs/PKT-SP-MM-I05-091029.pdf PacketCable™ Specification Multimedia Specification PKT-SP-MM-I05-091029]
+== Current Bug List ==
+[https://bugs.opendaylight.org/buglist.cgi?bug_status=__open__&content=packetcable List bugs]
+
+== System Overview ==
+These components introduce a DOCSIS QoS Service Flow management using the PCMM protocol.  The driver component is responsible for the PCMM/COPS/PDP functionality required to service requests from PacketCable Provider and FlowManager.  Requests are transposed into PCMM Gate Control messages and transmitted via COPS to the CMTS. This plugin adheres to the PCMM/COPS/PDP functionality defined in the CableLabs specification.  PacketCable solution is an MDSAL compliant component.
+
+[[File:Screenshot6.png]]
+
+== Packetcable Components ==
+packetcable is comprised of three OpendayLight bundles
+
+{| class="wikitable"
+|-
+! Bundle !! Description
+|-
+| packetcable-model || Contains the YANG information model for flows and nodes
+|-
+| packetcable-provider || Provider hosts the model processing, RESTCONF, API implmentation, and brokers requests to driver
+|-
+| packetcable-driver || The codec for transforming the model into the appropriate PCMM Gate message for flows and CMTS connections.
+|}
+
+[[File:Screenshot7.png]]
+
+See [https://git.opendaylight.org/gerrit/gitweb?p=packetcable.git;a=tree;f=packetcable-model/src/main/yang YANG Model]
+
+== Download and Install ==
+
+Current instructions pertain to RC0
+
+=== Download===
+[http://nexus.opendaylight.org/content/groups/staging/org/opendaylight/integration/distribution-karaf/0.2.0-Helium-RC0/distribution-karaf-0.2.0-Helium-RC0.zip Download RC0]
+
+=== Unzip ===
+<pre>
+unzip distribution-karaf-0.2.0-Helium-RC0.zip
+</pre>
+
+=== Clean out the local .m2 ===
+
+Karaf can mistakenly pick up artifacts from your local .m2, so
+<pre>
+rm -rf ~/.m2/repository/org/opendaylight
+</pre>
+
+=== Run Karaf ===
+<pre>
+cd distribution-karaf-0.2.0-Helium-RC0/bin/
+./karaf
+</pre>
+
+== Prepare to Test == 
+
+=== What features should we install? ===
+
+<pre>
+opendaylight-user@root>feature:install odl-l2switch-switch odl-restconf odl-mdsal-broker odl-restconf odl-adsal-all odl-openflowplugin-flow-services odl-openflowjava-protocol odl-ovsdb-all  odl-openflow-nxm-extensions odl-adsal-compatibility  odl-dlux-core odl-packetcable-all odl-mdsal-apidocs odl-mdsal-xsql
+</pre>
+
+=== How is ODL auto starting a series of bundles using Karaf? ===
+
+Edit etc/org.apache.karaf.features.cfg ‘featuresBoot' 
+<pre>
+#
+# Comma separated list of features to install at startup
+#
+featuresBoot=config,standard,region,package,kar,ssh,management,odl-l2switch-switch,odl-restconf,odl-mdsal-broker,odl-restconf,odl-adsal-all,odl-openflowplugin-flow-services,odl-openflowjava-protocol,odl-ovsdb-all,odl-openflow-nxm-extensions,odl-adsal-compatibility,,odl-dlux-core,odl-packetcable-all,odl-mdsal-apidocs,odl-mdsal-xsql
+
+</pre>
+
+=== How can I create a system service to start Karaf? ===
+
+Install http://karaf.apache.org/manual/latest/users-guide/wrapper.html
+<pre>
+opendaylight-user@root>feature:install service-wrapper
+opendaylight-user@root>wrapper:install --help
+DESCRIPTION
+        wrapper:install
+
+Install the container as a system service in the OS.
+
+SYNTAX
+        wrapper:install [options]
+
+OPTIONS
+        -d, --display
+                The display name of the service.
+                (defaults to karaf)
+        --help
+                Display this help message
+        -s, --start-type
+                Mode in which the service is installed. AUTO_START or DEMAND_START (Default: AUTO_START)
+                (defaults to AUTO_START)
+        -n, --name
+                The service name that will be used when installing the service. (Default: karaf)
+                (defaults to karaf)
+        -D, --description
+                The description of the service.
+                (defaults to )
+
+opendaylight-user@root> wrapper:install
+Creating file: /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/bin/karaf-wrapper
+Creating file: /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/bin/karaf-service
+Creating file: /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/etc/karaf-wrapper.conf
+Creating file: /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/lib/libwrapper.so
+Creating file: /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/lib/karaf-wrapper.jar
+Creating file: /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/lib/karaf-wrapper-main.jar
+
+Setup complete.  You may wish to tweak the JVM properties in the wrapper configuration file:
+/home/user/odl/distribution-karaf-0.2.0-Helium-RC0/etc/karaf-wrapper.conf
+before installing and starting the service.
+
+
+Ubuntu/Debian Linux system detected:
+  To install the service:
+    $ ln -s /home/user/odl/distribution-karaf-0.2.0-Helium-RC0/bin/karaf-service /etc/init.d/
+
+  To start the service when the machine is rebooted:
+    $ update-rc.d karaf-service defaults
+
+  To disable starting the service when the machine is rebooted:
+    $ update-rc.d -f karaf-service remove
+
+  To start the service:
+    $ /etc/init.d/karaf-service start
+
+  To stop the service:
+    $ /etc/init.d/karaf-service stop
+
+  To uninstall the service :
+    $ rm /etc/init.d/karaf-service
+
+</pre>
+
+TODO:  Stops and dies
+
+== Accessing User Interface Assets  ==
+
+
+=== Explore UI ===
+http://localhost:8181/dlux/index.html
+
+Sign in
+
+[[File:Screenshot4.png||Dlux Login]]
+
+Manage Flows
+
+[[File:Screenshot3.png|500x600px||Dlux Flows]]
+
+Manage Nodes
+
+[[File:Screenshot2.png|500x600px||Dlux Nodes]]
+
+=== Explore and exercise the PacketCable REST API ===
+http://localhost:8181/apidoc/explorer/index.html
+
+[[ #RESTCONF_API_Explorer | See Explorer ]]
+
+== How do I get external access to UI assets? ==
+
+TODO:  Short answer is you don't.
+
+Using Ubuntu 14.04LTS, install haproxy
+
+<pre>
+sudo apt-get install haproxy
+</pre>
+
+Ensure haproxy is enabled.
+
+<pre>
+cat /etc/default/haproxy 
+# Set ENABLED to 1 if you want the init script to start haproxy.
+ENABLED=1
+# Add extra flags here.
+#EXTRAOPTS="-de -m 16"
+</pre>
+
+Add configuration to /etc/haproxy/haproxy.cfg to proxy from port 8191 to localhost:8181 
+
+<pre>
+frontend public
+  bind *:8191
+  default_backend www
+
+backend www
+  timeout server 30s
+  server www1 127.0.0.1:8181
+</pre>
+
+Debug mode
+<pre>
+ sudo /etc/init.d/haproxy stop
+ sudo /usr/sbin/haproxy -f /etc/haproxy/haproxy.cfg -VVVV -db
+</pre>
+
+Let'er rip
+<pre>
+ sudo /etc/init.d/haproxy restart
+ sudo /etc/init.d/haproxy status
+</pre>
+
+== Tools for Testing ==
+
+=== RESTCONF API Explorer ===
+
+http://localhost:8181/apidoc/explorer/index.html
+
+Add a CMTS to Opendaylight Inventory
+
+[[File:Screenshot1.png|Add CMTS using RESTCONF Explorer]]
+
+
+=== Postman ===
+
+[https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm?hl=en Configure the Chrome browser]
+
+[https://git.opendaylight.org/gerrit/gitweb?p=packetcable.git;a=tree;f=packetcable-client  Download and import sample packetcable collection]
+
+
+[[File:Screenshot5.png|Postman]]
+
+=== Custom Testsuite ===
+
+Most of the [https://wiki.opendaylight.org/view/OpenDaylight_OpenFlow_Plugin::Python_test_scripts Openflow tests for RESTCONF] can be adapted for PCMM and service flow testing.  [https://git.opendaylight.org/gerrit/gitweb?p=packetcable.git;a=tree;f=packetcable-client Browse this folder] for WIP of tests and examples used for minimum acceptance testing.
+
+==== restconfapi.py ====
+
+Scripted series of packetcable actions testing minimum compliance.
+
+For example,  
+# Add CMTS, 
+# Add IPv4 Flow 1, 
+# Add IPv6 Flow 2, 
+# Delete Flow 2, 
+# Delete Flow 1, 
+# Delete CMTS 1
+
+Other flows can be formulated and added to create a regression test of what kind of flows are interesting for use cases.  Multicast?
+
+==== flow_config_perf_pcmm.py ====
+
+For load testing there is this nice tool that could be repurpose to load test a CMTS.  TODO: Adapt this script for load testing PCMM on a CMTS.
+
+=== Yang-IDE ===
+
+[https://github.com/xored/yang-ide/wiki/Setup-and-build Setup and Build Yang-IDE for Eclipse]
+
+
+== Using Wireshark to Trace PCMM ==
+
+# To start wireshark with privileges issue the following command: <pre>sudo wireshark &</pre>
+# Select the interface to monitor.
+# Use the Filter to only display COPS messages by applying “cops” in the filter field. 
+
+[[File:Screenshot8.png]]
+
+== Debugging and Verifying DQoS Gate (Flows) on the CMTS ==
+
+[http://books.google.com/books?id=zNnCLUa8CHQC&pg=PA701&lpg=PA701&dq=show+packetcable+gate  This book] serves as a good reference.  Below are some of the most useful CMTS commands to verify flows have been enabled on the CMTS.
+
+=== Cisco ===
+
+[http://www.cisco.com/c/en/us/td/docs/cable/cmts/cmd_ref/b_cmts_cable_cmd_ref.pdf Cisco CMTS Cable Command Reference]
+
+=== Find the Cable Modem ===
+
+<pre>
+10k2-DSG#show cable modem
+                                                                                  D
+MAC Address    IP Address      I/F           MAC           Prim RxPwr  Timing Num I
+                                             State         Sid  (dBmv) Offset CPE P
+0010.188a.faf6 0.0.0.0         C8/0/0/U0     offline       1    0.00   1482   0   N
+74ae.7600.01f3 10.32.115.150   C8/0/10/U0    online        1    -0.50  1431   0   Y
+0010.188a.fad8 10.32.115.142   C8/0/10/UB    w-online      2    -0.50  1507   1   Y
+000e.0900.00dd 10.32.115.143   C8/0/10/UB    w-online      3    1.00   1677   0   Y
+e86d.5271.304f 10.32.115.168   C8/0/10/UB    w-online      6    -0.50  1419   1   Y
+</pre>
+
+=== Show PCMM Plugin Connection ===
+
+<pre>
+10k2-DSG#show packetcabl ?
+  cms     Gate Controllers connected to this PacketCable client
+  event   Event message server information
+  gate    PacketCable gate information
+  global  PacketCable global information
+
+10k2-DSG#show packetcable cms
+GC-Addr        GC-Port  Client-Addr    COPS-handle  Version PSID Key PDD-Cfg
+
+
+10k2-DSG#show packetcable cms
+GC-Addr        GC-Port  Client-Addr    COPS-handle  Version PSID Key PDD-Cfg
+10.32.0.240    54238    10.32.15.3     0x4B9C8150/1    4.0   0    0   0   
+</pre>
+
+=== Show COPS Messages ===
+
+ <pre>debug cops details</pre>
+
+=== Use CM Mac Address to List Service Flows ===
+
+<pre>
+10k2-DSG#show cable modem    
+                                                                                  D
+MAC Address    IP Address      I/F           MAC           Prim RxPwr  Timing Num I
+                                             State         Sid  (dBmv) Offset CPE P
+0010.188a.faf6 ---             C8/0/0/UB     w-online      1    0.50   1480   1   N
+74ae.7600.01f3 10.32.115.150   C8/0/10/U0    online        1    -0.50  1431   0   Y
+0010.188a.fad8 10.32.115.142   C8/0/10/UB    w-online      2    -0.50  1507   1   Y
+000e.0900.00dd 10.32.115.143   C8/0/10/UB    w-online      3    0.00   1677   0   Y
+e86d.5271.304f 10.32.115.168   C8/0/10/UB    w-online      6    -0.50  1419   1   Y
+
+
+10k2-DSG#show cable modem 000e.0900.00dd service-flow
+                                                 
+
+SUMMARY:
+MAC Address    IP Address      Host          MAC           Prim  Num Primary    DS
+                               Interface     State         Sid   CPE Downstream RfId
+000e.0900.00dd 10.32.115.143   C8/0/10/UB    w-online      3     0   Mo8/0/2:1  2353
+
+
+Sfid  Dir Curr  Sid   Sched  Prio MaxSusRate  MaxBrst     MinRsvRate  Throughput 
+          State       Type
+23    US  act   3     BE     0    0           3044        0           39         
+30    US  act   16    BE     0    500000      3044        0           0          
+24    DS  act   N/A   N/A    0    0           3044        0           17         
+
+
+
+UPSTREAM SERVICE FLOW DETAIL:
+
+SFID  SID   Requests   Polls      Grants     Delayed    Dropped    Packets   
+                                             Grants     Grants
+23    3     784        0          784        0          0          784       
+30    16    0          0          0          0          0          0         
+
+
+DOWNSTREAM SERVICE FLOW DETAIL:
+
+SFID  RP_SFID QID    Flg Policer               Scheduler             FrwdIF    
+                         Xmits      Drops      Xmits      Drops
+24    33019   131550     0          0          777        0          Wi8/0/2:2
+
+Flags Legend:
+$: Low Latency Queue (aggregated)
+~: CIR Queue
+</pre>
+
+=== Deleting a PCMM Gate Message from the CMTS ===
+
+<pre>10k2-DSG#test cable dsd  000e.0900.00dd 30</pre>
+
+=== Find service flows ===
+All gate controllers currently connected to the PacketCable client are displayed
+<pre>
+show cable modem 00:11:22:33:44:55 service flow   ????
+show cable modem
+</pre>
+
+
+=== Debug and display PCMM Gate messages ===
+<pre>
+debug packetcable gate control
+debug packetcable gate events
+show packetcable gate summary
+show packetcable global
+show packetcable cms
+</pre>
+
+=== Debug COPS messages ===
+<pre>
+debug cops detail
+debug packetcable cops
+debug cable dynamic_qos trace
+</pre>
+
+=== Arris ===
+
+

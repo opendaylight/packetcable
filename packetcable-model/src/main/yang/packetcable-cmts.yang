@@ -13,10 +13,11 @@ module packetcable-cmts
 
     description "This module contains a collection of CMTS definitions";
     organization "OpenDaylight Project";
-    contact "TBD";
-    revision "2014-01-20" {
+
+    revision 2014-09-09 {
         description "Initial revision of packetcable cmts";
     }        
+
     grouping cmts-node-attributes {
         description "A PCMM capable CMTS and other available configuration resources.";
         
@@ -28,6 +29,7 @@ module packetcable-cmts
         leaf port {
             type inet:port-number;
             description "TCP port number to connect";
+            default 3918;
         }
     }
     

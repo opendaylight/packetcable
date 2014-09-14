@@ -3,16 +3,16 @@
         "barrier": "false",
         "cookie": "10",
         "cookie_mask": "10",
-        "flow-name": "FooXf22",
+        "flow-name": "FooXf3",
         "hard-timeout": "0",
-        "id": "111",
+        "id": "3",
         "idle-timeout": "0",
-        "installHw": "false",
+        "installHw": "true",
         "instructions": {
             "instruction": {
                 "apply-actions": {
                     "action": {
-                        "flood-all-action": null,
+                        "traffic-profile": "docsis-service-class-name",
                         "order": "1"
                     }
                 },
@@ -25,12 +25,14 @@
                     "type": "2048"
                 }
             },
-            "ipv4-destination": "10.0.0.1/24"
+            "ipv4-source": "10.0.0.1/24",
+            "tcp-source-port": "8080",
+            "ipv4-destination": "10.0.0.2/24",
+            "tcp-destination-port-start": "80",
+            "tcp-destination-port-end": "90"
         },
-        "out_group": "2",
-        "out_port": "10",
         "priority": "2",
         "strict": "true",
-        "table_id": "2"
+        "table_id": "0"
     }
 }

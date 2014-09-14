@@ -84,13 +84,11 @@
 
       Examples:
     -->
-      <!--
       <dependency>
         <groupId>org.opendaylight.packetcable</groupId>
         <artifactId>packetcable-consumer</artifactId>
         <version>${project.version}</version>
       </dependency>
-      -->
       <dependency>
         <groupId>org.opendaylight.packetcable</groupId>
         <artifactId>packetcable-provider</artifactId>

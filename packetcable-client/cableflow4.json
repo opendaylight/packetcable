@@ -2,17 +2,16 @@
     "flow": {
         "barrier": "false",
         "cookie": "10",
-        "cookie_mask": "10",
-        "flow-name": "FooXf45",
-        "hard-timeout": "12",
-        "id": "168",
-        "idle-timeout": "34",
-        "installHw": "false",
+        "cookie_mask": "255",
+        "flow-name": "FooXf4",
+        "hard-timeout": "1200",
+        "id": "4",
+        "idle-timeout": "3400",
         "instructions": {
             "instruction": {
                 "apply-actions": {
                     "action": {
-                        "drop-action": null,
+                        "traffic-profile": "best-effort",
                         "order": "0"
                     }
                 },
@@ -20,15 +19,31 @@
             }
         },
         "match": {
-            "metadata": {
-                "metadata": "500",
-                "metadata-mask": "[B@46645a66"
-            }
+            "ethernet-match": {
+                "ethernet-destination": {
+                    "address": "ff:ff:29:01:19:61"
+                },
+                "ethernet-source": {
+                    "address": "00:00:00:11:23:ae"
+                },
+                "ethernet-type": {
+                    "type": "2048"
+                }
+            },
+            "in-port": "0",
+            "ip-match": {
+                "ip-dscp": "0",
+                "ip-ecn": "0",
+                "ip-protocol": "132"
+            },
+            "ipv4-destination": "172.168.5.6/16",
+            "ipv4-source": "17.1.2.3/8",
+            "udp-destination-port": "384",
+            "udp-source-port-start": "768",
+            "udp-source-port-end": "768"
         },
-        "out_group": "2",
-        "out_port": "10",
         "priority": "2",
         "strict": "false",
-        "table_id": "2"
+        "table_id": "0"
     }
 }

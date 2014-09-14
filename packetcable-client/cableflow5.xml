@@ -1,50 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flow xmlns="urn:opendaylight:flow:inventory">
     <strict>false</strict>
-    <flow-name>FooXf27</flow-name>
-    <id>150</id>
-    <cookie_mask>255</cookie_mask>
-    <cookie>27</cookie>
-    <table_id>2</table_id>
-    <priority>2</priority>
-    <hard-timeout>1200</hard-timeout>
-    <idle-timeout>3400</idle-timeout>
-    <installHw>false</installHw>
     <instructions>
         <instruction>
             <order>0</order>
             <apply-actions>
                 <action>
                     <order>0</order>
-                    <dec-nw-ttl/>
+                    <dec-mpls-ttl/>
                 </action>
             </apply-actions>
         </instruction>
     </instructions>
+    <table_id>2</table_id>
+    <id>128</id>
+    <cookie_mask>255</cookie_mask>
     <match>
         <ethernet-match>
             <ethernet-type>
-                <type>34525</type>
+                <type>2048</type>
             </ethernet-type>
+            <ethernet-destination>
+                <address>ff:ff:ff:ff:ff:ff</address>
+            </ethernet-destination>
+            <ethernet-source>
+                <address>00:00:00:00:23:ae</address>
+            </ethernet-source>
         </ethernet-match>
-        <ipv6-source>1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76</ipv6-source>
-        <ipv6-destination>fe80:2acf:e9ff:fe21::6431/94</ipv6-destination>
-        <metadata>
-            <metadata>12345</metadata>
-        </metadata>
-        <ipv6-label>
-            <ipv6-flabel>33</ipv6-flabel>
-        </ipv6-label>
-        <ipv6-ext-header>
-            <ipv6-exthdr>0</ipv6-exthdr>
-        </ipv6-ext-header>
-        <ip-match>
-            <ip-protocol>6</ip-protocol>
-            <ip-dscp>60</ip-dscp>
-            <ip-ecn>3</ip-ecn>
-        </ip-match>
-        <tcp-source-port>183</tcp-source-port>
-        <tcp-destination-port>8080</tcp-destination-port>
+        <ipv4-source>10.1.2.3/24</ipv4-source>
+        <ipv4-destination>20.4.5.6/16</ipv4-destination>
+        <in-port>0</in-port>
     </match>
+    <hard-timeout>12</hard-timeout>
+    <flags>FlowModFlags [_cHECKOVERLAP=false, _rESETCOUNTS=false, _nOPKTCOUNTS=false, _nOBYTCOUNTS=false, _sENDFLOWREM=false]</flags>
+    <cookie>5</cookie>
+    <idle-timeout>34</idle-timeout>
+    <flow-name>FooXf5</flow-name>
+    <priority>2</priority>
+    <barrier>false</barrier>
 </flow>
-

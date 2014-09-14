@@ -13,7 +13,7 @@ module packetcable-match-types
     import opendaylight-flow-types {prefix flow;revision-date "2013-10-26";}
     import opendaylight-flow-statistics {prefix odl-flow-stats;revision-date "2013-08-19";}
 
-    revision "2014-01-20" {
+    revision 2014-09-09 {
         description "Initial revision of packetcable match types";
     }        
     
@@ -89,8 +89,8 @@ module packetcable-match-types
                 description "TCP source port end.";
                 type inet:port-number;
             }
-            leaf tcp-destination-port-begin {
-                description "TCP destination port begin.";
+            leaf tcp-destination-port-start {
+                description "TCP destination port start.";
                 type inet:port-number;
             }
             leaf tcp-destination-port-end {

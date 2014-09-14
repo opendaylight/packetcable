@@ -9,27 +9,27 @@ import java.net.UnknownHostException;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv6Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.TrafficProfileBestEffortAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.TrafficProfileDocsisServiceClassNameAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.TrafficProfileFlowspecAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.traffic.profile.best.effort.attributes.BeAuthorizedEnvelope;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.traffic.profile.best.effort.attributes.BeCommittedEnvelope;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140808.traffic.profile.best.effort.attributes.BereservedEnvelope;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.TrafficProfileBestEffortAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.TrafficProfileDocsisServiceClassNameAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.TrafficProfileFlowspecAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.traffic.profile.best.effort.attributes.BeAuthorizedEnvelope;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.traffic.profile.best.effort.attributes.BeCommittedEnvelope;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.traffic.profile.best.effort.attributes.BeReservedEnvelope;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.SubscriberIdRpcAddFlow;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.TcpMatchRangesAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.TcpMatchRangesRpcAddFlow;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.UdpMatchRangesRpcAddFlow;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.tcp.match.ranges.attributes.TcpMatchRanges;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140120.udp.match.ranges.attributes.UpdMatchRanges;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.SubscriberIdRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.TcpMatchRangesAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.TcpMatchRangesRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.UdpMatchRangesAttributes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.UdpMatchRangesRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.tcp.match.ranges.attributes.TcpMatchRanges;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.udp.match.ranges.attributes.UpdMatchRanges;
 import org.pcmm.gates.IClassifier;
 import org.pcmm.gates.IExtendedClassifier;
 import org.pcmm.gates.ITrafficProfile;
 import org.pcmm.gates.impl.BestEffortService;
+import org.pcmm.gates.impl.BestEffortService.BEEnvelop;
 import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.gates.impl.ExtendedClassifier;
-import org.pcmm.gates.impl.BestEffortService.BEEnvelop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +50,7 @@ public class PCMMDataProcessor {
 		return trafficProfile;
 	}
 
+	
 	public ITrafficProfile process(TrafficProfileDocsisServiceClassNameAttributes docsis) {
 		DOCSISServiceClassNameTrafficProfile trafficProfile = new DOCSISServiceClassNameTrafficProfile();
 		trafficProfile.setServiceClassName(docsis.getServiceClassName());
@@ -108,7 +109,7 @@ public class PCMMDataProcessor {
 
 	private void getBEReservedEnvelop(TrafficProfileBestEffortAttributes bestEffort, BestEffortService trafficProfile) {
 		BEEnvelop reservedEnvelop = trafficProfile.getReservedEnvelop();
-		BereservedEnvelope beReservedEnvelope = bestEffort.getBereservedEnvelope();
+		BeReservedEnvelope beReservedEnvelope = bestEffort.getBeReservedEnvelope();
 		if (beReservedEnvelope.getTrafficPriority() != null)
 			reservedEnvelop.setTrafficPriority(beReservedEnvelope.getTrafficPriority().byteValue());
 		else
@@ -146,7 +147,7 @@ public class PCMMDataProcessor {
 		if (tcpRange != null) {
 			classifier.setProtocol(IClassifier.Protocol.TCP);
 			TcpMatchRanges tcpMatchRanges = tcpRange.getTcpMatchRanges();
-			PortNumber tcpDestinationPortStart = tcpMatchRanges.getTcpDestinationPortBegin();
+			PortNumber tcpDestinationPortStart = tcpMatchRanges.getTcpDestinationPortStart();
 			if (tcpDestinationPortStart != null && tcpDestinationPortStart.getValue() != null)
 				dstPortStart = tcpDestinationPortStart.getValue().shortValue();
 			PortNumber tcpSourcePortStart = tcpMatchRanges.getTcpSourcePortStart();

@@ -201,7 +201,7 @@ class Menu(object):
         print "Invalid option!"
 
     def run(self):
-	self.print_menu()
+	#self.print_menu()
         actions = {
 	"1": tests.flow_add_1, 
 	"2": tests.flow_add_2, 
@@ -227,40 +227,42 @@ class Menu(object):
 
 
 class ODLCableflowRestconf(object):
-    def __init__(self):
-	ws.set_port(8181)	
+    def __init__(self, ws):
+	self.ws = ws
+	self.ws.set_port(8181)	
+	
 
     def topology(self):
-        ws.set_path('/restconf/operational/opendaylight-inventory:nodes')
-        content = ws.get()
+        self.ws.set_path('/restconf/operational/opendaylight-inventory:nodes')
+        content = self.ws.get()
         j=json.loads(content[2])
         ws.show(j)
 
     def cableflow_list(self):
-        ws.set_path('/config/opendaylight-inventory:nodes/node/%d/flow-node-inventory:table/0/flow')
-        content = ws.get()
+        self.ws.set_path('/config/opendaylight-inventory:nodes/node/%d/flow-node-inventory:table/0/flow')
+        content = self.ws.get()
         j=json.loads(content[2])
-        ws.show(j)
+        self.ws.show(j)
         #ws.show(content[2])
 	return(j)
 
     def cableflow_update(self, flow):
-        ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"' % flow['node']['id'],  flow['id'] )
-        content = ws.post(flow)
+        self.ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"' % flow['node']['id'],  flow['id'] )
+        content = self.ws.post(flow)
         j=json.loads(content[2])
 
     def cableflow_list(self):
-        ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d')
-        content = ws.get()
+        self.ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d')
+        content = self.ws.get()
         j=json.loads(content[2])
         ws.show(j)
         #ws.show(content[2])
 
     def cableflow_add(self, flow):
 # PUT http://localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"
-        ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"' % flow['node']['id'],  flow['id'] )
-        ws.show(flow)
-        content = ws.put(flow)
+        self.ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"' % flow['node']['id'],  flow['id'] )
+        self.ws.show(flow)
+        content = self.ws.put(flow)
         #print content
 	flowadd_response_codes = {
 	201:"Flow Config processed successfully",
@@ -276,8 +278,8 @@ class ODLCableflowRestconf(object):
 	print content[0], content[1], msg
 
     def cableflow_remove(self, flow):
-        ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"' % flow['node']['id'],  flow['id'] )
-        content = ws.remove("", flow)
+        self.ws.set_path('/restconf/config/opendaylight-inventory:nodes/node/openflow:%d/table/0/flow/%d"' % flow['node']['id'],  flow['id'] )
+        content = self.ws.remove("", flow)
 
 	flowdelete_reponse_codes = {
 	204:"Flow Config deleted successfully",
@@ -300,8 +302,8 @@ class ODLCableflowRestconf(object):
 
 
     def statistics_flows(self):
-        ws.set_path('/controller/nb/v2/statistics/default/flow')
-        content = ws.get()
+        self.ws.set_path('/controller/nb/v2/statistics/default/flow')
+        content = self.ws.get()
         allFlowStats = json.loads(content[2])
 
         flowStats = allFlowStats['flowStatistics']
@@ -341,65 +343,66 @@ class ODLCableflowRestconf(object):
 
 
 class CableflowTests(object):
-    def __init__(self):
+    def __init__(self, odl):
 	self.flows = {}
+	self.odl = odl
     def cmts_add_1():
         print "Add cmts 1     "
-        odl.cmts_add(cmts1)
+        self.odl.cmts_add(cmts1)
 
     def cmts_add_2():
         print "Add cmts 2     "
-        odl.cmts_add(cmts2)
+        self.odl.cmts_add(cmts2)
 
     def cmts_remove_1():
         print "Add cmts 1     "
-        odl.cmts_remove(cmts1)
+        self.odl.cmts_remove(cmts1)
 
     def cmts_remove_2():
         print "Add cmts 2     "
-        odl.cmts_remove(cmts2)
+        self.odl.cmts_remove(cmts2)
 
     def flow_add_1():
         print "Add Flow 1     "
-        odl.cableflow_add(flow1)
+        self.odl.cableflow_add(flow1)
 
 
     def flow_add_2():
         print "Add Flow 2     "
-        odl.cableflow_add(flow2)
+        self.odl.cableflow_add(flow2)
 
     def flow_add_several():
         print "Add Flow Several     "
-        odl.cableflow_add(flow1)
-        odl.cableflow_add(flow2)
-        odl.cableflow_add(flow3)
-        odl.cableflow_add(flow4)
-        odl.cableflow_add(flow5)
+        self.odl.cableflow_add(flow1)
+        self.odl.cableflow_add(flow2)
+        self.odl.cableflow_add(flow3)
+        self.odl.cableflow_add(flow4)
+        self.odl.cableflow_add(flow5)
 
 
     def flow_remove_1():
         print "Remove Flow 1  "
-        odl.cableflow_remove(flow1)
+        self.odl.cableflow_remove(flow1)
 
     def flow_remove_2():
         print "Remove Flow 2  "
-        odl.cableflow_remove(flow2)
+        self.odl.cableflow_remove(flow2)
 
     def flow_remove_all():
         print "Remove All Flows "
-        odl.cableflow_remove_all()
+        self.odl.cableflow_remove_all()
 
     def flow_list_stats():
         print "List Flow Stats"
-        odl.statistics_flows()
+        self.odl.statistics_flows()
 
     def topology_list():
         print "List Topology  "
-        odl.topology()
+        self.odl.topology()
 
     def flow_list():
         print "List Flows  "
-        odl.cableflow_list()
+        self.odl.cableflow_list()
 
 
     def flows_read(self, content_type='json'):
@@ -408,20 +411,23 @@ class CableflowTests(object):
             for filename in files:
                 if filename.endswith(".%s" % content_type):
                     base_filename = basename(filename)
-                    print base_filename
+                    # print base_filename
+		    fn = os.path.splitext(os.path.basename(filename))[0]  
                     #print filename
 	            with open(filename) as fp:
                         data = fp.read()
-                        print(data)
+                        # print(data)
                         # jdata = yaml.load ( data  )
                         # print(jdata)
-                        self.flows[filename]=data #equivalent to: self.varname= 'something'
+                        self.flows[fn]=data #equivalent to: self.varname= 'something'
 			if content_type == "xml":
-                            pprint (self.flows[filename], width=4)
+                            pprint (self.flows[fn], width=4)
 			else:
-                            # pprint (self.flows[filename], width=4)
+			    #print fn
+                            #pprint (self.flows[fn], width=4)
                             json.dumps(json.loads(data), indent=4)
 
+    def flows_print(self):
 	# print flow dictionary
 	l = self.flows.items()
 	l.sort()
@@ -429,21 +435,19 @@ class CableflowTests(object):
         for k,v in l:
             print k
 
-
-
-    def exit_app():
+    def exit_app(self):
         print "Quit           "
         exit(0)
 
-ws = RestfulAPI('127.0.0.1')
 
 if __name__ == "__main__":
+    ws = RestfulAPI('127.0.0.1')
     ws.credentials('admin', 'admin')
-    odl = ODLCableflowRestconf()
-    tests = CableflowTests()
+    odl = ODLCableflowRestconf(ws)
+    tests = CableflowTests(odl)
     tests.flows_read()
+    tests.flows_print()
 
-    exit(0)
     menu=Menu()
     menu.run()
     exit(0)
