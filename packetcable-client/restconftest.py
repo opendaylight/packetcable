@@ -191,8 +191,9 @@ class Menu(object):
         print ("8.  List Flow Stats   ")
         print ("9.  List Topology     ")
         print ("10. List Flows        ")
-        print ("11. Remove CMTS 1     ")
-        print ("12. Remove CMTS 2     ")
+        print ("11. Remove CMTS 2     ")
+        print ("12. Remove CMTS 1     ")
+        print ("13. Print JSON        ")
         print ("q. Quit               ")
 #        print (30 * '-')
 
@@ -203,15 +204,19 @@ class Menu(object):
     def run(self):
 	#self.print_menu()
         actions = {
-	"1": tests.flow_add_1, 
-	"2": tests.flow_add_2, 
-	"3": tests.flow_add_several, 
-	"4": tests.flow_remove_1,
+	"1": tests.cmts_add_1, 
+	"2": tests.cmts_add_2, 
+	"3": tests.flow_add_1, 
+	"4": tests.flow_add_2,
 	"5": tests.flow_remove_2,
+	"6": tests.flow_remove_1,
 	"6": tests.flow_remove_all,
 	"8": tests.flow_list_stats,
 	"9": tests.topology_list,
 	"10":tests.flow_list,
+	"11":tests.cmts_remove_2,
+	"11":tests.cmts_remove_1,
+	"13":tests.json_print,
 	"q": tests.exit_app,
         }
 
@@ -345,33 +350,34 @@ class ODLCableflowRestconf(object):
 class CableflowTests(object):
     def __init__(self, odl):
 	self.flows = {}
+	self.menu = {}
 	self.odl = odl
-    def cmts_add_1():
+    def cmts_add_1(self):
         print "Add cmts 1     "
         self.odl.cmts_add(cmts1)
 
-    def cmts_add_2():
+    def cmts_add_2(self):
         print "Add cmts 2     "
         self.odl.cmts_add(cmts2)
 
-    def cmts_remove_1():
+    def cmts_remove_1(self):
         print "Add cmts 1     "
         self.odl.cmts_remove(cmts1)
 
-    def cmts_remove_2():
+    def cmts_remove_2(self):
         print "Add cmts 2     "
         self.odl.cmts_remove(cmts2)
 
-    def flow_add_1():
+    def flow_add_1(self):
         print "Add Flow 1     "
         self.odl.cableflow_add(flow1)
 
 
-    def flow_add_2():
+    def flow_add_2(self):
         print "Add Flow 2     "
         self.odl.cableflow_add(flow2)
 
-    def flow_add_several():
+    def flow_add_several(self):
         print "Add Flow Several     "
         self.odl.cableflow_add(flow1)
         self.odl.cableflow_add(flow2)
@@ -380,29 +386,89 @@ class CableflowTests(object):
         self.odl.cableflow_add(flow5)
 
 
-    def flow_remove_1():
+    def flow_remove_1(self):
         print "Remove Flow 1  "
         self.odl.cableflow_remove(flow1)
 
-    def flow_remove_2():
+    def flow_remove_2(self):
         print "Remove Flow 2  "
         self.odl.cableflow_remove(flow2)
 
-    def flow_remove_all():
+    def flow_remove_all(self):
         print "Remove All Flows "
         self.odl.cableflow_remove_all()
 
-    def flow_list_stats():
+    def flow_list_stats(self):
         print "List Flow Stats"
         self.odl.statistics_flows()
 
-    def topology_list():
+    def topology_list(self):
         print "List Topology  "
         self.odl.topology()
 
-    def flow_list():
+    def flow_list(self):
         print "List Flows  "
         self.odl.cableflow_list()
+
+    def json_print(self):
+        print "Print JSON  "
+	c = 'a'
+	i = 0 
+        #fn = os.path.splitext(os.path.basename(filename))[0]  
+	l = self.flows.items()
+	l.sort()
+        for k,v in l:
+	    c = chr(ord('a') + i)
+            i += 1
+            self.menu[c] = k
+	    #print "c %c",c 
+            # print (self.flows[k])
+            str2 = self.flows[k].replace("\n", "")
+            json1_data = json.loads(str2)
+	    # Using the value directly can cause an error.
+	    try:
+	       # datapoints = json1_data['cmts-node']
+	        datapoints = json1_data['cmts-node']['address']
+                
+	        print "%c. %s - cmts %s" % (c, k, datapoints)
+	    except KeyError:
+                # print("not a cmts ")
+	    	try:
+	            datapoints = json1_data['packetcable-cmts:cmts-node']['address']
+	            print "%c. %s - cmts %s" % (c, k, datapoints)
+	            # print c, ". cmts ", datapoints, k
+	            # print "cmts ", datapoints
+	        except KeyError:
+                    #print("not a flow")
+	    	    try:
+	               datapoints = json1_data['flow']['flow-name']
+	               print "%c. %s - flow %s" % (c, k, datapoints)
+	               #print c,".", k, " - flow ", datapoints, k
+	               # print "flow ", datapoints
+	            except KeyError:
+                       print("invalid json file")
+			
+        selection = raw_input("Enter selection: ")
+        if "quit" == selection:
+             return
+        print self.flows[self.menu[selection]]
+	return
+	k  += ".json"
+        print k
+	with open(k) as fp:
+            data = fp.read()
+            #my_ordered_dict = json.loads(data, object_pairs_hook=collections.OrderedDict)
+            json1_data = json.loads(data)
+	    # Now you can access the data stored in datapoints just as you were expecting:
+            json.dumps(json.loads(data), indent=4)
+            pprint (data, width=4)
+            #json.dumps(json1_data, indent=4)
+
+	    #datapoints = json1_data['cmts_node']
+	    #print "datapoints ", datapoints
+
+	    # datapoints = my_ordered_dict['cmts_node']
+	    # print "datapoints ", datapoints
 
 
     def flows_read(self, content_type='json'):
