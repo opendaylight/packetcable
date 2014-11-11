@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.opendaylight.packetcable</groupId>
 		<artifactId>packetcable</artifactId>
-		<version>1.1.1-SNAPSHOT</version>
+		<version>1.1.1-Helium-SR1</version>
 	</parent>
 	<artifactId>packetcable-provider</artifactId>
 	<packaging>bundle</packaging>
 
 	<properties>
-		<sal-binding-api.version>1.1.1-SNAPSHOT</sal-binding-api.version>
+		<sal-binding-api.version>1.1.1-Helium-SR1</sal-binding-api.version>
 	</properties>
 
 	<dependencies>
