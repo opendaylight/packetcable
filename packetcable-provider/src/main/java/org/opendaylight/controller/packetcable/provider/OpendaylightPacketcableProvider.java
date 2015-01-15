@@ -251,18 +251,6 @@ public class OpendaylightPacketcableProvider implements DataChangeListener,
 	}
 
 	@Override
-	public Collection<? extends RpcService> getImplementations() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Collection<? extends ProviderFunctionality> getFunctionality() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public void onSessionInitiated(ProviderContext session) {
 		providerContext = session;
 		notificationService = session.getSALService(NotificationProviderService.class);
@@ -271,11 +259,6 @@ public class OpendaylightPacketcableProvider implements DataChangeListener,
 		listenerRegistration = dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, listenTo, this, DataChangeScope.BASE);
 	}
 
-	@Override
-	public void onSessionInitialized(ConsumerContext session) {
-		// Noop
-
-	}
 
 	public void onSessionAdded(/* Whatever you need per CmtsConnection */) {
 		CompositeObjectRegistrationBuilder<OpendaylightPacketcableProvider> builder = CompositeObjectRegistration.<OpendaylightPacketcableProvider> builderFor(this);
