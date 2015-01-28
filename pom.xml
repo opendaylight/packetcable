@@ -13,6 +13,10 @@
 	<name>packetcable</name> <!-- Used by Sonar to set project name -->
 	<packaging>pom</packaging>
 
+    <properties>
+      <openflowplugin.version>0.1.0-SNAPSHOT</openflowplugin.version>
+    </properties>
+
    <distributionManagement>
         <!-- OpenDayLight Released artifact -->
         <repository>
@@ -70,12 +74,14 @@
 	</repositories>
 	<dependencies>
 		<dependency>
-			<groupId>org.opendaylight.controller.model</groupId>
+			<groupId>org.opendaylight.openflowplugin.model</groupId>
 			<artifactId>model-flow-base</artifactId>
+            <version>${openflowplugin.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.opendaylight.controller.model</groupId>
+			<groupId>org.opendaylight.openflowplugin.model</groupId>
 			<artifactId>model-flow-service</artifactId>
+            <version>${openflowplugin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opendaylight.yangtools.model</groupId>
@@ -94,8 +100,9 @@
 			<artifactId>opendaylight-l2-types</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.opendaylight.controller.model</groupId>
+			<groupId>org.opendaylight.openflowplugin.model</groupId>
 			<artifactId>model-flow-statistics</artifactId>
+            <version>${openflowplugin.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
