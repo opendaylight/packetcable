@@ -21,6 +21,7 @@
     <repository>mvn:org.opendaylight.controller/features-flow/${mdsal.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/0.7.0-SNAPSHOT/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-mdsal/1.2.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/${openflowplugin.version}/xml/features</repository>
 
     <feature name='odl-packetcable-all' version='${project.version}' description='OpenDaylight :: packetcable :: All'>
             <feature version='${project.version}'>odl-packetcable-provider</feature>
@@ -50,7 +51,7 @@
         <feature name='odl-packetcable-model' version='${project.version}' description='OpenDaylight :: packetcable :: Model'>
             <feature version='0.7.0-SNAPSHOT'>odl-yangtools-binding</feature>
             <feature version='0.7.0-SNAPSHOT'>odl-yangtools-models</feature>
-	    <feature version='${project.version}'>odl-flow-model</feature>
+	        <feature version='${openflowplugin.version}'>odl-openflowplugin-nsf-model</feature>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-model/${project.version}</bundle>
         </feature>
 
@@ -59,7 +60,7 @@
             <feature version='1.2.0-SNAPSHOT'>odl-mdsal-broker</feature>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-provider/${project.version}</bundle>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
-	        <feature version='${project.version}'>odl-flow-model</feature>
+	        <feature version='${openflowplugin.version}'>odl-openflowplugin-nsf-model</feature>
             <feature version='${project.version}'>odl-packetcable-model</feature>
             <feature version='${project.version}'>odl-packetcable-driver</feature>
             <configfile finalname="etc/opendaylight/karaf/80-packetcable.xml">mvn:org.opendaylight.packetcable/packetcable-config/${project.version}/xml/config</configfile>
