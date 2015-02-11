@@ -41,33 +41,6 @@
 		<tag>HEAD</tag>
 		<url>https://wiki.opendaylight.org/view/PacketCablePCMM:Main</url>
 	</scm>
-	<repositories>
-		<!-- OpenDaylight releases -->
-		<repository>
-			<id>opendaylight-mirror</id>
-			<name>opendaylight-mirror</name>
-			<url>http://nexus.opendaylight.org/content/groups/public/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
-		<!-- OpenDaylight snapshots -->
-		<repository>
-			<id>opendaylight-snapshot</id>
-			<name>opendaylight-snapshot</name>
-			<url>http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.opendaylight.controller.model</groupId>
@@ -121,26 +94,4 @@
 	<!-- </modules> -->
 	<!-- </profile> -->
 	<!-- </profiles> -->
-
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>opendaylight-central</id>
-            <name>opendaylight-central</name>
-            <url>${nexusproxy}/repositories/public</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-            <id>opendaylight-snapshot</id>
-            <name>central2</name>
-            <url>${nexusproxy}/repositories/opendaylight.snapshot</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </pluginRepository>
-    </pluginRepositories>
-
-
 </project>
