@@ -1,13 +1,9 @@
 package org.umu.cops.ospep;
 
+import org.umu.cops.stack.*;
+
 import java.net.Socket;
 import java.util.Vector;
-
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDecisionMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSSyncStateMsg;
 
 /**
  * State manager class for outsourcing requests, at the PEP side.
@@ -105,10 +101,7 @@ public class COPSPepOSReqStateMan {
      */
     public COPSPepOSReqStateMan(short clientType, String clientHandle) {
         // COPS Handle
-        _handle = new COPSHandle();
-        COPSData id = new COPSData(clientHandle);
-        _handle.setId(id);
-        // client-type
+        _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _syncState = true;
         _status = ST_CREATE;

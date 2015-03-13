@@ -8,28 +8,17 @@ package org.pcmm;
 import java.io.*;
 import java.util.UUID.*;
 */
+import org.pcmm.gates.ITransactionID;
+import org.pcmm.gates.impl.PCMMGateReq;
+import org.umu.cops.common.COPSDebug;
+import org.umu.cops.prpdp.COPSPdpException;
+import org.umu.cops.stack.*;
+
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-
-import org.pcmm.gates.ITransactionID;
-import org.pcmm.gates.impl.PCMMGateReq;
-import org.umu.cops.common.COPSDebug;
-import org.umu.cops.prpdp.COPSPdpException;
-import org.umu.cops.stack.COPSClientSI;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDeleteMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSPrObjBase;
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReportType;
-import org.umu.cops.stack.COPSReqMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
 /*
 import org.pcmm.base.IPCMMBaseObject;
 import org.pcmm.gates.IAMID;
@@ -130,13 +119,8 @@ public class PCMMPdpReqStateMan {
      * @param clientHandle  Client handle
      */
     public PCMMPdpReqStateMan(short clientType, String clientHandle) {
-        // COPS Handle
-        _handle = new COPSHandle();
-        COPSData id = new COPSData(clientHandle);
-        _handle.setId(id);
-        // client-type
+        _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
-
         _status = ST_CREATE;
     }
 

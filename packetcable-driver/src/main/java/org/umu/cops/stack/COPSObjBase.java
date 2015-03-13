@@ -13,40 +13,32 @@ import java.util.Arrays;
 /**
  * COPS Object
  *
+ * TODO - this should be an interface and all of these default return values can be dangerous
  * @version COPSObjBase.java, v 1.00 2003
  *
  */
 public abstract class COPSObjBase {
     /**
      * Add padding in the data, if the data does not fall on 32-bit boundary
-     *
      * @param    len                 an int
-     *
      * @return   a COPSData
-     *
      */
-    static COPSData getPadding(int len) {
+    static COPSData getPadding(final int len) {
         byte[] padBuf = new byte[len];
         Arrays.fill(padBuf, (byte) 0);
-        COPSData d = new COPSData(padBuf, 0, len);
-        return d;
+        return new COPSData(padBuf, 0, len);
     }
 
     /**
-     * Writes data to a given network socket
-     *
+     * Writes data to a given network _socket
      * @param    id                  a  Socket
-     *
      * @throws   IOException
-     *
      */
     public abstract void writeData(Socket id) throws IOException;
 
     /**
      * Method getDataLength
-     *
      * @return   a short
-     *
      */
     short getDataLength() {
         return 0;
@@ -54,9 +46,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isCOPSHeader
-     *
      * @return   a boolean
-     *
      */
     boolean isCOPSHeader() {
         return false;
@@ -64,9 +54,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isClientHandle
-     *
      * @return   a boolean
-     *
      */
     boolean isClientHandle() {
         return false;
@@ -74,9 +62,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isContext
-     *
      * @return   a boolean
-     *
      */
     boolean isContext() {
         return false;
@@ -84,9 +70,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isInterface
-     *
      * @return   a boolean
-     *
      */
     boolean isInterface() {
         return false;
@@ -94,9 +78,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isDecision
-     *
      * @return   a boolean
-     *
      */
     boolean isDecision() {
         return false;
@@ -104,9 +86,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isLocalDecision
-     *
      * @return   a boolean
-     *
      */
     boolean isLocalDecision() {
         return false;
@@ -114,9 +94,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isReport
-     *
      * @return   a boolean
-     *
      */
     boolean isReport() {
         return false;
@@ -124,9 +102,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isError
-     *
      * @return   a boolean
-     *
      */
     boolean isError() {
         return false;
@@ -134,9 +110,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isTimer
-     *
      * @return   a boolean
-     *
      */
     boolean isTimer() {
         return false;
@@ -144,9 +118,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isPepId
-     *
      * @return   a boolean
-     *
      */
     boolean isPepId() {
         return false;
@@ -154,9 +126,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isReason
-     *
      * @return   a boolean
-     *
      */
     boolean isReason() {
         return false;
@@ -164,9 +134,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isPdpAddress
-     *
      * @return   a boolean
-     *
      */
     boolean isPdpAddress() {
         return false;
@@ -174,9 +142,7 @@ public abstract class COPSObjBase {
 
     /**
      * Method isClientSI
-     *
      * @return   a boolean
-     *
      */
     boolean isClientSI() {
         return false;
@@ -184,13 +150,10 @@ public abstract class COPSObjBase {
 
     /**
      * Method isMessageIntegrity
-     *
      * @return   a boolean
-     *
      */
     boolean isMessageIntegrity() {
         return false;
     }
 
-};
-
+}

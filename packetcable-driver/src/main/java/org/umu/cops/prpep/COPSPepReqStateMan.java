@@ -6,19 +6,12 @@
 
 package org.umu.cops.prpep;
 
+import org.umu.cops.stack.*;
+
 import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDecision;
-import org.umu.cops.stack.COPSDecisionMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSPrObjBase;
-import org.umu.cops.stack.COPSSyncStateMsg;
 
 /**
  * COPSPepReqStateMan manages Request State using Client Handle (RFC 2748 pag. 21)
@@ -131,11 +124,7 @@ public class COPSPepReqStateMan {
      *
      */
     public COPSPepReqStateMan(short clientType, String clientHandle) {
-        // COPS Handle
-        _handle = new COPSHandle();
-        COPSData id = new COPSData(clientHandle);
-        _handle.setId(id);
-        // client-type
+        _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _syncState = true;
         _status = ST_CREATE;

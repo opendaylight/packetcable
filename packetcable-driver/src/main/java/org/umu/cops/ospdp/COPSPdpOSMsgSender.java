@@ -1,20 +1,16 @@
 package org.umu.cops.ospdp;
 
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSDecision;
-import org.umu.cops.stack.COPSDecisionMsg;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSSyncStateMsg;
-
 /**
  * COPS message transceiver class for outsourcing connections at the PDP side.
+ *
+ * TODO - change all references of Vector to List<>
  */
 public class COPSPdpOSMsgSender {
     /**
@@ -99,8 +95,7 @@ public class COPSPdpOSMsgSender {
             hdr.setFlag(COPSHeader.COPS_FLAG_SOLICITED);
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle handle = new COPSHandle();
-        handle.setId(getClientHandle().getId());
+        final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         try {
@@ -176,8 +171,7 @@ public class COPSPdpOSMsgSender {
         COPSHeader hdr = new COPSHeader (COPSHeader.COPS_OP_DEC, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = new COPSHandle();
-        clienthandle.setId(_handle.getId());
+        final COPSHandle clienthandle = new COPSHandle(_handle.getId());
 
         // Decisions
         //  <Context>
@@ -225,8 +219,7 @@ public class COPSPdpOSMsgSender {
         COPSHeader hdr = new COPSHeader (COPSHeader.COPS_OP_DEC, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = new COPSHandle();
-        clienthandle.setId(_handle.getId());
+        final COPSHandle clienthandle = new COPSHandle(_handle.getId());
 
         // Decisions
         //  <Context>
@@ -267,8 +260,7 @@ public class COPSPdpOSMsgSender {
         COPSHeader hdr = new COPSHeader (COPSHeader.COPS_OP_SSQ, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = new COPSHandle();
-        clienthandle.setId(_handle.getId());
+        final COPSHandle clienthandle = new COPSHandle(_handle.getId());
 
         COPSSyncStateMsg msg = new COPSSyncStateMsg();
         try {

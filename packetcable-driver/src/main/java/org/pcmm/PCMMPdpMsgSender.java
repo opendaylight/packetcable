@@ -4,46 +4,19 @@
 
 package org.pcmm;
 
+import org.pcmm.gates.*;
+import org.pcmm.gates.IGateSpec.DSCPTOS;
+import org.pcmm.gates.IGateSpec.Direction;
+import org.pcmm.gates.impl.*;
+import org.umu.cops.prpdp.COPSPdpException;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import org.pcmm.gates.IAMID;
-import org.pcmm.gates.IClassifier;
-import org.pcmm.gates.IExtendedClassifier;
-import org.pcmm.gates.IGateID;
-import org.pcmm.gates.IGateSpec;
-import org.pcmm.gates.IGateSpec.DSCPTOS;
-import org.pcmm.gates.IGateSpec.Direction;
-import org.pcmm.gates.IPCMMGate;
-import org.pcmm.gates.ISubscriberID;
-import org.pcmm.gates.ITrafficProfile;
-import org.pcmm.gates.ITransactionID;
-import org.pcmm.gates.impl.AMID;
-import org.pcmm.gates.impl.BestEffortService;
-import org.pcmm.gates.impl.Classifier;
-import org.pcmm.gates.impl.ExtendedClassifier;
-import org.pcmm.gates.impl.GateID;
-import org.pcmm.gates.impl.GateSpec;
-import org.pcmm.gates.impl.PCMMGateReq;
-import org.pcmm.gates.impl.SubscriberID;
-import org.pcmm.gates.impl.TransactionID;
-import org.umu.cops.prpdp.COPSPdpException;
-import org.umu.cops.stack.COPSClientSI;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDecision;
-import org.umu.cops.stack.COPSDecisionMsg;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSObjHeader;
 //temp
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
-import org.umu.cops.stack.COPSTransceiver;
 //pcmm
 /*
  * Example of an UNSOLICITED decision
@@ -158,11 +131,9 @@ public class PCMMPdpMsgSender {
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle handle = new COPSHandle();
+        final COPSHandle handle = new COPSHandle(getClientHandle().getId());
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         ITransactionID trID = new TransactionID();
-
-        handle.setId(getClientHandle().getId());
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
@@ -225,7 +196,6 @@ public class PCMMPdpMsgSender {
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle handle = new COPSHandle();
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
 
         IPCMMGate gate = new PCMMGateReq();
@@ -293,7 +263,7 @@ public class PCMMPdpMsgSender {
         // new pcmm specific clientsi
         COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC, (byte) 4);
 
-        handle.setId(getClientHandle().getId());
+        final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
@@ -424,8 +394,6 @@ public class PCMMPdpMsgSender {
 
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
 
-        // Client Handle with the same clientHandle as the request
-        COPSHandle handle = new COPSHandle();
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
 
         IPCMMGate gate = new PCMMGateReq();
@@ -487,7 +455,8 @@ public class PCMMPdpMsgSender {
         COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC,
                 (byte) 4);
 
-        handle.setId(getClientHandle().getId());
+        // Client Handle with the same clientHandle as the request
+        final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
@@ -651,8 +620,6 @@ public class PCMMPdpMsgSender {
 
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
 
-        // Client Handle with the same clientHandle as the request
-        COPSHandle handle = new COPSHandle();
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
 
         IPCMMGate gate = new PCMMGateReq();
@@ -678,7 +645,8 @@ public class PCMMPdpMsgSender {
         COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC,
                 (byte) 4);
 
-        handle.setId(getClientHandle().getId());
+        // Client Handle with the same clientHandle as the request
+        final COPSHandle handle = new COPSHandle(getClientHandle().getId());
         // byte[] content = "1234".getBytes();
 
         // handle.setId(new COPSData(content, 0, content.length));
@@ -780,7 +748,6 @@ public class PCMMPdpMsgSender {
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle handle = new COPSHandle();
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
 
         IPCMMGate gate = new PCMMGateReq();
@@ -794,7 +761,7 @@ public class PCMMPdpMsgSender {
         // new pcmm specific clientsi
         COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC, (byte) 4);
 
-        handle.setId(getClientHandle().getId());
+        final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateDelete);
@@ -875,8 +842,7 @@ public class PCMMPdpMsgSender {
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = new COPSHandle();
-        clienthandle.setId(_handle.getId());
+        final COPSHandle clienthandle = new COPSHandle(_handle.getId());
 
         // Decisions
         // <Context>
@@ -918,8 +884,7 @@ public class PCMMPdpMsgSender {
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_SSQ, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = new COPSHandle();
-        clienthandle.setId(_handle.getId());
+        final COPSHandle clienthandle = new COPSHandle(_handle.getId());
 
         COPSSyncStateMsg msg = new COPSSyncStateMsg();
         try {
@@ -953,8 +918,7 @@ public class PCMMPdpMsgSender {
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_SSQ, getClientType());
 
         // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = new COPSHandle();
-        clienthandle.setId(_handle.getId());
+        final COPSHandle clienthandle = new COPSHandle(_handle.getId());
 
         COPSSyncStateMsg msg = new COPSSyncStateMsg();
         try {
