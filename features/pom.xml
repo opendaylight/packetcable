@@ -4,12 +4,12 @@
  terms of the Eclipse Public License v1.0 which accompanies this distribution,
  and is available at http://www.eclipse.org/legal/epl-v10.html
 --><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-   <modelVersion>4.0.0</modelVersion>
    <parent>
-    <artifactId>packetcable</artifactId>
-    <groupId>org.opendaylight.packetcable</groupId>
-    <version>1.2.0-SNAPSHOT</version>
-  </parent>
+     <groupId>org.opendaylight.odlparent</groupId>
+     <artifactId>features-parent</artifactId>
+     <version>1.5.0-SNAPSHOT</version>
+     <relativePath/>
+   </parent>
    <!--
     Necessary TODO: Hookup your parent pom here, else you will not get necessary versions,
     maven repos etc.  If you run this archetype in a subdirectory of your project, it
@@ -18,18 +18,25 @@
   -->
    <artifactId>features-packetcable</artifactId>
    <groupId>org.opendaylight.packetcable</groupId>
+   <modelVersion>4.0.0</modelVersion>
    <!-- Optional Uncomment version if you are not using a parent pom.xml
    <version>1.2.0-SNAPSHOT</version>
    -->
    <packaging>jar</packaging>
+   <prerequisites>
+     <maven>3.1.1</maven>
+   </prerequisites>
    <properties>
-      <features.file>features.xml</features.file>
+      <mdsal.version>1.2.0-SNAPSHOT</mdsal.version>
+      <yangtools.version>0.7.0-SNAPSHOT</yangtools.version>
+      <configfile.directory>etc/opendaylight/karaf</configfile.directory>
       <!-- Optional: Move these properties to your parent pom and possibly
             DependencyManagement section of your parent pom -->
       <branding.version>1.1.0-SNAPSHOT</branding.version>
       <karaf.resources.version>1.5.0-SNAPSHOT</karaf.resources.version>
       <karaf.version>3.0.1</karaf.version>
       <feature.test.version>0.7.0-SNAPSHOT</feature.test.version>
+      <openflowplugin.version>0.1.0-SNAPSHOT</openflowplugin.version>
       <karaf.empty.version>1.5.0-SNAPSHOT</karaf.empty.version>
       <surefire.version>2.16</surefire.version>
    </properties>
@@ -39,7 +46,6 @@
       you use in your features.xml file.
 
       Note: they will need to be <type>xml</xml>
-      and <classifier>features</classifier>.
       One other thing to watch for is to make sure they are
       <scope>compile</compile>, which they should be by default,
       but be cautious lest they be at a different scope in a parent pom.
