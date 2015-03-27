@@ -40,7 +40,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.add.flow.input.instructions.instruction.instruction.apply.actions._case.apply.actions.action.action.BestEffortCase;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.add.flow.input.instructions.instruction.instruction.apply.actions._case.apply.actions.action.action.DocsisServiceClassNameCase;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.add.flow.input.instructions.instruction.instruction.apply.actions._case.apply.actions.action.action.FlowspecCase;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.transaction.rev131103.TransactionId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.transaction.rev150304.TransactionId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.ApplyActionsCase;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.Instruction;
