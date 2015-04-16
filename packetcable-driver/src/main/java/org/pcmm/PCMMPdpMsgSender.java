@@ -8,6 +8,8 @@ import org.pcmm.gates.*;
 import org.pcmm.gates.IGateSpec.DSCPTOS;
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.impl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSObjHeader.CNum;
@@ -36,6 +38,8 @@ import java.net.UnknownHostException;
  * COPS message transceiver class for provisioning connections at the PDP side.
  */
 public class PCMMPdpMsgSender {
+
+    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpMsgSender.class);
 
     /**
      * Socket connected to PEP
@@ -139,8 +143,7 @@ public class PCMMPdpMsgSender {
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
-        _transactionID = (short) (_transactionID == 0 ? (short) (Math.random() * hashCode())
-                                  : _transactionID);
+        _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
         trID.setTransactionIdentifier(_transactionID);
 
         gate.setTransactionID(trID);
@@ -170,7 +173,7 @@ public class PCMMPdpMsgSender {
             */
 
         } catch (COPSException e) {
-            System.out.println("Error making Msg" + e.getMessage());
+            logger.error("Error making Msg", e);
         }
 
         // ** Send the GateSet Decision
@@ -178,8 +181,7 @@ public class PCMMPdpMsgSender {
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
-            System.out.println("Failed to send the decision, reason: "
-                               + e.getMessage());
+            logger.error("Failed to send the decision, reason: ", e);
         }
 
     }
@@ -208,12 +210,12 @@ public class PCMMPdpMsgSender {
         IGateSpec gateSpec = new GateSpec();
         IClassifier classifier = new Classifier();
         IExtendedClassifier eclassifier = new ExtendedClassifier();
-        int TrafficRate = 0;
+        final int trafficRate;
 
         if (num == 1)
-            TrafficRate =   PCMMGlobalConfig.DefaultBestEffortTrafficRate;
+            trafficRate =   PCMMGlobalConfig.DefaultBestEffortTrafficRate;
         else
-            TrafficRate =   PCMMGlobalConfig.DefaultLowBestEffortTrafficRate;
+            trafficRate =   PCMMGlobalConfig.DefaultLowBestEffortTrafficRate;
 
         ITrafficProfile trafficProfile = new BestEffortService(
             (byte) 7); //BestEffortService.DEFAULT_ENVELOP);
@@ -227,7 +229,7 @@ public class PCMMPdpMsgSender {
             PCMMGlobalConfig.BETransmissionPolicy);
         ((BestEffortService) trafficProfile).getAuthorizedEnvelop()
         .setMaximumSustainedTrafficRate(
-            TrafficRate);
+            trafficRate);
         //  PCMMGlobalConfig.DefaultLowBestEffortTrafficRate );
         //  PCMMGlobalConfig.DefaultBestEffortTrafficRate);
 
@@ -241,7 +243,7 @@ public class PCMMPdpMsgSender {
             PCMMGlobalConfig.BETransmissionPolicy);
         ((BestEffortService) trafficProfile).getReservedEnvelop()
         .setMaximumSustainedTrafficRate(
-            TrafficRate);
+            trafficRate);
         //  PCMMGlobalConfig.DefaultLowBestEffortTrafficRate );
         //  PCMMGlobalConfig.DefaultBestEffortTrafficRate);
 
@@ -256,7 +258,7 @@ public class PCMMPdpMsgSender {
             PCMMGlobalConfig.BETransmissionPolicy);
         ((BestEffortService) trafficProfile).getCommittedEnvelop()
         .setMaximumSustainedTrafficRate(
-            TrafficRate);
+            trafficRate);
         //  PCMMGlobalConfig.DefaultLowBestEffortTrafficRate );
         //  PCMMGlobalConfig.DefaultBestEffortTrafficRate);
 
@@ -269,8 +271,7 @@ public class PCMMPdpMsgSender {
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
-        _transactionID = (short) (_transactionID == 0 ? (short) (Math.random() * hashCode())
-                                  : _transactionID);
+        _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
         trID.setTransactionIdentifier(_transactionID);
 
         amid.setApplicationType((short) 1);
@@ -300,7 +301,7 @@ public class PCMMPdpMsgSender {
                 eclassifier.setIPDestinationMask(mask);
                 eclassifier.setIPSourceMask(mask);
             } catch (UnknownHostException unae) {
-                System.out.println("Error getByName" + unae.getMessage());
+                logger.error("Error getByName", unae);
             }
             eclassifier.setSourcePortStart(PCMMGlobalConfig.srcPort);
             eclassifier.setSourcePortEnd(PCMMGlobalConfig.srcPort);
@@ -334,7 +335,7 @@ public class PCMMPdpMsgSender {
                 classifier.setSourceIPAddress(srcIP);
                 classifier.setDestinationIPAddress(dstIP);
             } catch (UnknownHostException unae) {
-                System.out.println("Error getByName" + unae.getMessage());
+                logger.error("Error getByName", unae);
             }
             classifier.setSourcePort(PCMMGlobalConfig.srcPort);
             classifier.setDestinationPort(PCMMGlobalConfig.dstPort);
@@ -371,7 +372,7 @@ public class PCMMPdpMsgSender {
             */
 
         } catch (COPSException e) {
-            System.out.println("Error making Msg" + e.getMessage());
+            logger.error("Error making Msg", e);
         }
 
         // ** Send the GateSet Decision
@@ -379,8 +380,7 @@ public class PCMMPdpMsgSender {
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
-            System.out.println("Failed to send the decision, reason: "
-                               + e.getMessage());
+            logger.error("Failed to send the decision, reason: ", e);
         }
 
     }
@@ -461,8 +461,7 @@ public class PCMMPdpMsgSender {
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
-        _transactionID = (short) (_transactionID == 0 ? (short) (Math.random() * hashCode())
-                                  : _transactionID);
+        _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
         trID.setTransactionIdentifier(_transactionID);
 
         amid.setApplicationType((short) 1);
@@ -492,7 +491,7 @@ public class PCMMPdpMsgSender {
                 eclassifier.setIPDestinationMask(mask);
                 eclassifier.setIPSourceMask(mask);
             } catch (UnknownHostException unae) {
-                System.out.println("Error getByName" + unae.getMessage());
+                logger.error("Error getByName", unae);
             }
             eclassifier.setSourcePortStart(PCMMGlobalConfig.srcPort);
             eclassifier.setSourcePortEnd(PCMMGlobalConfig.srcPort);
@@ -526,7 +525,7 @@ public class PCMMPdpMsgSender {
                 classifier.setSourceIPAddress(srcIP);
                 classifier.setDestinationIPAddress(dstIP);
             } catch (UnknownHostException unae) {
-                System.out.println("Error getByName" + unae.getMessage());
+                logger.error("Error getByName", unae);
             }
             classifier.setSourcePort(PCMMGlobalConfig.srcPort);
             classifier.setDestinationPort(PCMMGlobalConfig.dstPort);
@@ -563,7 +562,7 @@ public class PCMMPdpMsgSender {
             */
 
         } catch (COPSException e) {
-            System.out.println("Error making Msg" + e.getMessage());
+            logger.error("Error making Msg", e);
         }
 
         // ** Send the GateSet Decision
@@ -571,8 +570,7 @@ public class PCMMPdpMsgSender {
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
-            System.out.println("Failed to send the decision, reason: "
-                               + e.getMessage());
+            logger.error("Failed to send the decision", e);
         }
 
     }
@@ -583,7 +581,7 @@ public class PCMMPdpMsgSender {
             // waits for the gate-set-ack or error
             COPSMsg responseMsg = COPSTransceiver.receiveMsg(socket);
             if (responseMsg.getHeader().isAReport()) {
-                System.out.println("processing received report from CMTS");
+                logger.info("processing received report from CMTS");
                 COPSReportMsg reportMsg = (COPSReportMsg) responseMsg;
                 if (reportMsg.getClientSI().size() == 0) {
                     return false;
@@ -594,7 +592,7 @@ public class PCMMPdpMsgSender {
                         .getData());
                 if (responseGate.getTransactionID() != null
                         && responseGate.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck) {
-                    System.out.println("the CMTS has sent a Gate-Set-Ack response");
+                    logger.info("the CMTS has sent a Gate-Set-Ack response");
                     // here CMTS responded that he acknowledged the Gate-Set
                     // TODO do further check of Gate-Set-Ack GateID etc...
                     _gateID = responseGate.getGateID().getGateID();
@@ -653,8 +651,7 @@ public class PCMMPdpMsgSender {
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
-        _transactionID = (short) (_transactionID == 0 ? (short) (Math.random() * hashCode())
-                                  : _transactionID);
+        _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
         trID.setTransactionIdentifier(_transactionID);
 
         amid.setApplicationType((short) 1);
@@ -680,7 +677,7 @@ public class PCMMPdpMsgSender {
             classifier.setSourceIPAddress(srcIP);
             classifier.setDestinationIPAddress(dstIP);
         } catch (UnknownHostException unae) {
-            System.out.println("Error getByName" + unae.getMessage());
+            logger.error("Error getByName", unae);
         }
         classifier.setSourcePort(PCMMGlobalConfig.srcPort);
         classifier.setDestinationPort(PCMMGlobalConfig.dstPort);
@@ -717,7 +714,7 @@ public class PCMMPdpMsgSender {
             */
 
         } catch (COPSException e) {
-            System.out.println("Error making Msg" + e.getMessage());
+            logger.error("Error making Msg", e);
         }
 
         // ** Send the GateSet Decision
@@ -725,8 +722,7 @@ public class PCMMPdpMsgSender {
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
-            System.out.println("Failed to send the decision, reason: "
-                               + e.getMessage());
+            logger.error("Failed to send the decision", e);
         }
 
     }
@@ -755,7 +751,6 @@ public class PCMMPdpMsgSender {
 
         IAMID amid = new AMID();
         ISubscriberID subscriberID = new SubscriberID();
-        IGateSpec gateSpec = new GateSpec();
         IGateID gateID = new GateID();
 
         // new pcmm specific clientsi
@@ -765,8 +760,7 @@ public class PCMMPdpMsgSender {
 
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateDelete);
-        _transactionID = (short) (_transactionID == 0 ? (short) (Math.random() * hashCode())
-                                  : _transactionID);
+        _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
         trID.setTransactionIdentifier(_transactionID);
 
         amid.setApplicationType((short) 1);
@@ -777,7 +771,7 @@ public class PCMMPdpMsgSender {
             InetAddress subIP = InetAddress.getByName(PCMMGlobalConfig.SubscriberID);
             subscriberID.setSourceIPAddress(subIP);
         } catch (UnknownHostException unae) {
-            System.out.println("Error getByName" + unae.getMessage());
+            logger.error("Error getByName", unae);
         }
 
         gate.setTransactionID(trID);
@@ -811,7 +805,7 @@ public class PCMMPdpMsgSender {
             */
 
         } catch (COPSException e) {
-            System.out.println("Error making Msg" + e.getMessage());
+            logger.error("Error making Msg", e);
         }
 
         // ** Send the GateDelete Decision
@@ -820,8 +814,7 @@ public class PCMMPdpMsgSender {
             decisionMsg.writeData(_sock);
             // decisionMsg.writeData(socket_id);
         } catch (IOException e) {
-            System.out.println("Failed to send the decision, reason: "
-                               + e.getMessage());
+            logger.error("Failed to send the decision", e);
         }
     }
 
