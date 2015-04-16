@@ -4,33 +4,24 @@
 
 package org.pcmm;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
-import org.umu.cops.common.COPSDebug;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.umu.cops.prpep.COPSPepAgent;
 import org.umu.cops.prpep.COPSPepConnection;
 import org.umu.cops.prpep.COPSPepException;
-import org.umu.cops.stack.COPSAcctTimer;
-import org.umu.cops.stack.COPSClientAcceptMsg;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSClientOpenMsg;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKATimer;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPepId;
-import org.umu.cops.stack.COPSTransceiver;
+import org.umu.cops.stack.*;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
  * This is a provisioning COPS PEP. Responsible for making connection to the PDP
  * and maintaining it
  */
 public class PCMMPepAgent extends COPSPepAgent implements Runnable {
+
+    public final static Logger logger = LoggerFactory.getLogger(PCMMPepAgent.class);
 
     /** Well-known port for COPS */
     public static final int WELL_KNOWN_CMTS_PORT = 3918;
@@ -80,8 +71,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
     public void run() {
         try {
 
-            COPSDebug.err(getClass().getName(), "Create Server Socket on Port "
-                          + serverPort);
+            logger.info("Create Server Socket on Port " + serverPort);
 
             serverSocket = new ServerSocket(serverPort);
             // Loop through for Incoming messages
@@ -92,8 +82,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
                 // Wait for an incoming connection from a PEP
                 Socket socket = serverSocket.accept();
 
-                COPSDebug.err(getClass().getName(), "New connection accepted "
-                              + socket.getInetAddress() + ":" + socket.getPort());
+                logger.info("New connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
 
                 processConnection(socket);
                 /**
@@ -104,12 +93,8 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
                  */
 
             }
-        } catch (IOException e) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
-        } catch (COPSException e) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
-        } catch (COPSPepException e) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
+        } catch (Exception e) {
+            logger.error("Error while processing the socket connection", e);
         }
     }
 
@@ -130,15 +115,12 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
      *
      * Not send [<PDPRedirAddr>], [<Integrity>]
      *
-     * @throws UnknownHostException
      * @throws IOException
      * @throws COPSException
      * @throws COPSPepException
      *
      */
-    private COPSPepConnection processConnection(Socket socket)
-    throws UnknownHostException, IOException, COPSException,
-                COPSPepException {
+    private COPSPepConnection processConnection(Socket socket) throws IOException, COPSException, COPSPepException {
         // Build OPN
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, getClientType());
 
@@ -155,15 +137,15 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
          * InetAddress addr = InetAddress.getByName(psHost); Socket socket = new
          * Socket(addr,psPort);
          */
-        COPSDebug.err(getClass().getName(), "Send COPSClientOpenMsg to PDP");
+        logger.info("Send COPSClientOpenMsg to PDP");
         msg.writeData(socket);
 
         // Receive the response
-        COPSDebug.err(getClass().getName(), "Receive the resposne from PDP");
+        logger.info("Receive the resposne from PDP");
         COPSMsg recvmsg = COPSTransceiver.receiveMsg(socket);
 
         if (recvmsg.getHeader().isAClientAccept()) {
-            COPSDebug.err(getClass().getName(), "isAClientAccept from PDP");
+            logger.info("isAClientAccept from PDP");
             COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvmsg;
 
             // Support
@@ -189,12 +171,12 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
                     socket);
             conn.setKaTimer(_kaTimeVal);
             conn.setAcctTimer(_acctTimer);
-            COPSDebug.err(getClass().getName(), "Thread(conn).start");
+            logger.info("Thread(conn).start");
             new Thread(conn).start();
 
             return conn;
         } else if (recvmsg.getHeader().isAClientClose()) {
-            COPSDebug.err(getClass().getName(), "isAClientClose from PDP");
+            logger.info("isAClientClose from PDP");
             COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
             error = cMsg.getError();
             socket.close();
