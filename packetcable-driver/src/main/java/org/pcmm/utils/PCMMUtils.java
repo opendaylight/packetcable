@@ -3,6 +3,9 @@
  */
 package org.pcmm.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -10,12 +13,14 @@ import java.io.IOException;
 
 public class PCMMUtils {
 
+    public final static Logger logger = LoggerFactory.getLogger(PCMMUtils.class);
+
     public static void WriteBinaryDump(String rootFileName, byte[] buffer) {
         // Make this Unique
         String fileName = "/tmp/" + rootFileName + "-" + java.util.UUID.randomUUID() + ".bin";
         try {
 
-            System.out.println("Open fileName " + fileName);
+            logger.info("Open fileName " + fileName);
             FileOutputStream outputStream = new FileOutputStream(fileName);
 
             // write() writes as many bytes from the buffer
@@ -29,9 +34,9 @@ public class PCMMUtils {
             // Always close files.
             outputStream.close();
 
-            System.out.println("Wrote " + buffer.length + " bytes");
+            logger.info("Wrote " + buffer.length + " bytes");
         } catch (IOException ex) {
-            System.out.println("Error writing file '" + fileName + "'");
+            logger.error("Error writing file '" + fileName + "'", ex);
             // Or we could just do this:
             // ex.printStackTrace();
         }
@@ -53,12 +58,12 @@ public class PCMMUtils {
             // Always close files.
             inputStream.close();
 
-            System.out.println("Read " + total + " bytes");
+            logger.info("Read " + total + " bytes");
             return buffer;
         } catch (FileNotFoundException ex) {
-            System.out.println("Unable to open file '" + fileName + "'");
+            logger.error("Unable to open file '" + fileName + "'", ex);
         } catch (IOException ex) {
-            System.out.println("Error reading file '" + fileName + "'");
+            logger.error("Error reading file '" + fileName + "'", ex);
             // Or we could just do this:
             // ex.printStackTrace();
         }
