@@ -1,39 +1,28 @@
 package org.umu.cops.ospdp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
-
-import org.umu.cops.common.COPSDebug;
-import org.umu.cops.stack.COPSAcctTimer;
-import org.umu.cops.stack.COPSClientAcceptMsg;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSClientOpenMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKATimer;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPepId;
-import org.umu.cops.stack.COPSTransceiver;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Core PDP agent for outsourcing.
  */
 public class COPSPdpOSAgent extends Thread {
+
+    public final static Logger logger = LoggerFactory.getLogger(COPSPdpOSAgent.class);
+
     /** Well-known port for COPS */
     public static final int WELL_KNOWN_PDP_PORT = 3288;
     /** Default keep-alive timer value (secs) */
     public static final short KA_TIMER_VALUE = 30;
     /** Default accounting timer value (secs) */
     public static final short ACCT_TIMER_VALUE = 0;
-
-    /**
-        PDP host IP
-     */
-    private ServerSocket _serverSocket;
 
     /**
         PDP host port
@@ -58,7 +47,7 @@ public class COPSPdpOSAgent extends Thread {
     /**
         Maps a PEP-ID to a connection
      */
-    private Hashtable _connectionMap;
+    private final Map<String, COPSPdpOSConnection> _connectionMap;
     // map < String(PEPID), COPSPdpOSConnection > ConnectionMap;
 
     /**
@@ -78,7 +67,7 @@ public class COPSPdpOSAgent extends Thread {
         _acctTimer = ACCT_TIMER_VALUE;
 
         _clientType = clientType;
-        _connectionMap = new Hashtable(40);
+        _connectionMap = new ConcurrentHashMap<>();
         _process = process;
     }
 
@@ -96,7 +85,7 @@ public class COPSPdpOSAgent extends Thread {
         _acctTimer = ACCT_TIMER_VALUE;
 
         _clientType = clientType;
-        _connectionMap = new Hashtable(40);
+        _connectionMap = new ConcurrentHashMap<>();
         _process = process;
     }
 
@@ -133,22 +122,6 @@ public class COPSPdpOSAgent extends Thread {
     }
 
     /**
-     * Gets the PEPs connected to this PDP
-     * @return   An <tt>Enumeration</tt> of all connected PEPs
-     */
-    public Enumeration getConnectedPEPIds() {
-        return _connectionMap.keys();
-    }
-
-    /**
-     * Gets the connection map
-     * @return   A <tt>Hashtable</tt> holding the connection map
-     */
-    public Hashtable getConnectionMap() {
-        return _connectionMap;
-    }
-
-    /**
      * Gets the client-type
      * @return   The client-type
      */
@@ -164,7 +137,7 @@ public class COPSPdpOSAgent extends Thread {
      * @throws IOException
      */
     public void disconnect (String pepID, COPSError error) throws COPSException, IOException {
-        COPSPdpOSConnection pdpConn = (COPSPdpOSConnection) _connectionMap.get(pepID);
+        COPSPdpOSConnection pdpConn = _connectionMap.get(pepID);
 
         COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, _clientType);
         COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
@@ -174,7 +147,6 @@ public class COPSPdpOSAgent extends Thread {
 
         closeMsg.writeData(pdpConn.getSocket());
         pdpConn.close();
-        pdpConn = null;
     }
 
     /**
@@ -184,7 +156,7 @@ public class COPSPdpOSAgent extends Thread {
      * @throws COPSPdpException
      */
     public void sync(String pepID) throws COPSException, COPSPdpException {
-        COPSPdpOSConnection pdpConn = (COPSPdpOSConnection) _connectionMap.get(pepID);
+        COPSPdpOSConnection pdpConn = _connectionMap.get(pepID);
         pdpConn.syncAllRequestState();
     }
 
@@ -201,14 +173,14 @@ public class COPSPdpOSAgent extends Thread {
      */
     public void run() {
         try {
-            _serverSocket = new ServerSocket (_serverPort);
+            final ServerSocket serverSocket = new ServerSocket (_serverPort);
 
             //Loop through for Incoming messages
 
             // server infinite loop
             while (true) {
                 // Wait for an incoming connection from a PEP
-                Socket socket = _serverSocket.accept();
+                Socket socket = serverSocket.accept();
 
                 // COPSDebug.out(getClass().getName(),"New connection accepted " +
                 //           socket.getInetAddress() +
@@ -223,19 +195,22 @@ public class COPSPdpOSAgent extends Thread {
                         // COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
                         try {
                             socket.close();
-                        } catch (Exception ex) {};
+                        } catch (Exception ex) {
+                            logger.error("Error closing socket", ex);
+                        }
                     }
                 } catch (Exception e) { // COPSException, IOException
                     // COPSDebug.err(getClass().getName(), COPSDebug.ERROR_EXCEPTION,
                     //    "(" + socket.getInetAddress() + ":" + socket.getPort() + ")", e);
                     try {
                         socket.close();
-                    } catch (Exception ex) {};
+                    } catch (Exception ex) {
+                        logger.error("Error closing socket", ex);
+                    }
                 }
             }
         } catch (IOException e) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
-            return;
+            logger.error("Error processing socket messages", e);
         }
     }
 
@@ -260,7 +235,9 @@ public class COPSPdpOSAgent extends Thread {
             closeMsg.add(err);
             try {
                 closeMsg.writeData(conn);
-            } catch (IOException unae) {}
+            } catch (IOException unae) {
+                logger.error("Error writing data", unae);
+            }
 
             throw new COPSException("Unsupported client type");
         }
@@ -275,7 +252,9 @@ public class COPSPdpOSAgent extends Thread {
             closeMsg.add(err);
             try {
                 closeMsg.writeData(conn);
-            } catch (IOException unae) {}
+            } catch (IOException unae) {
+                logger.error("Error writing data", unae);
+            }
 
             throw new COPSException("Mandatory COPS object missing (PEPId)");
         }
@@ -293,7 +272,9 @@ public class COPSPdpOSAgent extends Thread {
             closeMsg.add(err);
             try {
                 closeMsg.writeData(conn);
-            } catch (IOException unae) {}
+            } catch (IOException unae) {
+                logger.error("Error writing data", unae);
+            }
 
             throw new COPSException("Unsupported objects (ClientSI, PdpAddress, Integrity)");
         }
