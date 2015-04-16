@@ -6,31 +6,22 @@
 
 package org.umu.cops.prpdp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
-
-import org.umu.cops.common.COPSDebug;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSDeleteMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKAMsg;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPepId;
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReqMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
-import org.umu.cops.stack.COPSTransceiver;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Class for managing an provisioning connection at the PDP side.
  */
 public class COPSPdpConnection implements Runnable {
+
+    public final static Logger logger = LoggerFactory.getLogger(COPSPdpConnection.class);
 
     /**
         Socket connected to PEP
@@ -60,7 +51,7 @@ public class COPSPdpConnection implements Runnable {
     /**
         Maps a Client Handle to a Handler
      */
-    protected Hashtable _managerMap;
+    protected final Map<String, COPSPdpReqStateMan> _managerMap;
     // map < String(COPSHandle), COPSPdpHandler> HandlerMap;
 
     /**
@@ -96,7 +87,7 @@ public class COPSPdpConnection implements Runnable {
 
         _lastKa = new Date();
         _lastmessage = COPSHeader.COPS_OP_OPN;
-        _managerMap = new Hashtable(20);
+        _managerMap = new ConcurrentHashMap<>();
 
         _kaTimer = 0;
         _process = process;
@@ -151,22 +142,6 @@ public class COPSPdpConnection implements Runnable {
     }
 
     /**
-     * Gets active handles
-     * @return   An <tt>Enumeration</tt> holding all active handles
-     */
-    public Enumeration getHandles() {
-        return _managerMap.keys();
-    }
-
-    /**
-     * Gets the handle map
-     * @return   A <tt>Hashtable</tt> holding the handle map
-     */
-    public Hashtable getReqStateMans() {
-        return _managerMap;
-    }
-
-    /**
      * Gets the PEP-ID
      * @return   The ID of the PEP, as a <tt>String</tt>
      */
@@ -218,7 +193,7 @@ public class COPSPdpConnection implements Runnable {
                     int _startTime = (int) (_lastRecKa.getTime());
                     int cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > _kaTimer*1000) {
+                    if ((cTime - _startTime) > _kaTimer * 1000) {
                         _sock.close();
                         // Notify all Request State Managers
                         notifyNoKAAllReqStateMan();
@@ -228,7 +203,7 @@ public class COPSPdpConnection implements Runnable {
                     _startTime = (int) (_lastSendKa.getTime());
                     cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
+                    if ((cTime - _startTime) > ((_kaTimer * 3/4) * 1000)) {
                         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_KA);
                         COPSKAMsg msg = new COPSKAMsg();
 
@@ -241,23 +216,29 @@ public class COPSPdpConnection implements Runnable {
 
                 try {
                     Thread.sleep(500);
-                } catch (Exception e) {};
+                } catch (Exception e) {
+                    logger.error("Exception thrown while sleeping", e);
+                }
 
             }
         } catch (Exception e) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
+            logger.error("Error while processing socket messages", e);
         }
 
         // connection closed by server
         // COPSDebug.out(getClass().getName(),"Connection closed by client");
         try {
             _sock.close();
-        } catch (IOException e) {};
+        } catch (IOException e) {
+            logger.error("Error closing socket", e);
+        }
 
         // Notify all Request State Managers
         try {
             notifyCloseAllReqStateMan();
-        } catch (COPSPdpException e) {};
+        } catch (COPSPdpException e) {
+            logger.error("Error closing state managers");
+        }
     }
 
     /**
@@ -316,12 +297,13 @@ public class COPSPdpConnection implements Runnable {
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
-                COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                              "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+                logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
             }
 
             conn.close();
-        } catch (Exception unae) { };
+        } catch (Exception unae) {
+            logger.error("Unexpected exception closing connection", unae);
+        }
     }
 
     /**
@@ -351,12 +333,12 @@ public class COPSPdpConnection implements Runnable {
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
-                COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                              "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+                logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
             }
-
             kaMsg.writeData(conn);
-        } catch (Exception unae) { };
+        } catch (Exception unae) {
+            logger.error("Unexpected exception while writing COPS data", unae);
+        }
     }
 
     /**
@@ -381,8 +363,7 @@ public class COPSPdpConnection implements Runnable {
 
         // Support
         if (cMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         // Delete clientHandler
@@ -391,9 +372,9 @@ public class COPSPdpConnection implements Runnable {
             //  cMsg.getClientHandle().getId().getData());
         }
 
-        COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        COPSPdpReqStateMan man = _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("No state manager found with ID - " + cMsg.getClientHandle().getId().str());
         } else {
             man.processDeleteRequestState(cMsg);
         }
@@ -427,8 +408,7 @@ public class COPSPdpConnection implements Runnable {
 
         // Support
         if (reqMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         COPSPdpReqStateMan man;
@@ -471,13 +451,12 @@ public class COPSPdpConnection implements Runnable {
 
         // Support
         if (repMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(repMsg.getClientHandle().getId().str());
         if (man == null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("No state manager found with ID - " + repMsg.getClientHandle().getId().str());
         } else {
             man.processReport(repMsg);
         }
@@ -498,13 +477,12 @@ public class COPSPdpConnection implements Runnable {
 
         // Support
         if (cMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("No state manager found with ID - " + cMsg.getClientHandle().getId().str());
         } else {
             man.processSyncComplete(cMsg);
         }
@@ -515,39 +493,21 @@ public class COPSPdpConnection implements Runnable {
      * @throws COPSException
      * @throws COPSPdpException
      */
-    protected void syncAllRequestState()
-    throws COPSException, COPSPdpException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(handle);
-
-                man.syncRequestState();
-            }
+    protected void syncAllRequestState() throws COPSException, COPSPdpException {
+        for (final COPSPdpReqStateMan man : _managerMap.values()) {
+            man.syncRequestState();
         }
     }
 
-    private void notifyCloseAllReqStateMan()
-    throws COPSPdpException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(handle);
-
-                man.processClosedConnection(_error);
-            }
+    private void notifyCloseAllReqStateMan() throws COPSPdpException {
+        for (final COPSPdpReqStateMan man : _managerMap.values()) {
+            man.processClosedConnection(_error);
         }
     }
 
-    private void notifyNoKAAllReqStateMan()
-    throws COPSPdpException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(handle);
-
-                man.processNoKAConnection();
-            }
+    private void notifyNoKAAllReqStateMan() throws COPSPdpException {
+        for (final COPSPdpReqStateMan man : _managerMap.values()) {
+            man.processNoKAConnection();
         }
     }
 
