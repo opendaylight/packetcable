@@ -4,15 +4,19 @@
 
 package org.pcmm;
 
-import java.util.Hashtable;
-
 import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
-// import org.umu.cops.prpdp.COPSPdpDataProcess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.COPSError;
+
+import java.util.Hashtable;
 
 
 public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
+
+    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpAgent.class);
+
     private Hashtable installPolicy;
     private Hashtable removePolicy;
 
@@ -47,7 +51,7 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
      */
     public void setClientData(PCMMPdpReqStateMan man, Hashtable reqSIs) {
 
-        System.out.println(getClass().getName() + ": " + "Request Info");
+        logger.info("Request Info");
         /*
                 for (Enumeration e = reqSIs.keys() ; e.hasMoreElements() ;) {
                     String strprid = (String) e.nextElement();
@@ -73,13 +77,11 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
      * Fail report received
      *
      * @param man
-     * @param reportSIs
+     * @param gateMsg
      */
     public void failReport(PCMMPdpReqStateMan man, PCMMGateReq gateMsg) {
 
-        System.out.println(getClass().getName()+ ": " + "Fail Report notified.");
-        System.out.println(getClass().getName()+ ": " + gateMsg.getError().toString());
-
+        logger.info("Fail Report notified with error - " + gateMsg.getError().toString());
         /*
 
                 System.out.println(getClass().getName() + ": " + "Report Info");
@@ -99,14 +101,13 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
      * Positive report received
      *
      * @param man
-     * @param reportSIs
+     * @param gateMsg
      */
     public void successReport(PCMMPdpReqStateMan man, PCMMGateReq gateMsg) {
-        System.out.println(getClass().getName()+ ": " + "Success Report notified.");
+        logger.info("Success Report notified.");
 
         if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck ) {
-            System.out.println(getClass().getName()+ ": GateDeleteAck ");
-            System.out.println(getClass().getName()+ ": GateID = " + gateMsg.getGateID().getGateID());
+            logger.info("GateDeleteAck: GateID = " + gateMsg.getGateID().getGateID());
             if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID1())
                 PCMMGlobalConfig.setGateID1(0);
             if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID2())
@@ -114,8 +115,7 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
 
         }
         if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck ) {
-            System.out.println(getClass().getName()+ ": GateSetAck ");
-            System.out.println(getClass().getName()+ ": GateID = " + gateMsg.getGateID().getGateID());
+            logger.info("GateSetAck : GateID = " + gateMsg.getGateID().getGateID());
             if (0 == PCMMGlobalConfig.getGateID1())
                 PCMMGlobalConfig.setGateID1(gateMsg.getGateID().getGateID());
             if (0 == PCMMGlobalConfig.getGateID2())
@@ -141,10 +141,10 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
      * Accounting report received
      *
      * @param man
-     * @param reportSIs
+     * @param gateMsg
      */
     public void acctReport(PCMMPdpReqStateMan man, PCMMGateReq gateMsg) {
-        System.out.println(getClass().getName()+ ": " + "Acct Report notified.");
+        logger.info("Acct Report notified.");
 
         /*
                 System.out.println(getClass().getName()+ ": " + "Report Info");
@@ -185,7 +185,7 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
      * @param error
      */
     public void notifyClosedConnection(PCMMPdpReqStateMan man, COPSError error) {
-        System.out.println(getClass().getName() + ": " + "Connection was closed by PEP");
+        logger.info("Connection was closed by PEP");
     }
 
     /**
