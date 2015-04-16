@@ -75,38 +75,33 @@ public class COPSDecisionMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_HANDLE: {
-                _clientHandle = new COPSHandle(buf);
-                _dataStart += _clientHandle.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_CONTEXT: {
-                //dec context
-                _decContext = new COPSContext(buf);
-                _dataStart += _decContext.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_ERROR: {
-                _error = new COPSError(buf);
-                _dataStart += _error.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_DEC: {
-                COPSDecision decs = new COPSDecision(buf);
-                _dataStart += decs.getDataLength();
-                addDecision(decs, _decContext);
-            }
-            break;
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-            default: {
-                throw new COPSException("Bad Message format, unknown object type");
-            }
+                case HANDLE:
+                    _clientHandle = new COPSHandle(buf);
+                    _dataStart += _clientHandle.getDataLength();
+                    break;
+                case CONTEXT:
+                    //dec context
+                    _decContext = new COPSContext(buf);
+                    _dataStart += _decContext.getDataLength();
+                    break;
+                case ERROR:
+                    _error = new COPSError(buf);
+                    _dataStart += _error.getDataLength();
+                    break;
+                case DEC:
+                    COPSDecision decs = new COPSDecision(buf);
+                    _dataStart += decs.getDataLength();
+                    addDecision(decs, _decContext);
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                default: {
+                    throw new COPSException("Bad Message format, unknown object type");
+                }
             }
         }
         checkSanity();
@@ -243,7 +238,7 @@ public class COPSDecisionMsg extends COPSMsg {
     /**
      * Add clientSI object
      *
-     * @param    integrity           a  COPSIntegrity
+     * @param    clientSI           a  COPSClientSI
      *
      * @throws   COPSException
      *

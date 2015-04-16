@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -29,9 +32,7 @@ public class COPSContext extends COPSObjBase {
 
     ///
     public COPSContext(short rType, short mType ) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(COPSObjHeader.COPS_CONTEXT);
-        _objHdr.setCType((byte) 1);
+        _objHdr = new COPSObjHeader(CNum.CONTEXT, CType.DEF);
         _rType = rType;
         _mType = mType;
         _objHdr.setDataLength((short) 4);
@@ -41,9 +42,7 @@ public class COPSContext extends COPSObjBase {
           Parse the data and create a Context object
      */
     protected COPSContext(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         _rType |= ((short) dataPtr[4]) << 8;
         _rType |= ((short) dataPtr[5]) & 0xFF;

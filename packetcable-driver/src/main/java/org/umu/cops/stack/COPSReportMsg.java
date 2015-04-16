@@ -260,34 +260,27 @@ public class COPSReportMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_HANDLE: {
-                _clientHandle = new COPSHandle(buf);
-                _dataStart += _clientHandle.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_RPT: {
-                _report = new COPSReportType(buf);
-                _dataStart += _report.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_CSI: {
-                COPSClientSI csi = new COPSClientSI(buf);
-                _dataStart += csi.getDataLength();
-                _clientSI.add(csi);
-            }
-            break;
-
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-
-            default: {
-                throw new COPSException("Bad Message format, unknown object type");
-            }
+                case HANDLE:
+                    _clientHandle = new COPSHandle(buf);
+                    _dataStart += _clientHandle.getDataLength();
+                    break;
+                case RPT:
+                    _report = new COPSReportType(buf);
+                    _dataStart += _report.getDataLength();
+                    break;
+                case CSI:
+                    COPSClientSI csi = new COPSClientSI(buf);
+                    _dataStart += csi.getDataLength();
+                    _clientSI.add(csi);
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                default:
+                    throw new COPSException("Bad Message format, unknown object type");
             }
         }
         checkSanity();

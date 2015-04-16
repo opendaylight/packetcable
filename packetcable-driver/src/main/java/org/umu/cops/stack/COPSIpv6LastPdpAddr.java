@@ -19,7 +19,8 @@ public class COPSIpv6LastPdpAddr extends COPSIpv6PdpAddress {
 
     public COPSIpv6LastPdpAddr() {
         super();
-        _objHdr.setCNum(COPSObjHeader.COPS_LAST_PDP_ADDR);
+        // TODO - FIXME later, currently not in use and the header is now immutable
+//        _objHdr.setCNum(COPSObjHeader.COPS_LAST_PDP_ADDR);
     }
 
     public COPSIpv6LastPdpAddr(byte[] dataPtr) {

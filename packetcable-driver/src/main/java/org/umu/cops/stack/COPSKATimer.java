@@ -7,6 +7,8 @@
 package org.umu.cops.stack;
 
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 /**
  * COPS Keep Alive Timer
@@ -17,16 +19,12 @@ package org.umu.cops.stack;
 public class COPSKATimer extends COPSTimer {
 
     public COPSKATimer() {
-        super ((short) 1);
-        _objHdr.setCNum(COPSObjHeader.COPS_KA);
-        _objHdr.setCType((byte) 1);
+        super(new COPSObjHeader(CNum.KA, CType.DEF), (short) 1);
     }
 
     ///
     public COPSKATimer(short timeVal) {
-        super(timeVal);
-        _objHdr.setCNum(COPSObjHeader.COPS_KA);
-        _objHdr.setCType((byte) 1);
+        super(new COPSObjHeader(CNum.KA, CType.DEF), timeVal);
     }
 
     /**

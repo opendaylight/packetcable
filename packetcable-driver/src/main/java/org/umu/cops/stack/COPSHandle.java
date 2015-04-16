@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -51,9 +54,7 @@ public class COPSHandle extends COPSObjBase {
      */
     public COPSHandle(final COPSData id) {
         if (id == null) throw new IllegalArgumentException("COPSData must not be null");
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(COPSObjHeader.COPS_HANDLE);
-        _objHdr.setCType((byte) 1);
+        _objHdr = new COPSObjHeader(CNum.HANDLE, CType.DEF);
         _id = id;
         if ((_id.length() % 4) != 0) {
             final int padLen = 4 - (_id.length() % 4);
@@ -72,8 +73,7 @@ public class COPSHandle extends COPSObjBase {
         if (dataPtr == null || dataPtr.length < 5)
             throw new IllegalArgumentException("Data cannot be null or fewer than 5 bytes");
 
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         //Get the length of data following the obj header
         final int dLen = _objHdr.getDataLength() - 4;

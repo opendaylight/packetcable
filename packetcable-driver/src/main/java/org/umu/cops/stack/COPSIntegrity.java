@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -24,17 +27,13 @@ public class COPSIntegrity extends COPSObjBase {
     private COPSData _padding;
 
     public COPSIntegrity() {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(COPSObjHeader.COPS_MSG_INTEGRITY);
-        _objHdr.setCType((byte) 1);
+        _objHdr = new COPSObjHeader(CNum.MSG_INTEGRITY, CType.DEF);
         _keyId = 0;
         _seqNum = 0;
     }
 
     public COPSIntegrity(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         _keyId |= ((short) dataPtr[4]) << 24;
         _keyId |= ((short) dataPtr[5]) << 16;

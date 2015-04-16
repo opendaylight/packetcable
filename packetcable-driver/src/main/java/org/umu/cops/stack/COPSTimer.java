@@ -16,7 +16,7 @@ import java.net.Socket;
  * @version COPSTimer.java, v 1.00 2003
  *
  */
-public class COPSTimer extends COPSObjBase {
+public abstract class COPSTimer extends COPSObjBase {
 
     protected COPSObjHeader _objHdr;
     private short _reserved;
@@ -93,8 +93,8 @@ public class COPSTimer extends COPSObjBase {
         COPSUtil.writeData(id, buf, 4);
     }
 
-    protected COPSTimer(short timeVal) {
-        _objHdr = new COPSObjHeader();
+    protected COPSTimer(COPSObjHeader hdr, short timeVal) {
+        _objHdr = hdr;
         //Time range is 1 - 65535 seconds
         _timerValue = timeVal;
         // _objHdr.setDataLength(sizeof(u_int32_t));
@@ -105,9 +105,7 @@ public class COPSTimer extends COPSObjBase {
      * Receive data that is in netwrok byte order and fill in the obj.
      */
     protected COPSTimer(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         _reserved |= ((short) dataPtr[4]) << 8;
         _reserved |= ((short) dataPtr[5]) & 0xFF;

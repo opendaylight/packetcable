@@ -10,6 +10,8 @@ import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.impl.*;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -145,7 +147,7 @@ public class PCMMPdpMsgSender {
 
 
         // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC, (byte) 4);
+        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
         byte[] data = gate.getData();
         clientSD.setData(new COPSData(data, 0, data.length));
         try {
@@ -261,7 +263,7 @@ public class PCMMPdpMsgSender {
 
 
         // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC, (byte) 4);
+        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
 
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
@@ -452,8 +454,7 @@ public class PCMMPdpMsgSender {
 
 
         // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC,
-                (byte) 4);
+        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
 
         // Client Handle with the same clientHandle as the request
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
@@ -642,8 +643,7 @@ public class PCMMPdpMsgSender {
             PCMMGlobalConfig.BETransmissionPolicy);
 
         // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC,
-                (byte) 4);
+        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
 
         // Client Handle with the same clientHandle as the request
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
@@ -759,7 +759,7 @@ public class PCMMPdpMsgSender {
         IGateID gateID = new GateID();
 
         // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI(COPSObjHeader.COPS_DEC, (byte) 4);
+        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
 
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 

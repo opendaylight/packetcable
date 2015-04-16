@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -25,15 +28,13 @@ abstract public class COPSIpv6PdpAddress extends COPSPdpAddress {
 
     protected COPSIpv6PdpAddress() {
         _addr = new COPSIpv6Address();
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCType((byte) 2);
+        _objHdr = new COPSObjHeader(CNum.NA, CType.STATELESS);
         // _objHdr.setDataLength((short) _addr.getDataLength() + sizeof(u_int32_t));
         _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
     }
 
     protected COPSIpv6PdpAddress(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
+        _objHdr = COPSObjHeader.parse(dataPtr);
         // _objHdr.checkDataLength();
 
         byte[] buf = new byte[16];

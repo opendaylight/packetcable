@@ -11,6 +11,8 @@ import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.net.InetAddress;
 import java.util.Properties;
@@ -99,7 +101,7 @@ public class MessageFactory implements IMessageFactory {
         if (prop.get(MessageProperties.DECISION_FLAG) != null)
             decision.setFlags((short) prop.get(MessageProperties.DECISION_FLAG));
 
-        final COPSClientSI si = new COPSClientSI(COPSObjHeader.COPS_DEC, (byte) 4);
+        final COPSClientSI si = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
         if (prop.get(MessageProperties.GATE_CONTROL) != null)
             si.setData((COPSData) prop.get(MessageProperties.GATE_CONTROL));
         try {

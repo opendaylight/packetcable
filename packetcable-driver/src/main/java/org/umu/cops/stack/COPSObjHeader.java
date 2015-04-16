@@ -9,6 +9,8 @@ package org.umu.cops.stack;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * COPS Object Header
@@ -16,68 +18,82 @@ import java.net.Socket;
  * @version COPSObjHeader.java, v 1.00 2003
  *
  */
-public class COPSObjHeader extends COPSObjBase {
+public class COPSObjHeader  {
 
-    public final static byte COPS_HANDLE = 1;
-    public final static byte COPS_CONTEXT = 2;
-    public final static byte COPS_ININTF = 3;
-    public final static byte COPS_OUTINTF = 4;
-    public final static byte COPS_REASON_CODE = 5;
-    public final static byte COPS_DEC = 6;
-    public final static byte COPS_LPDP_DEC = 7;
-    public final static byte COPS_ERROR = 8;
-    public final static byte COPS_CSI = 9;
-    public final static byte COPS_KA = 10;
-    public final static byte COPS_PEPID = 11;
-    public final static byte COPS_RPT = 12;
-    public final static byte COPS_PDP_REDIR = 13;
-    public final static byte COPS_LAST_PDP_ADDR = 14;
-    public final static byte COPS_ACCT_TIMER = 15;
-    public final static byte COPS_MSG_INTEGRITY = 16;
+    static Map<Integer, CNum> VAL_TO_CNUM = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_CNUM.put(CNum.NA.ordinal(), CNum.NA);
+        VAL_TO_CNUM.put(CNum.HANDLE.ordinal(), CNum.HANDLE);
+        VAL_TO_CNUM.put(CNum.CONTEXT.ordinal(), CNum.CONTEXT);
+        VAL_TO_CNUM.put(CNum.ININTF.ordinal(), CNum.ININTF);
+        VAL_TO_CNUM.put(CNum.OUTINTF.ordinal(), CNum.OUTINTF);
+        VAL_TO_CNUM.put(CNum.REASON_CODE.ordinal(), CNum.REASON_CODE);
+        VAL_TO_CNUM.put(CNum.DEC.ordinal(), CNum.DEC);
+        VAL_TO_CNUM.put(CNum.LPDP_DEC.ordinal(), CNum.LPDP_DEC);
+        VAL_TO_CNUM.put(CNum.ERROR.ordinal(), CNum.ERROR);
+        VAL_TO_CNUM.put(CNum.CSI.ordinal(), CNum.CSI);
+        VAL_TO_CNUM.put(CNum.KA.ordinal(), CNum.KA);
+        VAL_TO_CNUM.put(CNum.PEPID.ordinal(), CNum.PEPID);
+        VAL_TO_CNUM.put(CNum.RPT.ordinal(), CNum.RPT);
+        VAL_TO_CNUM.put(CNum.PDP_REDIR.ordinal(), CNum.PDP_REDIR);
+        VAL_TO_CNUM.put(CNum.LAST_PDP_ADDR.ordinal(), CNum.LAST_PDP_ADDR);
+        VAL_TO_CNUM.put(CNum.ACCT_TIMER.ordinal(), CNum.ACCT_TIMER);
+        VAL_TO_CNUM.put(CNum.MSG_INTEGRITY.ordinal(), CNum.MSG_INTEGRITY);
+    }
 
-    private transient short _len;
-    private transient byte _cNum;
+    static Map<Integer, CType> VAL_TO_CTYPE = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_CTYPE.put(CType.NA.ordinal(), CType.NA);
+        VAL_TO_CTYPE.put(CType.DEF.ordinal(), CType.DEF);
+        VAL_TO_CTYPE.put(CType.STATELESS.ordinal(), CType.STATELESS);
+        VAL_TO_CTYPE.put(CType.REPL.ordinal(), CType.REPL);
+        VAL_TO_CTYPE.put(CType.CSI.ordinal(), CType.CSI);
+        VAL_TO_CTYPE.put(CType.NAMED.ordinal(), CType.NAMED);
+    }
 
-    // TODO - This value may be better as an enumeration
-    private transient byte _cType;
+    /**
+     * Denotes the type of COPSMsg
+     */
+    private final CNum _cNum;
+
+    /**
+     * Subtype or version of the information.
+     */
+    private final CType _cType;
+
+    /**
+     * TODO - remove this attribute as the body of the COPS message should return the body length
+     */
+    @Deprecated
+    private short _len;
 
     /**
      * Constructor
      * @param cNum - the cNum value
      * @param cType - the cType value
+     * @throws java.lang.IllegalArgumentException
      */
-    public COPSObjHeader(final byte cNum, final byte cType) {
-        _len = 4;
+    public COPSObjHeader(final CNum cNum, final CType cType) {
+        if (cNum == null || cType == null) throw new IllegalArgumentException("CNum and CType must not be null");
         _cNum = cNum;
         _cType = cType;
-    }
-
-    /**
-     * Default constructor
-     */
-    public COPSObjHeader() {
         _len = 4;
-        _cNum = 0;
-        _cType = 0;
-    }
-
-    protected COPSObjHeader(final byte[] data) {
-        parse(data);
     }
 
     /**
      * Get the data length in number of octets
      * @return   a short
      */
-    public short getDataLength() {
-        return _len;
+    public short getHdrLength() {
+        return (short)4;
     }
 
     /**
      * Get the class information identifier cNum
      * @return   a byte
      */
-    public byte getCNum() {
+
+    public CNum getCNum() {
         return _cNum;
     }
 
@@ -85,7 +101,7 @@ public class COPSObjHeader extends COPSObjBase {
      * Get the type per cNum
      * @return   a byte
      */
-    public byte getCType() {
+    public CType getCType() {
         return _cType;
     }
 
@@ -94,38 +110,38 @@ public class COPSObjHeader extends COPSObjBase {
      * @return   a String
      */
     public String getStrCNum() {
-        switch (getCNum()) {
-            case COPS_HANDLE:
+        switch (_cNum) {
+            case HANDLE:
                 return ("Client-handle");
-            case COPS_CONTEXT:
+            case CONTEXT:
                 return ("Context");
-            case COPS_ININTF:
+            case ININTF:
                 return ("In-Interface");
-            case COPS_OUTINTF:
+            case OUTINTF:
                 return ("Out-Interface");
-            case COPS_REASON_CODE:
+            case REASON_CODE:
                 return ("Reason");
-            case COPS_DEC:
+            case DEC:
                 return ("Decision");
-            case COPS_LPDP_DEC:
+            case LPDP_DEC:
                 return ("Local-Decision");
-            case COPS_ERROR:
+            case ERROR:
                 return ("Error");
-            case COPS_CSI:
+            case CSI:
                 return ("Client-SI");
-            case COPS_KA:
+            case KA:
                 return ("KA-timer");
-            case COPS_PEPID:
+            case PEPID:
                 return ("PEP-id");
-            case COPS_RPT:
+            case RPT:
                 return ("Report");
-            case COPS_PDP_REDIR:
+            case PDP_REDIR:
                 return ("Redirect PDP addr");
-            case COPS_LAST_PDP_ADDR:
+            case LAST_PDP_ADDR:
                 return ("Last PDP addr");
-            case COPS_ACCT_TIMER:
+            case ACCT_TIMER:
                 return ("Account-Timer");
-            case COPS_MSG_INTEGRITY:
+            case MSG_INTEGRITY:
                 return ("Message-Integrity");
             default:
                 return ("Unknown");
@@ -136,59 +152,44 @@ public class COPSObjHeader extends COPSObjBase {
      * Set the obj length, the length is the length of the data following
      * the object header.The length of the object header (4 bytes) is added
      * to the length passed.
+     *
+     * TODO - The data length will be removed from the header in a subsequent patch
+     *
      * @param    len                 a  short
      */
-    public void setDataLength(final short len) {
+    @Deprecated
+    public void setDataLength(short len) {
         //Add the length of the header also
         _len = (short) (len + 4);
     }
 
     /**
-     * Set the class of information cNum
-     * @param    cNum                a  byte
+     * Get the data length in number of octets
+     *
+     * @return   a short
+     *
      */
-    public void setCNum(final byte cNum) {
-        _cNum = cNum;
+    public short getDataLength() {
+        return _len;
     }
 
     /**
-     * Set the  type defined per cNum
-     * @param    cType               a  byte
-     */
-    public void setCType(final byte cType) {
-        _cType = cType;
-    }
-
-    /**
-     * Writes data to a given network _socket
+     * Writes data to a given network socket
+     *
      * @param    id                  a  Socket
+     *
      * @throws   IOException
+     *
      */
-    public void writeData(final Socket id) throws IOException {
-        final byte[] buf = new byte[4];
+    public void writeData(Socket id) throws IOException {
+        byte[] buf = new byte[4];
 
         buf[0] = (byte) (_len >> 8);
         buf[1] = (byte) _len;
-        buf[2] = _cNum;
-        buf[3] = _cType;
+        buf[2] = (byte) _cNum.ordinal();
+        buf[3] = (byte) _cType.ordinal();
 
         COPSUtil.writeData(id, buf, 4);
-    }
-
-    /**
-     * Method parse
-     * @param    data                a  byte[]
-     */
-    public void parse(final byte[] data) {
-        if (data == null || data.length < 4)
-            throw new IllegalArgumentException("Data cannot be null or fewer than 2 bytes");
-
-        // TODO - Determine what setting the _len value from the data buffer really means
-        _len = 0;
-        _len |= ((short) data[0]) << 8;
-        _len |= ((short) data[1]) & 0xFF;
-        _cNum |= data[2];
-        _cType |= data[3];
     }
 
     /**
@@ -198,29 +199,83 @@ public class COPSObjHeader extends COPSObjBase {
      */
     public void dump(final OutputStream os) throws IOException {
         os.write(("**" + getStrCNum() + "**" + "\n").getBytes());
-        os.write(("Length: " + _len + "\n").getBytes());
         os.write(("C-num: " + _cNum + "\n").getBytes());
         os.write(("C-type: " + _cType + "\n").getBytes());
     }
 
     @Override
-    public boolean equals(final Object o) {
+    public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
         if (!(o instanceof COPSObjHeader)) {
             return false;
         }
-        final COPSObjHeader that = (COPSObjHeader) o;
-        return _cNum == that._cNum && _cType == that._cType && _len == that._len;
+
+        final COPSObjHeader header = (COPSObjHeader) o;
+
+        return _cNum == header._cNum && _cType == header._cType;
+
     }
 
     @Override
     public int hashCode() {
-        int result = (int) _len;
-        result = 31 * result + (int) _cNum;
-        result = 31 * result + (int) _cType;
+        int result = _cNum.hashCode();
+        result = 31 * result + _cType.hashCode();
         return result;
     }
+
+    /**
+     * Method parse
+     *
+     * @param    data                a  byte[]
+     *
+     */
+    public final static COPSObjHeader parse(byte[] data) {
+        short len = 0;
+        len = 0;
+        len |= ((short) data[0]) << 8;
+        len |= ((short) data[1]) & 0xFF;
+
+        int cNum = 0;
+        cNum |= data[2];
+
+        int cType = 0;
+        cType |= data[3];
+
+        final COPSObjHeader hdr = new COPSObjHeader(VAL_TO_CNUM.get(cNum), VAL_TO_CTYPE.get(cType));
+        hdr.setDataLength(len);
+        return hdr;
+    }
+
+    public enum CNum {
+        NA,
+        HANDLE,
+        CONTEXT,
+        ININTF,
+        OUTINTF,
+        REASON_CODE,
+        DEC,
+        LPDP_DEC,
+        ERROR,
+        CSI,
+        KA,
+        PEPID,
+        RPT,
+        PDP_REDIR,
+        LAST_PDP_ADDR,
+        ACCT_TIMER,
+        MSG_INTEGRITY,
+    }
+
+    public enum CType {
+        NA,
+        DEF,
+        STATELESS,
+        REPL,
+        CSI,
+        NAMED
+    }
+
 }
 

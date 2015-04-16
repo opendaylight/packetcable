@@ -61,14 +61,14 @@ public abstract class COPSIpv6Interface extends COPSInterface {
         return (_objHdr.getDataLength());
     }
 
-    protected COPSIpv6Interface() {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCType((byte) 2);
+    protected COPSIpv6Interface(COPSObjHeader hdr) {
+        _objHdr = hdr;
+//        _objHdr.setCType((byte) 2);
         _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
     }
 
     protected COPSIpv6Interface(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
+        _objHdr = COPSObjHeader.parse(dataPtr);
         _objHdr.parse(dataPtr);
         // _objHdr.checkDataLength();
 
@@ -85,7 +85,7 @@ public abstract class COPSIpv6Interface extends COPSInterface {
         _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
     }
 
-    protected COPSObjHeader _objHdr;
+    private COPSObjHeader _objHdr;
     private COPSIpv6Address _addr;
     private int _ifindex;
 }

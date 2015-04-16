@@ -203,21 +203,18 @@ public class COPSSyncStateMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_HANDLE: {
-                _clientHandle = new COPSHandle(buf);
-                _dataStart += _clientHandle.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-            default: {
-                throw new COPSException("Bad Message format, unknown object type");
-            }
+                case HANDLE:
+                    _clientHandle = new COPSHandle(buf);
+                    _dataStart += _clientHandle.getDataLength();
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                default:
+                    throw new COPSException("Bad Message format, unknown object type");
             }
         }
         checkSanity();

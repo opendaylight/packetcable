@@ -436,63 +436,55 @@ public class COPSReqMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_HANDLE: {
-                _clientHandle = new COPSHandle(buf);
-                _dataStart += _clientHandle.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_CONTEXT: {
-                if (_context == null) {
-                    //Message context
-                    _context = new COPSContext(buf);
-                    _dataStart += _context.getDataLength();
-                } else {
-                    //lpdp context
-                    _lpdpContext = new COPSContext(buf);
-                    _dataStart += _lpdpContext.getDataLength();
-                }
-            }
-            break;
-            case COPSObjHeader.COPS_ININTF: {
-                if (objHdr.getCType() == 1) {
-                    _inInterface = new COPSIpv4InInterface(buf);
-                } else {
-                    _inInterface = new COPSIpv6InInterface(buf);
-                }
-                _dataStart += _inInterface.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_OUTINTF: {
-                if (objHdr.getCType() == 1) {
-                    _outInterface = new COPSIpv4OutInterface(buf);
-                } else {
-                    _outInterface = new COPSIpv6OutInterface(buf);
-                }
-                _dataStart += _outInterface.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_LPDP_DEC: {
-                COPSLPDPDecision lpdp = new COPSLPDPDecision(buf);
-                _dataStart += lpdp.getDataLength();
-                addLocalDecision(lpdp, _lpdpContext);
-            }
-            break;
-            case COPSObjHeader.COPS_CSI: {
-                COPSClientSI csi = new COPSClientSI (buf);
-                _dataStart += csi.getDataLength();
-                _clientSIs.add(csi);
-            }
-            break;
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-            default: {
-                throw new COPSException("Bad Message format, unknown object type");
-            }
+                case HANDLE:
+                    _clientHandle = new COPSHandle(buf);
+                    _dataStart += _clientHandle.getDataLength();
+                    break;
+                case CONTEXT:
+                    if (_context == null) {
+                        //Message context
+                        _context = new COPSContext(buf);
+                        _dataStart += _context.getDataLength();
+                    } else {
+                        //lpdp context
+                        _lpdpContext = new COPSContext(buf);
+                        _dataStart += _lpdpContext.getDataLength();
+                    }
+                    break;
+                case ININTF:
+                    if (objHdr.getCType().ordinal() == 1) {
+                        _inInterface = new COPSIpv4InInterface(buf);
+                    } else {
+                        _inInterface = new COPSIpv6InInterface(buf);
+                    }
+                    _dataStart += _inInterface.getDataLength();
+                    break;
+                case OUTINTF:
+                    if (objHdr.getCType().ordinal() == 1) {
+                        _outInterface = new COPSIpv4OutInterface(buf);
+                    } else {
+                        _outInterface = new COPSIpv6OutInterface(buf);
+                    }
+                    _dataStart += _outInterface.getDataLength();
+                break;
+                case LPDP_DEC:
+                    COPSLPDPDecision lpdp = new COPSLPDPDecision(buf);
+                    _dataStart += lpdp.getDataLength();
+                    addLocalDecision(lpdp, _lpdpContext);
+                    break;
+                case CSI:
+                    COPSClientSI csi = new COPSClientSI (buf);
+                    _dataStart += csi.getDataLength();
+                    _clientSIs.add(csi);
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                default:
+                    throw new COPSException("Bad Message format, unknown object type");
             }
         }
         checkSanity();
