@@ -3,64 +3,39 @@
  */
 package org.pcmm.rcd.impl;
 
+import org.pcmm.PCMMConstants;
+import org.pcmm.PCMMGlobalConfig;
+import org.pcmm.PCMMProperties;
+import org.pcmm.gates.*;
+import org.pcmm.gates.IGateSpec.DSCPTOS;
+import org.pcmm.gates.IGateSpec.Direction;
+import org.pcmm.gates.impl.*;
+import org.pcmm.messages.IMessage.MessageProperties;
+import org.pcmm.messages.impl.MessageFactory;
+import org.pcmm.objects.MMVersionInfo;
+import org.pcmm.rcd.IPCMMPolicyServer;
+import org.pcmm.utils.PCMMException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.prpdp.COPSPdpConnection;
+import org.umu.cops.prpdp.COPSPdpDataProcess;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import org.pcmm.PCMMConstants;
-import org.pcmm.PCMMGlobalConfig;
-import org.pcmm.PCMMProperties;
-import org.pcmm.gates.IAMID;
-import org.pcmm.gates.IClassifier;
-import org.pcmm.gates.IExtendedClassifier;
-import org.pcmm.gates.IGateID;
-import org.pcmm.gates.IGateSpec;
-import org.pcmm.gates.IGateSpec.DSCPTOS;
-import org.pcmm.gates.IGateSpec.Direction;
-import org.pcmm.gates.IPCMMError;
-import org.pcmm.gates.IPCMMGate;
-import org.pcmm.gates.ISubscriberID;
-import org.pcmm.gates.ITrafficProfile;
-import org.pcmm.gates.ITransactionID;
-import org.pcmm.gates.impl.AMID;
-import org.pcmm.gates.impl.BestEffortService;
-import org.pcmm.gates.impl.Classifier;
-import org.pcmm.gates.impl.ExtendedClassifier;
-import org.pcmm.gates.impl.GateID;
-import org.pcmm.gates.impl.GateSpec;
-import org.pcmm.gates.impl.PCMMError;
-import org.pcmm.gates.impl.PCMMGateReq;
-import org.pcmm.gates.impl.SubscriberID;
-import org.pcmm.gates.impl.TransactionID;
-import org.pcmm.messages.IMessage.MessageProperties;
-import org.pcmm.messages.impl.MessageFactory;
-import org.pcmm.objects.MMVersionInfo;
-import org.pcmm.rcd.IPCMMPolicyServer;
-import org.pcmm.utils.PCMMException;
-import org.umu.cops.prpdp.COPSPdpConnection;
-import org.umu.cops.prpdp.COPSPdpDataProcess;
-import org.umu.cops.stack.COPSClientAcceptMsg;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSClientOpenMsg;
-import org.umu.cops.stack.COPSClientSI;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDecision;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReqMsg;
-
 /**
  * 
  * PCMM policy server
  * 
  */
-public class PCMMPolicyServer extends AbstractPCMMServer implements
-		IPCMMPolicyServer {
+public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyServer {
+
+    public final static Logger logger = LoggerFactory.getLogger(PCMMPolicyServer.class);
+
 	/**
 	 * since PCMMPolicyServer can connect to multiple CMTS (PEP) we need to
 	 * manage each connection in a separate thread.
@@ -144,7 +119,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 							// gate-set
 							client.setClientHandle(req.getClientHandle().getId().str());
 							COPSPdpDataProcess processor = null;
-							COPSPdpConnection copsPdpConnection = new COPSPdpConnection(opn.getPepId(), ((AbstractPCMMClient) client).getSocket(), processor);
+							COPSPdpConnection copsPdpConnection = new COPSPdpConnection(opn.getPepId(),
+                                    ((AbstractPCMMClient) client).getSocket(), processor);
 							copsPdpConnection.setKaTimer(((COPSClientAcceptMsg) catMsg).getKATimer().getTimerVal());
 							pool.schedule(pool.adapt(copsPdpConnection));
 							endNegotiation = true;
@@ -204,7 +180,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 			ITransactionID trID = new TransactionID();
 			// set transaction ID to gate set
 			trID.setGateCommandType(ITransactionID.GateSet);
-			transactionID = (short) (transactionID == 0 ? (short) (Math.random() * hashCode()) : transactionID);
+			transactionID = (transactionID == 0 ? (short) (Math.random() * hashCode()) : transactionID);
 			trID.setTransactionIdentifier(transactionID);
 			// AMID
 			IAMID amid = getAMID();
@@ -245,7 +221,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 				}
 				COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
 				IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
-				IPCMMError error = ((PCMMGateReq) responseGate).getError();
+				IPCMMError error = responseGate.getError();
 				if (error != null) {
 					logger.error(error.toString());
 					return false;
@@ -324,7 +300,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 				}
 				COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
 				IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
-				IPCMMError error = ((PCMMGateReq) responseGate).getError();
+				IPCMMError error = responseGate.getError();
 				if (error != null) {
 					logger.error(error.toString());
 					return false;
@@ -403,7 +379,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 				}
 				COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
 				IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
-				IPCMMError error = ((PCMMGateReq) responseGate).getError();
+				IPCMMError error = responseGate.getError();
 				ITransactionID responseTransactionID = responseGate.getTransactionID();
 				if (error != null) {
 					logger.debug(responseTransactionID != null ? responseTransactionID.toString() : "returned Transaction ID is null");
@@ -495,7 +471,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 				}
 				COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
 				IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
-				IPCMMError error = ((PCMMGateReq) responseGate).getError();
+				IPCMMError error = responseGate.getError();
 				ITransactionID responseTransactionID = responseGate.getTransactionID();
 				if (error != null) {
 					logger.debug(responseTransactionID != null ? responseTransactionID.toString() : "returned Transaction ID is null");
@@ -536,7 +512,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 		}
 
 		private IClassifier getClassifier(ISubscriberID subscriberID) {
-			IClassifier classifier = null;
+			IClassifier classifier;
 			// if the version major is less than 4 we need to use Classifier
 			if (getVersionInfo().getMajorVersionNB() >= 4) {
 				classifier = new ExtendedClassifier();
@@ -553,7 +529,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 					((IExtendedClassifier) classifier).setIPDestinationMask(mask);
 					((IExtendedClassifier) classifier).setIPSourceMask(mask);
 				} catch (UnknownHostException unae) {
-					System.out.println("Error getByName" + unae.getMessage());
+					logger.error("Error getByName", unae);
 				}
 				((IExtendedClassifier) classifier).setSourcePortStart(PCMMGlobalConfig.srcPort);
 				((IExtendedClassifier) classifier).setSourcePortEnd(PCMMGlobalConfig.srcPort);
@@ -583,7 +559,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements
 					classifier.setSourceIPAddress(srcIP);
 					classifier.setDestinationIPAddress(dstIP);
 				} catch (UnknownHostException unae) {
-					System.out.println("Error getByName" + unae.getMessage());
+					logger.error("Error getByName", unae);
 				}
 				classifier.setSourcePort(PCMMGlobalConfig.srcPort);
 				classifier.setDestinationPort(PCMMGlobalConfig.dstPort);
