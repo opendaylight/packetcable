@@ -15,7 +15,7 @@ import java.util.Hashtable;
 
 public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
 
-    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpAgent.class);
+    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpDataProcess.class);
 
     private Hashtable installPolicy;
     private Hashtable removePolicy;
