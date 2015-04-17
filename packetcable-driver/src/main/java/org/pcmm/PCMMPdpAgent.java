@@ -4,36 +4,30 @@
 
 package org.pcmm;
 
+import org.pcmm.objects.MMVersionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.common.COPSDebug;
+import org.umu.cops.ospep.COPSPepException;
+import org.umu.cops.prpdp.COPSPdpAgent;
+import org.umu.cops.prpdp.COPSPdpException;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import org.umu.cops.common.COPSDebug;
-import org.umu.cops.ospep.COPSPepException;
-import org.umu.cops.prpdp.COPSPdpAgent;
-import org.umu.cops.prpdp.COPSPdpException;
-import org.umu.cops.stack.COPSAcctTimer;
-import org.umu.cops.stack.COPSClientAcceptMsg;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSClientOpenMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKATimer;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPepId;
-import org.umu.cops.stack.COPSReqMsg;
-import org.umu.cops.stack.COPSTransceiver;
 // import org.umu.cops.prpdp.COPSPdpDataProcess;
-import org.pcmm.objects.MMVersionInfo;
 
 
 /**
  * Core PDP agent for provisioning
  */
 public class PCMMPdpAgent extends COPSPdpAgent {
+
+    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpAgent.class);
+
     /** Well-known port for PCMM */
     public static final int WELL_KNOWN_PDP_PORT = 3918;
 
@@ -220,7 +214,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         if ((cMsg.getClientSI() != null) ) {
             _mminfo = new MMVersionInfo(cMsg
                                         .getClientSI().getData().getData());
-            System.out.println("CMTS sent MMVersion info : major:"
+            logger.info("CMTS sent MMVersion info : major:"
                                + _mminfo.getMajorVersionNB() + "  minor:"
                                + _mminfo.getMinorVersionNB());
 
@@ -260,8 +254,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             COPSMsg rmsg = COPSTransceiver.receiveMsg(socket);
             // Client-Close
             if (rmsg.getHeader().isAClientClose()) {
-                System.out.println(((COPSClientCloseMsg) rmsg)
-                                   .getError().getDescription());
+                logger.info("Client close description - " + ((COPSClientCloseMsg) rmsg).getError().getDescription());
                 // close the socket
                 COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
                                                  .getHeader().getClientType());
@@ -392,7 +385,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
 
     /**
       * Sets the PepId
-      * @param   <tt>COPSPepId</tt>
+      * @param   pepId - COPSPepId
       */
     public void setPepId(COPSPepId pepId) {
         _pepId = pepId;
