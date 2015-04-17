@@ -8,7 +8,6 @@ import org.pcmm.objects.MMVersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.common.COPSDebug;
-import org.umu.cops.ospep.COPSPepException;
 import org.umu.cops.prpdp.COPSPdpAgent;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
@@ -16,7 +15,6 @@ import org.umu.cops.stack.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 // import org.umu.cops.prpdp.COPSPdpDataProcess;
 
@@ -102,11 +100,9 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @throws java.net.UnknownHostException
      * @throws java.io.IOException
      * @throws COPSException
-     * @throws COPSPepException
+     * @throws COPSPdpException
      */
-    public boolean connect(String psHost, int psPort)
-    throws UnknownHostException, IOException, COPSException,
-                COPSPdpException {
+    public boolean connect(String psHost, int psPort) throws IOException, COPSException, COPSPdpException {
 
         this.psHost = psHost;
         this.psPort = psPort;
@@ -115,10 +111,10 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         try {
             socket = new Socket(addr, psPort);
         } catch (IOException e) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
+            logger.error(COPSDebug.ERROR_SOCKET, e);
             return (false);
         }
-        COPSDebug.err(getClass().getName(), "PDP Socket Opened");
+        logger.info("PDP Socket Opened");
         // Loop through for Incoming messages
 
         // server infinite loop
@@ -127,32 +123,24 @@ public class PCMMPdpAgent extends COPSPdpAgent {
 
             // We're waiting for an message
             try {
-                COPSDebug.err(getClass().getName(),
-                              "PDP  COPSTransceiver.receiveMsg ");
+                logger.info("PDP  COPSTransceiver.receiveMsg");
                 COPSMsg msg = COPSTransceiver.receiveMsg(socket);
                 if (msg.getHeader().isAClientOpen()) {
-                    COPSDebug.err(getClass().getName(),
-                                  "PDP msg.getHeader().isAClientOpen");
+                    logger.info("PDP msg.getHeader().isAClientOpen");
                     handleClientOpenMsg(socket, msg);
                 } else {
-                    // COPSDebug.err(getClass().getName(),
-                    // COPSDebug.ERROR_NOEXPECTEDMSG);
                     try {
                         socket.close();
                     } catch (Exception ex) {
+                        logger.error("Unexpected exception closing socket", ex);
                     }
-                    ;
                 }
             } catch (Exception e) { // COPSException, IOException
-                // COPSDebug.err(getClass().getName(),
-                // COPSDebug.ERROR_EXCEPTION,
-                // "(" + socket.getInetAddress() + ":" + socket.getPort() + ")",
-                // e);
                 try {
                     socket.close();
                 } catch (Exception ex) {
+                    logger.error("Unexpected exception closing socket", ex);
                 }
-                ;
                 return true;
             }
         }
@@ -187,6 +175,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
+                logger.error("Unexpected error writing COPS data", unae);
             }
 
             throw new COPSException("Unsupported client type");
@@ -205,6 +194,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
+                logger.error("Unexpected error writing COPS data", unae);
             }
 
             throw new COPSException("Mandatory COPS object missing (PEPId)");
@@ -230,6 +220,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
+                logger.error("Unexpected error writing COPS data", unae);
             }
 
             throw new COPSException("Unsupported objects (PdpAddress, Integrity)");
@@ -250,7 +241,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         acceptMsg.writeData(conn);
         // XXX - handleRequestMsg
         try {
-            COPSDebug.err(getClass().getName(), "PDP COPSTransceiver.receiveMsg ");
+            logger.info("PDP COPSTransceiver.receiveMsg");
             COPSMsg rmsg = COPSTransceiver.receiveMsg(socket);
             // Client-Close
             if (rmsg.getHeader().isAClientClose()) {
@@ -266,6 +257,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
                 try {
                     closeMsg.writeData(conn);
                 } catch (IOException unae) {
+                    logger.error("Unexpected exception writing COPS data", unae);
                 }
                 throw new COPSException("CMTS requetsed Client-Close");
             } else {
@@ -281,7 +273,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             throw new COPSException("Error COPSTransceiver.receiveMsg");
         }
 
-        COPSDebug.err(getClass().getName(), "PDPCOPSConnection");
+        logger.info("PDPCOPSConnection");
         PCMMPdpConnection pdpConn = new PCMMPdpConnection(pepId, conn, _process);
         pdpConn.setKaTimer(getKaTimer());
         if (getAcctTimer() != 0)
@@ -298,7 +290,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         }
         // XXX - End handleRequestMsg
 
-        COPSDebug.err(getClass().getName(), "PDP Thread(pdpConn).start");
+        logger.info("PDP Thread(pdpConn).start");
         new Thread(pdpConn).start();
         getConnectionMap().put(pepId.getData().str(), pdpConn);
     }
@@ -311,9 +303,11 @@ public class PCMMPdpAgent extends COPSPdpAgent {
     }
 
     /**
+     * TODO - make the host immutable
      * @param _psHost
      *            the _psHost to set
      */
+    @Deprecated
     public void setPsHost(String _psHost) {
         this.psHost = _psHost;
     }
@@ -326,9 +320,11 @@ public class PCMMPdpAgent extends COPSPdpAgent {
     }
 
     /**
+     * TODO - make the port immutable
      * @param _psPort
      *            the _psPort to set
      */
+    @Deprecated
     public void setPsPort(int _psPort) {
         this.psPort = _psPort;
     }
@@ -341,9 +337,11 @@ public class PCMMPdpAgent extends COPSPdpAgent {
     }
 
     /**
+     * TODO - Ensure socket is not overly transient
      * @param socket
      *            the socket to set
      */
+    @Deprecated
     public void setSocket(Socket socket) {
         this.socket = socket;
     }
@@ -384,9 +382,11 @@ public class PCMMPdpAgent extends COPSPdpAgent {
     }
 
     /**
-      * Sets the PepId
-      * @param   pepId - COPSPepId
-      */
+     * Sets the PepId
+     * TODO - make PEP ID and the associate string immutable or remove altogether
+     * @param   pepId - COPSPepId
+     */
+    @Deprecated
     public void setPepId(COPSPepId pepId) {
         _pepId = pepId;
         _pepIdString = pepId.getData().str();
