@@ -23,19 +23,17 @@ abstract public class COPSIpv4PdpAddress extends COPSPdpAddress {
     private short _reserved;
     protected short _tcpPort;
 
-    protected COPSIpv4PdpAddress() {
+    protected COPSIpv4PdpAddress(COPSObjHeader hdr) {
         _addr = new COPSIpv4Address();
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCType((byte) 1);
+        _objHdr = hdr;
+//        _objHdr.setCType((byte) 1);
         // _objHdr.setDataLength((short) _addr.getDataLength() + sizeof(u_int32_t));
         _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
     }
 
     protected COPSIpv4PdpAddress(byte[] dataPtr) {
         _addr = new COPSIpv4Address();
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         byte[] buf = new byte[4];
         System.arraycopy(dataPtr,2,buf,0,4);

@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -23,15 +26,11 @@ public class COPSPepId extends COPSObjBase {
     COPSData _padding;
 
     public COPSPepId() {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(COPSObjHeader.COPS_PEPID);
-        _objHdr.setCType((byte) 1);
+        _objHdr = new COPSObjHeader(CNum.PEPID, CType.DEF);
     }
 
     protected COPSPepId(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         //Get the length of data following the obj header
         short dLen = (short) (_objHdr.getDataLength() - 4);

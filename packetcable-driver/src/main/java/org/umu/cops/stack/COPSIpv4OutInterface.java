@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.net.Socket;
 
@@ -17,8 +20,7 @@ import java.net.Socket;
  */
 public class COPSIpv4OutInterface extends COPSIpv4Interface {
     public COPSIpv4OutInterface() {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(COPSObjHeader.COPS_ININTF);
+        super(new COPSObjHeader(CNum.ININTF, CType.DEF));
     }
 
     public COPSIpv4OutInterface(byte[] dataPtr) {

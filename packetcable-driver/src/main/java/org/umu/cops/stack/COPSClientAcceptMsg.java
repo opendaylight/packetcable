@@ -175,26 +175,22 @@ public class COPSClientAcceptMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_KA: {
-                _kaTimer = new COPSKATimer(buf);
-                _dataStart += _kaTimer.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_ACCT_TIMER: {
-                _acctTimer = new COPSAcctTimer(buf);
-                _dataStart += _acctTimer.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-            default: {
-                throw new COPSException("Bad Message format");
-            }
+                case KA:
+                    _kaTimer = new COPSKATimer(buf);
+                    _dataStart += _kaTimer.getDataLength();
+                    break;
+                case ACCT_TIMER:
+                    _acctTimer = new COPSAcctTimer(buf);
+                    _dataStart += _acctTimer.getDataLength();
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                default:
+                    throw new COPSException("Bad Message format");
             }
         }
         checkSanity();

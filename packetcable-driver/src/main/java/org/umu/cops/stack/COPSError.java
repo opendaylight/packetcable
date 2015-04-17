@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -59,19 +62,14 @@ public class COPSError extends COPSObjBase {
     private short _errSubCode;
 
     public COPSError(short errCode, short subCode) {
-        _objHdr = new COPSObjHeader();
+        _objHdr = new COPSObjHeader(CNum.ERROR, CType.DEF);
         _errCode = errCode;
         _errSubCode = subCode;
-        _objHdr.setCNum(COPSObjHeader.COPS_ERROR);
-        _objHdr.setCType((byte) 1);
         _objHdr.setDataLength((short) 4);
     }
 
     protected COPSError(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
-
+        _objHdr = COPSObjHeader.parse(dataPtr);
         _errCode |= ((short) dataPtr[4]) << 8;
         _errCode |= ((short) dataPtr[5]) & 0xFF;
         _errSubCode |= ((short) dataPtr[6]) << 8;

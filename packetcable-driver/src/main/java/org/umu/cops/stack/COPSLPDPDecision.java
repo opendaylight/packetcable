@@ -21,12 +21,14 @@ public class COPSLPDPDecision extends COPSDecision {
      */
     public COPSLPDPDecision(byte cType) {
         super (cType);
-        _objHdr.setCNum(COPSObjHeader.COPS_LPDP_DEC);
+// TODO - FIXME later, currently not in use and the header is now immutable
+//        _objHdr.setCNum(COPSObjHeader.COPS_LPDP_DEC);
     }
 
     public COPSLPDPDecision() {
         super ();
-        _objHdr.setCNum(COPSObjHeader.COPS_LPDP_DEC);
+// TODO - FIXME later, currently not in use and the header is now immutable
+//        _objHdr.setCNum(COPSObjHeader.COPS_LPDP_DEC);
     }
 
     /**

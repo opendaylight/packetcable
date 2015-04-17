@@ -3,23 +3,14 @@
  */
 package org.pcmm.messages.impl;
 
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-
-import org.umu.cops.stack.COPSClientSI;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSDecision;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSIntegrity;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSObjHeader;
 
 /**
  * COPS Decision Message
@@ -85,50 +76,42 @@ public class COPSDecisionMsgEX extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data, _dataStart, buf, 0, data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader(buf) {
-            };
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_HANDLE: {
-                _clientHandle = new COPSHandle(buf) {
-                };
-                _dataStart += _clientHandle.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_CONTEXT: {
-                // dec context
-                _decContext = new COPSContext(buf) {
-                };
-                _dataStart += _decContext.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_ERROR: {
-                _error = new COPSError(buf) {
-                };
-                _dataStart += _error.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_DEC: {
-                COPSDecision decs = new COPSDecision(buf) {
-                };
-                _dataStart += decs.getDataLength();
-                addDecision(decs, _decContext);
-            }
-            break;
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_CSI: {
-                clientSI = new COPSClientSI(buf) {
-                };
-                _dataStart += clientSI.getDataLength();
-            }
-            break;
-            default: {
-                throw new COPSException(
-                    "Bad Message format, unknown object type");
-            }
+                case HANDLE:
+                    _clientHandle = new COPSHandle(buf) {
+                    };
+                    _dataStart += _clientHandle.getDataLength();
+                    break;
+                case CONTEXT:
+                    // dec context
+                    _decContext = new COPSContext(buf) {
+                    };
+                    _dataStart += _decContext.getDataLength();
+                    break;
+                case ERROR:
+                    _error = new COPSError(buf) {
+                    };
+                    _dataStart += _error.getDataLength();
+                    break;
+                case DEC:
+                    COPSDecision decs = new COPSDecision(buf) {
+                    };
+                    _dataStart += decs.getDataLength();
+                    addDecision(decs, _decContext);
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                case CSI:
+                    clientSI = new COPSClientSI(buf) {
+                    };
+                    _dataStart += clientSI.getDataLength();
+                    break;
+                default:
+                    throw new COPSException(
+                        "Bad Message format, unknown object type");
             }
         }
         checkSanity();

@@ -249,35 +249,30 @@ public class COPSClientOpenMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_PEPID: {
-                _pepId = new COPSPepId(buf);
-                _dataStart += _pepId.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_LAST_PDP_ADDR: {
-                if (objHdr.getCType() == 1) {
-                    _pdpAddress = new COPSIpv4LastPdpAddr(buf);
-                } else if (objHdr.getCType() == 2) {
-                    _pdpAddress = new COPSIpv6LastPdpAddr(buf);
-                }
-                _dataStart += _pdpAddress.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_CSI: {
-                _clientSI = new COPSClientSI(buf);
-                _dataStart += _clientSI.getDataLength();
-            }
-            break;
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
-                _integrity = new COPSIntegrity(buf);
-                _dataStart += _integrity.getDataLength();
-            }
-            break;
-            default: {
-                throw new COPSException("Bad Message format");
-            }
+                case PEPID:
+                    _pepId = new COPSPepId(buf);
+                    _dataStart += _pepId.getDataLength();
+                    break;
+                case LAST_PDP_ADDR:
+                    if (objHdr.getCType().ordinal() == 1) {
+                        _pdpAddress = new COPSIpv4LastPdpAddr(buf);
+                    } else if (objHdr.getCType().ordinal() == 2) {
+                        _pdpAddress = new COPSIpv6LastPdpAddr(buf);
+                    }
+                    _dataStart += _pdpAddress.getDataLength();
+                    break;
+                case CSI:
+                    _clientSI = new COPSClientSI(buf);
+                    _dataStart += _clientSI.getDataLength();
+                    break;
+                case MSG_INTEGRITY:
+                    _integrity = new COPSIntegrity(buf);
+                    _dataStart += _integrity.getDataLength();
+                    break;
+                default:
+                    throw new COPSException("Bad Message format");
             }
         }
         checkSanity();

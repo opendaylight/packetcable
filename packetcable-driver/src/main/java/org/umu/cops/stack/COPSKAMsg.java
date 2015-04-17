@@ -123,13 +123,12 @@ public class COPSKAMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = new COPSObjHeader (buf);
+            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
             switch (objHdr.getCNum()) {
-            case COPSObjHeader.COPS_MSG_INTEGRITY: {
+            case MSG_INTEGRITY:
                 _integrity = new COPSIntegrity(buf);
                 _dataStart += _integrity.getDataLength();
-            }
-            break;
+                break;
             default: {
                 throw new COPSException("Bad Message format, unknown object type");
             }

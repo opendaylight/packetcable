@@ -7,6 +7,8 @@
 package org.umu.cops.stack;
 
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 /**
  * COPS Accounting Timer Object
@@ -17,16 +19,12 @@ package org.umu.cops.stack;
 public class COPSAcctTimer extends COPSTimer {
 
     public COPSAcctTimer() {
-        super ((short) 1);
-        _objHdr.setCNum(COPSObjHeader.COPS_ACCT_TIMER);
-        _objHdr.setCType((byte) 1);
+        super(new COPSObjHeader(CNum.ACCT_TIMER, CType.DEF), (short) 1);
     }
 
     ///
     public COPSAcctTimer(short timeVal) {
-        super(timeVal);
-        _objHdr.setCNum(COPSObjHeader.COPS_ACCT_TIMER);
-        _objHdr.setCType((byte) 1);
+        super(new COPSObjHeader(CNum.ACCT_TIMER, CType.DEF), timeVal);
     }
 
     ///

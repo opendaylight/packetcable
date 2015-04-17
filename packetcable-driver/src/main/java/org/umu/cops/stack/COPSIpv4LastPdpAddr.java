@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -18,8 +21,7 @@ import java.io.OutputStream;
 public class COPSIpv4LastPdpAddr extends COPSIpv4PdpAddress {
 
     public COPSIpv4LastPdpAddr() {
-        super();
-        _objHdr.setCNum(COPSObjHeader.COPS_LAST_PDP_ADDR);
+        super(new COPSObjHeader(CNum.LAST_PDP_ADDR, CType.DEF));
     }
 
     public COPSIpv4LastPdpAddr(byte[] dataPtr) {

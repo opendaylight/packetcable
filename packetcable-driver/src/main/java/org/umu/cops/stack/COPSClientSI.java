@@ -6,6 +6,8 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -26,24 +28,18 @@ public class COPSClientSI extends COPSObjBase {
 
     ///
     public COPSClientSI(byte type) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(COPSObjHeader.COPS_CSI);
-        _objHdr.setCType(type);
+        _objHdr = new COPSObjHeader(CNum.CSI, COPSObjHeader.VAL_TO_CTYPE.get((int)type));
     }
 
     public COPSClientSI(byte cnum, byte ctype) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.setCNum(cnum);
-        _objHdr.setCType(ctype);
+        _objHdr = new COPSObjHeader(COPSObjHeader.VAL_TO_CNUM.get((int)cnum), COPSObjHeader.VAL_TO_CTYPE.get((int)ctype));
     }
 
     /**
      Parse the data and create a ClientSI object
      */
     protected COPSClientSI(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         //Get the length of data following the obj header
         short dLen = (short) (_objHdr.getDataLength() - 4);

@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -19,20 +22,20 @@ import java.net.Socket;
 public class COPSDecision extends COPSObjBase {
 
     // CType
-    public final static byte DEC_DEF = 1;
-    public final static byte DEC_STATELESS = 2;
-    public final static byte DEC_REPL = 3;
-    public final static byte DEC_CSI = 4;
-    public final static byte DEC_NAMED = 5;
+    @Deprecated public final static byte DEC_DEF = 1;
+    @Deprecated public final static byte DEC_STATELESS = 2;
+    @Deprecated public final static byte DEC_REPL = 3;
+    @Deprecated public final static byte DEC_CSI = 4;
+    @Deprecated public final static byte DEC_NAMED = 5;
 
     // Command
-    public final static byte DEC_NULL = 0;
-    public final static byte DEC_INSTALL = 1;
-    public final static byte DEC_REMOVE = 2;
+    @Deprecated public final static byte DEC_NULL = 0;
+    @Deprecated public final static byte DEC_INSTALL = 1;
+    @Deprecated public final static byte DEC_REMOVE = 2;
 
     // Flags
-    public final static byte F_REQERROR = 0x1;
-    public final static byte F_REQSTATE = 0x2;
+    @Deprecated public final static byte F_REQERROR = 0x1;
+    @Deprecated public final static byte F_REQSTATE = 0x2;
 
     protected COPSObjHeader _objHdr;
     private COPSData _data;
@@ -45,20 +48,16 @@ public class COPSDecision extends COPSObjBase {
       a decision object which is of fixed length.
      */
     public COPSDecision(byte cType) {
-        _objHdr = new COPSObjHeader();
+        _objHdr = new COPSObjHeader(CNum.DEC, COPSObjHeader.VAL_TO_CTYPE.get((int)cType));
         _cmdCode = 0;
         _flags = 0;
-        _objHdr.setCNum(COPSObjHeader.COPS_DEC);
-        _objHdr.setCType(cType);
-        if (cType == DEC_DEF) _objHdr.setDataLength( (short) 4);
+        if (cType == CType.DEF.ordinal()) _objHdr.setDataLength( (short) 4);
     }
 
     public COPSDecision() {
-        _objHdr = new COPSObjHeader();
+        _objHdr = new COPSObjHeader(CNum.DEC, CType.DEF);
         _cmdCode = 0;
         _flags = 0;
-        _objHdr.setCNum(COPSObjHeader.COPS_DEC);
-        _objHdr.setCType(DEC_DEF);
         _objHdr.setDataLength( (short) 4);
     }
 
@@ -66,13 +65,11 @@ public class COPSDecision extends COPSObjBase {
           Initialize the decision object with values from COPSObj header
      */
     protected COPSDecision(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         _cmdCode = 0;
         _flags = 0;
-        if (_objHdr.getCType() == DEC_DEF) {
+        if (_objHdr.getCType().equals(CType.DEF)) {
             _cmdCode |= ((short) dataPtr[4]) << 8;
             _cmdCode |= ((short) dataPtr[5]) & 0xFF;
             _flags |= ((short) dataPtr[6]) << 8;
@@ -132,7 +129,7 @@ public class COPSDecision extends COPSObjBase {
      *
      */
     public boolean isFlagSet() {
-        return ( _objHdr.getCType() == 1);
+        return ( _objHdr.getCType().ordinal() == 1);
     };
 
     /**
@@ -203,18 +200,18 @@ public class COPSDecision extends COPSObjBase {
      */
     public String getTypeStr() {
         switch (_objHdr.getCType()) {
-        case DEC_DEF:
-            return "Default";
-        case DEC_STATELESS:
-            return "Stateless data";
-        case DEC_REPL:
-            return "Replacement data";
-        case DEC_CSI:
-            return "Client specific decision data";
-        case DEC_NAMED:
-            return "Named decision data";
-        default:
-            return "Unknown";
+            case DEF:
+                return "Default";
+            case STATELESS:
+                return "Stateless data";
+            case REPL:
+                return "Replacement data";
+            case CSI:
+                return "Client specific decision data";
+            case NAMED:
+                return "Named decision data";
+            default:
+                return "Unknown";
         }
     }
 
@@ -249,7 +246,7 @@ public class COPSDecision extends COPSObjBase {
     public void writeData(Socket id) throws IOException {
         _objHdr.writeData(id);
 
-        if (_objHdr.getCType() >= 2) {
+        if (_objHdr.getCType().ordinal() >= 2) {
             COPSUtil.writeData(id, _data.getData(), _data.length());
             if (_padding != null) {
                 COPSUtil.writeData(id, _padding.getData(), _padding.length());
@@ -275,7 +272,7 @@ public class COPSDecision extends COPSObjBase {
     public void dump(OutputStream os) throws IOException {
         _objHdr.dump(os);
 
-        if (_objHdr.getCType() == 1) {
+        if (_objHdr.getCType().ordinal() == 1) {
             os.write(new String("Decision (" + getTypeStr() + ")\n").getBytes());
             os.write(new String("Command code: " + _cmdCode + "\n").getBytes());
             os.write(new String("Command flags: " + _flags + "\n").getBytes());

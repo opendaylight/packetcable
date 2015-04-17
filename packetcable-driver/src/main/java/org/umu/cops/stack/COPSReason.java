@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -70,11 +73,9 @@ public class COPSReason extends COPSPrObjBase {
 
     ///
     public COPSReason(short reasonCode, short subCode) {
-        _objHdr = new COPSObjHeader();
+        _objHdr = new COPSObjHeader(CNum.REASON_CODE, CType.DEF);
         _reasonCode = reasonCode;
         _reasonSubCode = subCode;
-        _objHdr.setCNum(COPSObjHeader.COPS_REASON_CODE);
-        _objHdr.setCType((byte) 1);
         _objHdr.setDataLength((short) 4);
     }
 
@@ -82,9 +83,7 @@ public class COPSReason extends COPSPrObjBase {
           Parse data and create COPSReason object
      */
     protected COPSReason(byte[] dataPtr) {
-        _objHdr = new COPSObjHeader();
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
+        _objHdr = COPSObjHeader.parse(dataPtr);
 
         _reasonCode |= ((short) dataPtr[4]) << 8;
         _reasonCode |= ((short) dataPtr[5]) & 0xFF;
