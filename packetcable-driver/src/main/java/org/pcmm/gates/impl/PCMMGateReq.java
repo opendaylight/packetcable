@@ -3,18 +3,12 @@
  */
 package org.pcmm.gates.impl;
 
-import java.util.Arrays;
-
 import org.pcmm.base.IPCMMBaseObject;
-import org.pcmm.gates.IAMID;
-import org.pcmm.gates.IClassifier;
-import org.pcmm.gates.IGateID;
-import org.pcmm.gates.IGateSpec;
-import org.pcmm.gates.IPCMMError;
-import org.pcmm.gates.IPCMMGate;
-import org.pcmm.gates.ISubscriberID;
-import org.pcmm.gates.ITrafficProfile;
-import org.pcmm.gates.ITransactionID;
+import org.pcmm.gates.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
 
 /**
  * <p>
@@ -23,6 +17,8 @@ import org.pcmm.gates.ITransactionID;
  * </p>
  */
 public class PCMMGateReq implements IPCMMGate {
+
+    public final static Logger logger = LoggerFactory.getLogger(PCMMGateReq.class);
 
     private boolean multicast;
     private IGateID gateID;
@@ -75,7 +71,7 @@ public class PCMMGateReq implements IPCMMGate {
                 error = new PCMMError(dataBuffer);
                 break;
             default:
-                System.out.println("unhandled Object skept : S-NUM=" + sNum
+                logger.warn("Unhandled Object skept : S-NUM=" + sNum
                                    + "  S-TYPE=" + sType + "  LEN=" + len);
             }
             offset += len;
