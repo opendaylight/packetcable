@@ -1,30 +1,22 @@
 package org.umu.cops.ospdp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.umu.cops.common.COPSDebug;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSDeleteMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKAMsg;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPepId;
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReqMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
-import org.umu.cops.stack.COPSTransceiver;
-
 /**
  * Class for managing an outsourcing connection at the PDP side.
  */
 public class COPSPdpOSConnection implements Runnable {
+
+    public final static Logger logger = LoggerFactory.getLogger(COPSPdpOSConnection.class);
+
     /**
         Socket connected to PEP
      */
@@ -211,7 +203,7 @@ public class COPSPdpOSConnection implements Runnable {
                     int _startTime = (int) (_lastRecKa.getTime());
                     int cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > _kaTimer*1000) {
+                    if ((cTime - _startTime) > _kaTimer*1000) {
                         _sock.close();
                         // Notify all Request State Managers
                         notifyNoKAAllReqStateMan();
@@ -221,7 +213,7 @@ public class COPSPdpOSConnection implements Runnable {
                     _startTime = (int) (_lastSendKa.getTime());
                     cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
+                    if ((cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
                         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_KA);
                         COPSKAMsg msg = new COPSKAMsg();
 
@@ -234,24 +226,29 @@ public class COPSPdpOSConnection implements Runnable {
 
                 try {
                     Thread.sleep(500);
-                } catch (Exception e) {};
+                } catch (Exception e) {
+                    logger.error("Exception caught while sleeping", e);
+                }
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
+            logger.error("Error processing COPS message from socket", e);
         }
 
         // connection closed by server
         // COPSDebug.out(getClass().getName(),"Connection closed by client");
         try {
             _sock.close();
-        } catch (IOException e) {};
+        } catch (IOException e) {
+            logger.error("Error closing socket", e);
+        }
 
         // Notify all Request State Managers
         try {
             notifyCloseAllReqStateMan();
-        } catch (COPSPdpException e) {};
+        } catch (COPSPdpException e) {
+            logger.error("Error closing state managers", e);
+        }
     }
 
     /**
@@ -310,12 +307,13 @@ public class COPSPdpOSConnection implements Runnable {
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
-                COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                              "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+                logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
             }
 
             conn.close();
-        } catch (Exception unae) { };
+        } catch (Exception unae) {
+            logger.error("Unexpected exception while closing the connection", unae);
+        }
     }
 
     /**
@@ -345,12 +343,13 @@ public class COPSPdpOSConnection implements Runnable {
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
-                COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                              "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+                logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
             }
 
             kaMsg.writeData(conn);
-        } catch (Exception unae) { };
+        } catch (Exception unae) {
+            logger.error("Unexpected exception writing COPS data", unae);
+        }
     }
 
     /**
@@ -375,8 +374,7 @@ public class COPSPdpOSConnection implements Runnable {
 
         // Support
         if (cMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         // Delete clientHandler
@@ -387,7 +385,7 @@ public class COPSPdpOSConnection implements Runnable {
 
         COPSPdpOSReqStateMan man = (COPSPdpOSReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("State manager not found for ID - " + cMsg.getClientHandle().getId().str());
         } else {
             man.processDeleteRequestState(cMsg);
         }
@@ -419,8 +417,7 @@ public class COPSPdpOSConnection implements Runnable {
 
         // Support
         if (reqMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         COPSPdpOSReqStateMan man;
@@ -461,13 +458,12 @@ public class COPSPdpOSConnection implements Runnable {
 
         // Support
         if (repMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         COPSPdpOSReqStateMan man = (COPSPdpOSReqStateMan) _managerMap.get(repMsg.getClientHandle().getId().str());
         if (man == null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("State manager not found for ID - " + repMsg.getClientHandle().getId().str());
         } else {
             man.processReport(repMsg);
         }
@@ -488,13 +484,12 @@ public class COPSPdpOSConnection implements Runnable {
 
         // Support
         if (cMsg.getIntegrity() != null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
         COPSPdpOSReqStateMan man = (COPSPdpOSReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("State manager not found for ID - " + cMsg.getClientHandle().getId().str());
         } else {
             man.processSyncComplete(cMsg);
         }
