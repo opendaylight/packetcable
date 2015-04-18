@@ -1,47 +1,40 @@
 package org.umu.cops.ospep;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
-
-import org.umu.cops.common.COPSDebug;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSDecisionMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKAMsg;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
-import org.umu.cops.stack.COPSTransceiver;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * COPSPepConnection represents a PEP-PDP Connection Manager.
  * Responsible for processing messages received from PDP.
  */
 public class COPSPepOSConnection implements Runnable {
+
+    public final static Logger logger = LoggerFactory.getLogger(COPSPepOSConnection.class);
+
     /** Socket connected to PDP */
     protected Socket _sock;
 
     /** Time to wait responses (milliseconds), default is 10 seconds */
-    protected int _responseTime;
+    protected final int _responseTime;
 
     /** COPS Client-type */
-    protected short _clientType;
+    protected final short _clientType;
 
     /**
         Accounting timer value (secs)
      */
-    protected short _acctTimer;
+    protected transient short _acctTimer;
 
     /**
         Keep-alive timer value (secs)
      */
-    protected short _kaTimer;
+    protected transient short _kaTimer;
 
     /**
      *  Time of the latest keep-alive received
@@ -56,7 +49,7 @@ public class COPSPepOSConnection implements Runnable {
     /**
         Maps a COPS Client Handle to a Request State Manager
      */
-    protected Hashtable _managerMap;
+    protected final Map<String, COPSPepOSReqStateMan> _managerMap;
     // map < String(COPSHandle), COPSPepOSReqStateMan>;
 
     /**
@@ -79,7 +72,7 @@ public class COPSPepOSConnection implements Runnable {
         _responseTime = 10000;
         _lastmessage = COPSHeader.COPS_OP_CAT;
 
-        _managerMap = new Hashtable(20);
+        _managerMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -115,19 +108,12 @@ public class COPSPepOSConnection implements Runnable {
     }
 
     /**
-     * Gets active COPS handles
-     * @return  An <tt>Enumeration</tt> holding all active handles
-     */
-    protected Enumeration getHandles() {
-        return _managerMap.keys();
-    }
-
-    /**
      * Gets all request state managers
      * @return  A <tt>Hashatable</tt> holding all request state managers
+     * TODO - change the return to Map
      */
     protected Hashtable getReqStateMans() {
-        return _managerMap;
+        return new Hashtable(_managerMap);
     }
 
     /**
@@ -154,14 +140,6 @@ public class COPSPepOSConnection implements Runnable {
     public byte getLastmessage() {
         return _lastmessage;
     }
-
-    /**
-     * Sets response time
-     * @param respTime  Response time value (msecs)
-     */
-    public void setResponseTime(int respTime) {
-        _responseTime = respTime;
-    };
 
     /**
      * Sets keep-alive timer
@@ -200,7 +178,7 @@ public class COPSPepOSConnection implements Runnable {
                     int _startTime = (int) (_lastRecKa.getTime());
                     int cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > _kaTimer*1000) {
+                    if ((cTime - _startTime) > _kaTimer*1000) {
                         _sock.close();
                         // Notify all Request State Managers
                         notifyNoKAAllReqStateMan();
@@ -210,7 +188,7 @@ public class COPSPepOSConnection implements Runnable {
                     _startTime = (int) (_lastSendKa.getTime());
                     cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
+                    if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
                         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_KA);
                         COPSKAMsg msg = new COPSKAMsg();
 
@@ -226,7 +204,7 @@ public class COPSPepOSConnection implements Runnable {
                     int _startTime = (int) (_lastSendAcc.getTime());
                     int cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > ((_acctTimer*3/4)*1000)) {
+                    if ((cTime - _startTime) > ((_acctTimer*3/4)*1000)) {
                         // Notify all Request State Managers
                         notifyAcctAllReqStateMan();
                         _lastSendAcc = new Date();
@@ -235,23 +213,28 @@ public class COPSPepOSConnection implements Runnable {
 
                 try {
                     Thread.sleep(500);
-                } catch (Exception e) {};
+                } catch (Exception e) {
+                    logger.error("Exception thrown while sleeping", e);
+                }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_SOCKET, e);
+            logger.error("Error while processing socket messages", e);
         }
 
         // connection closed by server
         // COPSDebug.out(getClass().getName(),"Connection closed by server");
         try {
             _sock.close();
-        } catch (IOException e) {};
+        } catch (IOException e) {
+            logger.error("Unexpected exception closing the socket", e);
+        }
 
         // Notify all Request State Managers
         try {
             notifyCloseAllReqStateMan();
-        } catch (COPSPepException e) {};
+        } catch (COPSPepException e) {
+            logger.error("Error closing state managers", e);
+        }
     }
 
     /**
@@ -306,10 +289,12 @@ public class COPSPepOSConnection implements Runnable {
         try {
             // Support
             if (cMsg.getIntegrity() != null)
-                COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED, "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+                logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
 
             conn.close();
-        } catch (Exception unae) { };
+        } catch (Exception unae) {
+            logger.error("Unexpected exception closing connection", unae);
+        }
     }
 
     /**
@@ -337,14 +322,11 @@ public class COPSPepOSConnection implements Runnable {
 
         // COPSDebug.out(getClass().getName(),"Get KAlive Msg");
 
-        try {
-            // Support
-            if (cMsg.getIntegrity() != null)
-                COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED, "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+        // Support
+        if (cMsg.getIntegrity() != null)
+            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
 
-            // must we do anything else?
-
-        } catch (Exception unae) { };
+        // must we do anything else?
     }
 
     /**
@@ -391,13 +373,12 @@ public class COPSPepOSConnection implements Runnable {
 
         // Support
         if (cMsg.getIntegrity() != null)
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOSUPPORTED,
-                          "Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
 
-        COPSPepOSReqStateMan manager = (COPSPepOSReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        COPSPepOSReqStateMan manager = _managerMap.get(cMsg.getClientHandle().getId().str());
 
         if (manager == null)
-            COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
+            logger.warn("Unable to find state manager with ID - " + cMsg.getClientHandle().getId().str());
         else
             manager.processSyncStateRequest(cMsg);
     }
@@ -434,35 +415,20 @@ public class COPSPepOSConnection implements Runnable {
     }
 
     private void notifyCloseAllReqStateMan() throws COPSPepException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                COPSPepOSReqStateMan man = (COPSPepOSReqStateMan) _managerMap.get(handle);
-
+        for (final COPSPepOSReqStateMan man : _managerMap.values()) {
                 man.processClosedConnection(_error);
-            }
         }
     }
 
     private void notifyNoKAAllReqStateMan() throws COPSPepException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                COPSPepOSReqStateMan man = (COPSPepOSReqStateMan) _managerMap.get(handle);
-
-                man.processNoKAConnection();
-            }
+        for (final COPSPepOSReqStateMan man : _managerMap.values()) {
+            man.processNoKAConnection();
         }
     }
 
     private void notifyAcctAllReqStateMan() throws COPSPepException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                COPSPepOSReqStateMan man = (COPSPepOSReqStateMan) _managerMap.get(handle);
-
-                man.processAcctReport();
-            }
+        for (final COPSPepOSReqStateMan man : _managerMap.values()) {
+            man.processAcctReport();
         }
     }
 

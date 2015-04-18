@@ -7,7 +7,6 @@ package org.pcmm;
 import org.pcmm.objects.MMVersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.umu.cops.common.COPSDebug;
 import org.umu.cops.prpdp.COPSPdpAgent;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
@@ -15,9 +14,6 @@ import org.umu.cops.stack.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-
-// import org.umu.cops.prpdp.COPSPdpDataProcess;
-
 
 /**
  * Core PDP agent for provisioning
@@ -111,7 +107,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         try {
             socket = new Socket(addr, psPort);
         } catch (IOException e) {
-            logger.error(COPSDebug.ERROR_SOCKET, e);
+            logger.error("Error creating socket connection", e);
             return (false);
         }
         logger.info("PDP Socket Opened");
@@ -287,6 +283,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         try {
             man.initRequestState(conn);
         } catch (COPSPdpException unae) {
+            logger.error("Error initializing the state manager's request state");
         }
         // XXX - End handleRequestMsg
 
