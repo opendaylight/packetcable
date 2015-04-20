@@ -81,13 +81,39 @@
         <scope>runtime</scope>
       </dependency>
     -->
-    <dependency>
-        <groupId>org.opendaylight.controller</groupId>
-        <artifactId>features-mdsal</artifactId>
+      <dependency>
+          <groupId>org.opendaylight.controller</groupId>
+          <artifactId>features-mdsal</artifactId>
+          <classifier>features</classifier>
+          <version>${project.version}</version>
+          <type>xml</type>
+          <scope>runtime</scope>
+      </dependency>
+<!--
+      <dependency>
+        <groupId>org.opendaylight.l2switch</groupId>
+        <artifactId>features-l2switch</artifactId>
         <classifier>features</classifier>
-        <version>${project.version}</version>
+        <version>0.2.0-SNAPSHOT</version>
         <type>xml</type>
         <scope>runtime</scope>
+      </dependency>
+-->
+      <dependency>
+          <groupId>org.opendaylight.controller</groupId>
+          <artifactId>features-restconf</artifactId>
+          <classifier>features</classifier>
+          <version>1.2.0-SNAPSHOT</version>
+          <type>xml</type>
+          <scope>runtime</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.opendaylight.dlux</groupId>
+          <artifactId>features-dlux</artifactId>
+          <classifier>features</classifier>
+          <version>0.2.0-SNAPSHOT</version>
+          <type>xml</type>
+          <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.opendaylight.packetcable</groupId>
@@ -190,8 +216,11 @@
         <configuration>
           <bootFeatures>
             <feature>standard</feature>
+            <feature>odl-restconf</feature>
+            <!--<feature>odl-l2switch-switch</feature>-->
+            <feature>odl-dlux-core</feature>
             <feature>odl-mdsal-apidocs</feature>
-            <feature>odl-packetcable-provider</feature>
+            <feature>odl-packetcable-all</feature>
             <!--
               Optional TODO: Add entries here for the features you want in your local distro
               Note: odl-restconf is a separate feature from odl-mdsal-broker.  If you want
