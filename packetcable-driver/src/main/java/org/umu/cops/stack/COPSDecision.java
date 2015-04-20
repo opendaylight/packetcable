@@ -242,21 +242,6 @@ public class COPSDecision extends COPSObjBase {
 
     @Override
     protected void writeBody(final Socket socket) throws IOException {
-/*
-        if (this.getHeader().getCType().ordinal() >= 2) {
-            COPSUtil.writeData(socket, _data.getData(), _data.length());
-            if (_padding != null) {
-                COPSUtil.writeData(socket, _padding.getData(), _padding.length());
-            }
-        } else {
-            byte[] buf = new byte[4];
-            buf[0] = (byte) (_cmdCode.ordinal() >> 8);
-            buf[1] = (byte) _cmdCode.ordinal();
-            buf[2] = (byte) (_flags.ordinal() >> 8);
-            buf[3] = (byte) _flags.ordinal();
-            COPSUtil.writeData(socket, buf, 4);
-        }
-*/
         final byte[] buf = new byte[4];
         buf[0] = (byte) (_cmdCode.ordinal() >> 8);
         buf[1] = (byte) _cmdCode.ordinal();
@@ -296,10 +281,9 @@ public class COPSDecision extends COPSObjBase {
 
         final COPSDecision that = (COPSDecision) o;
 
-        return _cmdCode == that._cmdCode && _flags == that._flags &&
-                (_data.equals(that._data) && _padding.equals(that._padding) ||
-                        COPSUtil.copsDataPaddingEquals(this._data, this._padding, that._data, that._padding));
-
+        return _cmdCode == that._cmdCode && _flags == that._flags && _data.equals(that._data) &&
+                _padding.equals(that._padding) ||
+                COPSUtil.copsDataPaddingEquals(this._data, this._padding, that._data, that._padding);
     }
 
     @Override

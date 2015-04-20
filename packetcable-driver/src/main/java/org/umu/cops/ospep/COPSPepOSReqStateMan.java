@@ -1,8 +1,11 @@
 package org.umu.cops.ospep;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
+import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -61,7 +64,7 @@ public class COPSPepOSReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected short _clientType;
+    protected ClientType _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -77,7 +80,7 @@ public class COPSPepOSReqStateMan {
     /**
      * ClientSI data from signaling.
      */
-    protected Vector _clientSIs;
+    protected final Set<COPSClientSI> _clientSIs;
 
     /**
      *  Current state of the request being managed
@@ -99,7 +102,7 @@ public class COPSPepOSReqStateMan {
      * @param    clientType Client-type
      * @param   clientHandle    Client's <tt>COPSHandle</tt>
      */
-    public COPSPepOSReqStateMan(short clientType, String clientHandle) {
+    public COPSPepOSReqStateMan(final ClientType clientType, final String clientHandle) {
         // COPS Handle
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
@@ -120,15 +123,15 @@ public class COPSPepOSReqStateMan {
      * Sets the client SI data.
      * @param someClientSIs Client SI data built by the event listener
      */
-    public void setClientSI(Vector someClientSIs) {
-        _clientSIs = someClientSIs;
+    public void setClientSI(final List<COPSClientSI> someClientSIs) {
+        _clientSIs.addAll(someClientSIs);
     }
 
     /**
      * Gets the client-type
      * @return  Client-type value
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 

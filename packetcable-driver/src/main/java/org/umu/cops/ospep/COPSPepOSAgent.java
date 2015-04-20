@@ -3,12 +3,14 @@ package org.umu.cops.ospep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Hashtable;
-import java.util.Vector;
+import java.util.List;
 
 /**
  * This is a outsourcing COPS PEP. Responsible for making
@@ -26,7 +28,7 @@ public class COPSPepOSAgent {
     /**
         PEP's client-type
      */
-    private short _clientType;
+    private ClientType _clientType;
 
     /**
         PDP host name
@@ -58,7 +60,7 @@ public class COPSPepOSAgent {
      * @param    pepID              PEP-ID
      * @param    clientType         Client-type
      */
-    public COPSPepOSAgent(String pepID, short clientType) {
+    public COPSPepOSAgent(final String pepID, final ClientType clientType) {
         _pepID = pepID;
         _clientType = clientType;
     }
@@ -67,7 +69,7 @@ public class COPSPepOSAgent {
      * Creates a PEP agent with a PEP-ID equal to "noname"
      * @param    clientType         Client-type
      */
-    public COPSPepOSAgent(short clientType) {
+    public COPSPepOSAgent(final ClientType clientType) {
         // PEPId
         try {
             _pepID = InetAddress.getLocalHost().getHostName();
@@ -98,7 +100,7 @@ public class COPSPepOSAgent {
      * Gets the COPS client-type
      * @return  PEP's client-type
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -171,13 +173,8 @@ public class COPSPepOSAgent {
      * @throws COPSException
      * @throws IOException
      */
-    public void disconnect(COPSError error) throws COPSException, IOException {
-        COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, _clientType);
-        COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-        closeMsg.add(cHdr);
-        if (error != null)
-            closeMsg.add(error);
-
+    public void disconnect(final COPSError error) throws COPSException, IOException {
+        final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType, error, null, null);
         closeMsg.writeData(_conn.getSocket());
         _conn.close();
         _conn = null;
@@ -190,7 +187,7 @@ public class COPSPepOSAgent {
      * @throws COPSPepException
      * @throws COPSException
      */
-    public COPSPepOSReqStateMan addRequestState(COPSHandle handle, Vector clientSIs) throws COPSPepException, COPSException {
+    public COPSPepOSReqStateMan addRequestState(final COPSHandle handle, List<COPSClientSI> clientSIs) throws COPSPepException, COPSException {
         if (_conn != null)
             return _conn.addRequestState(handle.getId().str(), _process, clientSIs);
 
@@ -248,26 +245,22 @@ public class COPSPepOSAgent {
      * @throws   COPSPepException
      *
      */
-    private COPSPepOSConnection processConnection(String psHost, int psPort) throws IOException, COPSException,
-            COPSPepException {
+    private COPSPepOSConnection processConnection(final String psHost, final int psPort)
+            throws IOException, COPSException, COPSPepException {
         // Build OPN
-        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, _clientType);
-
-        COPSPepId pepId = new COPSPepId(new COPSData(_pepID));
-        COPSClientOpenMsg msg = new COPSClientOpenMsg();
-        msg.add(hdr);
-        msg.add(pepId);
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(_clientType, new COPSPepId(new COPSData(_pepID)),
+                null, null, null);
 
         // Create socket and send OPN
-        InetAddress addr = InetAddress.getByName(psHost);
-        Socket socket = new Socket(addr,psPort);
+        final InetAddress addr = InetAddress.getByName(psHost);
+        final Socket socket = new Socket(addr,psPort);
         msg.writeData(socket);
 
         // Get response
-        COPSMsg recvmsg = COPSTransceiver.receiveMsg(socket);
+        final COPSMsg recvmsg = COPSTransceiver.receiveMsg(socket);
 
-        if (recvmsg.getHeader().isAClientAccept()) {
-            COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvmsg;
+        if (recvmsg.getHeader().getOpCode().equals(OPCode.CAT)) {
+            final COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvmsg;
 
             // Support
             if (cMsg.getIntegrity() != null) {
@@ -275,26 +268,26 @@ public class COPSPepOSAgent {
             }
 
             // Mandatory KATimer
-            COPSKATimer kt = cMsg.getKATimer();
+            final COPSKATimer kt = cMsg.getKATimer();
             if (kt == null)
                 throw new COPSPepException ("Mandatory COPS object missing (KA Timer)");
             short _kaTimeVal = kt.getTimerVal();
 
             // ACTimer
-            COPSAcctTimer at = cMsg.getAcctTimer();
-            short _acctTimer = 0;
-            if (at != null)
-                _acctTimer = at.getTimerVal();
+            final COPSAcctTimer at = cMsg.getAcctTimer();
+            short _acctTimer;
+            if (at != null) _acctTimer = at.getTimerVal();
+            else _acctTimer = 0;
 
             // Create connection manager
-            COPSPepOSConnection conn = new COPSPepOSConnection(_clientType, socket);
+            final COPSPepOSConnection conn = new COPSPepOSConnection(_clientType, socket);
             conn.setKaTimer(_kaTimeVal);
             conn.setAcctTimer(_acctTimer);
             new Thread(conn).start();
 
             return conn;
-        } else if (recvmsg.getHeader().isAClientClose()) {
-            COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
+        } else if (recvmsg.getHeader().getOpCode().equals(OPCode.CC)) {
+            final COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
             _error = cMsg.getError();
             socket.close();
             return null;
@@ -308,7 +301,7 @@ public class COPSPepOSAgent {
      * @param handle The COPS handle for this request
      * @param clientSIs The client specific data for this request
      */
-    public void dispatchEvent(COPSHandle handle, Vector clientSIs) {
+    public void dispatchEvent(COPSHandle handle, final List<COPSClientSI> clientSIs) {
         try {
             addRequestState(handle, clientSIs);
         } catch (Exception e) {

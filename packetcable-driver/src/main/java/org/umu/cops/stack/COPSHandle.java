@@ -38,15 +38,13 @@ import java.net.Socket;
  *   object with respect to the handle object values of other currently
  *   installed requests.
  *
- * @version COPSHandle.java, v 1.00 2003
- *
  */
 public class COPSHandle extends COPSObjBase {
 
     /**
      * The payload data
      */
-    private final COPSData _id;
+    private final COPSData _data;
 
     /**
      * Bytes to add to outbound payload to ensure the length is divisible by 4 bytes
@@ -54,7 +52,7 @@ public class COPSHandle extends COPSObjBase {
     private final COPSData _padding;
 
     /**
-     * Constructor
+     * Constructor generally used for sending messages
      * @param id - the identifier (must not be null)
      * @throws java.lang.IllegalArgumentException when the id parameter is null
      */
@@ -63,21 +61,24 @@ public class COPSHandle extends COPSObjBase {
     }
 
     /**
-     * Constructor
-     * @param id - the identifier (must not be null)
-     * @throws java.lang.IllegalArgumentException when the id parameter is null
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSObjHeader information is known
+     * @param objHdr - the object header
+     * @param data - the ID
+     * @throws java.lang.IllegalArgumentException
      */
-    protected COPSHandle(final COPSObjHeader objHeader, final COPSData id) {
-        super(objHeader);
-        if (! objHeader.getCNum().equals(CNum.HANDLE))
+    protected COPSHandle(final COPSObjHeader objHdr, final COPSData data) {
+        super(objHdr);
+        if (!objHdr.getCNum().equals(CNum.HANDLE))
             throw new IllegalArgumentException("CNum on header must be of type HANDLE");
-        if (! objHeader.getCType().equals(CType.DEF))
+        if (!objHdr.getCType().equals(CType.DEF))
             throw new IllegalArgumentException("Invalid CType value. Must be " + CType.DEF);
-        if (id == null) throw new IllegalArgumentException("COPSData must not be null");
+        if (data == null) throw new IllegalArgumentException("COPSData must not be null");
 
-        _id = id;
-        if ((_id.length() % 4) != 0) {
-            final int padLen = 4 - (_id.length() % 4);
+        _data = data;
+
+        if ((_data.length() % 4) != 0) {
+            final int padLen = 4 - (_data.length() % 4);
             _padding = COPSObjectParser.getPadding(padLen);
         } else {
             _padding = new COPSData();
@@ -86,7 +87,7 @@ public class COPSHandle extends COPSObjBase {
 
     @Override
     public int getDataLength() {
-        return _id.length() + _padding.length();
+        return _data.length() + _padding.length();
     }
 
     /**
@@ -94,18 +95,18 @@ public class COPSHandle extends COPSObjBase {
      * @return   a COPSData
      */
     public COPSData getId() {
-        return _id;
+        return _data;
     }
 
     @Override
-    public void writeBody(final Socket socket) throws IOException {
-        COPSUtil.writeData(socket, _id.getData(), _id.length());
+    protected void writeBody(final Socket socket) throws IOException {
+        COPSUtil.writeData(socket, _data.getData(), _data.length());
         COPSUtil.writeData(socket, _padding.getData(), _padding.length());
     }
 
     @Override
     public void dumpBody(final OutputStream os) throws IOException {
-        os.write(("client-handle: " + _id.str() + "\n").getBytes());
+        os.write(("client-handle: " + _data.str() + "\n").getBytes());
     }
 
     @Override
@@ -122,14 +123,14 @@ public class COPSHandle extends COPSObjBase {
 
         final COPSHandle that = (COPSHandle) o;
 
-        return _id.equals(that._id) && _padding.equals(that._padding);
-
+        return _data.equals(that._data) && _padding.equals(that._padding) ||
+                COPSUtil.copsDataPaddingEquals(this._data, this._padding, that._data, that._padding);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + _id.hashCode();
+        result = 31 * result + _data.hashCode();
         result = 31 * result + _padding.hashCode();
         return result;
     }

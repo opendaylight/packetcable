@@ -13,13 +13,11 @@ import org.umu.cops.prpep.COPSPepDataProcess;
 import org.umu.cops.prpep.COPSPepException;
 import org.umu.cops.prpep.COPSPepReqStateMan;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -44,18 +42,18 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 					// set the major version info and minor version info to
 					// default (5,0)
 					logger.info("Send OPN message to the PS");
-					sendRequest(MessageFactory.getInstance().create(COPSHeader.COPS_OP_OPN, new Properties()));
+					sendRequest(MessageFactory.getInstance().create(OPCode.OPN, new Properties()));
 					// wait for CAT
 					COPSMsg recvMsg = readMessage();
 
-					if (recvMsg.getHeader().isAClientClose()) {
+					if (recvMsg.getHeader().getOpCode().equals(OPCode.CC)) {
 						COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvMsg;
 						logger.info("PS requested Client-Close" + cMsg.getError().getDescription());
 						// send a CC message and close the socket
 						disconnect();
 						return;
 					}
-					if (recvMsg.getHeader().isAClientAccept()) {
+					if (recvMsg.getHeader().getOpCode().equals(OPCode.CAT)) {
 						logger.info("received Client-Accept from PS");
 						COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvMsg;
 						// Support
@@ -78,7 +76,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 						logger.info("Send a REQ message to the PS");
 						{
 							Properties prop = new Properties();
-							COPSMsg reqMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_REQ, prop);
+							COPSMsg reqMsg = MessageFactory.getInstance().create(OPCode.REQ, prop);
 							handle = ((COPSReqMsg) reqMsg).getClientHandle().getId().str();
 							sendRequest(reqMsg);
 						}
@@ -124,7 +122,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 
 	/* public */class PCMMCmtsConnection extends COPSPepConnection {
 
-		public PCMMCmtsConnection(short clientType, Socket sock) {
+		public PCMMCmtsConnection(final ClientType clientType, final Socket sock) {
 			super(clientType, sock);
 		}
 
@@ -142,7 +140,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 	@SuppressWarnings("rawtypes")
 	class PCMMPSReqStateMan extends COPSPepReqStateMan {
 
-		public PCMMPSReqStateMan(short clientType, String clientHandle) {
+		public PCMMPSReqStateMan(final ClientType clientType, final String clientHandle) {
 			super(clientType, clientHandle);
 			_process = new CmtsDataProcessor();
 
@@ -153,59 +151,57 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 				throws COPSPepException {
 
 			// COPSHandle handle = dMsg.getClientHandle();
-			Hashtable decisions = dMsg.getDecisions();
+			Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
 
-			Hashtable<String, String> removeDecs = new Hashtable<String, String>(10);
-			Hashtable<String, String> installDecs = new Hashtable<String, String>(10);
-			Hashtable<String, String> errorDecs = new Hashtable<String, String>(10);
-			for (Enumeration e = decisions.keys(); e.hasMoreElements();) {
+            Map<String, String> removeDecs = new HashMap<>();
+            Map<String, String> installDecs = new HashMap<>();
+            Map<String, String> errorDecs = new HashMap<>();
 
-				COPSContext context = (COPSContext) e.nextElement();
-				Vector v = (Vector) decisions.get(context);
-				Enumeration ee = v.elements();
-				COPSDecision cmddecision = (COPSDecision) ee.nextElement();
+			for (final Set<COPSDecision> copsDecisions : dMsg.getDecisions().values()) {
+				final COPSDecision cmddecision = copsDecisions.iterator().next();
 
 				// cmddecision --> we must check whether it is an error!
+                String prid = "";
+                switch (cmddecision.getCommand()) {
+                    case INSTALL:
+                        for (final COPSDecision decision : copsDecisions) {
+                            COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+                            switch (obj.getSNum()) {
+                                // TODO when there is install request only the PR_PRID
+                                // is git but the ClientSI object containing the PR_EPD
+                                // is null??? this is why the tests fail and so I set
+                                // the assertion to NOT true....
+                                case COPSPrObjBase.PR_PRID:
+                                    prid = obj.getData().str();
+                                    break;
+                                case COPSPrObjBase.PR_EPD:
+                                    installDecs.put(prid, obj.getData().str());
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    case REMOVE:
+                        for (final COPSDecision decision : copsDecisions) {
+                            COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+                            switch (obj.getSNum()) {
+                                // TODO when there is install request only the PR_PRID
+                                // is git but the ClientSI object containing the PR_EPD
+                                // is null??? this is why the tests fail and so I set
+                                // the assertion to NOT true....
+                                case COPSPrObjBase.PR_PRID:
+                                    prid = obj.getData().str();
+                                    break;
+                                case COPSPrObjBase.PR_EPD:
+                                    removeDecs.put(prid, obj.getData().str());
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                }
+            }
 
-				if (cmddecision.getCommand().equals(Command.INSTALL)) {
-					String prid = "";
-					for (; ee.hasMoreElements();) {
-						COPSDecision decision = (COPSDecision) ee.nextElement();
-						COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
-						switch (obj.getSNum()) {
-						// TODO when there is install request only the PR_PRID
-						// is git but the ClientSI object containing the PR_EPD
-						// is null??? this is why the tests fail and so I set
-						// the assertion to NOT true....
-						case COPSPrObjBase.PR_PRID:
-							prid = obj.getData().str();
-						break;
-						case COPSPrObjBase.PR_EPD:
-							installDecs.put(prid, obj.getData().str());
-						break;
-						default:
-						break;
-						}
-					}
-				}
-				if (cmddecision.getCommand().equals(Command.REMOVE)) {
-					String prid = new String();
-					for (; ee.hasMoreElements();) {
-						COPSDecision decision = (COPSDecision) ee.nextElement();
-						COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
-						switch (obj.getSNum()) {
-						case COPSPrObjBase.PR_PRID:
-							prid = obj.getData().str();
-						break;
-						case COPSPrObjBase.PR_EPD:
-							removeDecs.put(prid, obj.getData().str());
-						break;
-						default:
-						break;
-						}
-					}
-				}
-			}
 			if (_process != null) {
 				// ** Apply decisions to the configuration
 				_process.setDecisions(this, removeDecs, installDecs, errorDecs);
@@ -225,20 +221,21 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 	@SuppressWarnings("rawtypes")
 	class CmtsDataProcessor extends COPSPepDataProcess {
 
-		private Hashtable<String, String> removeDecs;
-		private Hashtable<String, String> installDecs;
-		private Hashtable<String, String> errorDecs;
+		private Map<String, String> removeDecs;
+		private Map<String, String> installDecs;
+		private Map<String, String> errorDecs;
 		private COPSPepReqStateMan stateManager;
 
 		public CmtsDataProcessor() {
-			setRemoveDecs(new Hashtable<String, String>(10));
-			setInstallDecs(new Hashtable<String, String>(10));
-			setErrorDecs(new Hashtable<String, String>(10));
+			setRemoveDecs(new HashMap<String, String>());
+			setInstallDecs(new HashMap<String, String>());
+			setErrorDecs(new HashMap<String, String>());
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public void setDecisions(COPSPepReqStateMan man, Hashtable removeDecs, Hashtable installDecs, Hashtable errorDecs) {
+		public void setDecisions(final COPSPepReqStateMan man, final Map<String, String> removeDecs,
+                                 final Map<String, String> installDecs, final Map<String, String> errorDecs) {
 			setRemoveDecs(removeDecs);
 			setInstallDecs(installDecs);
 			setErrorDecs(errorDecs);
@@ -251,22 +248,23 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		}
 
 		@Override
-		public Hashtable getReportData(COPSPepReqStateMan man) {
+		public Map<String, String> getReportData(COPSPepReqStateMan man) {
 			if (isFailReport(man)) {
 				return errorDecs;
 			} else {
-				ITransactionID transactionID = null;
-				String key = null;
-				Hashtable<String, String> siDataHashTable = new Hashtable<String, String>();
+				Map<String, String> siDataHashTable = new HashMap<>();
 				if (installDecs.size() > 0) {
 					String data = "";
 					for (String k : installDecs.keySet()) {
 						data = installDecs.get(k);
 						break;
 					}
-					transactionID = new PCMMGateReq(new COPSData(data).getData()).getTransactionID();
+					final ITransactionID transactionID = new PCMMGateReq(new COPSData(data).getData()).getTransactionID();
 					IPCMMGate responseGate = new PCMMGateReq();
 					responseGate.setTransactionID(transactionID);
+
+                    // TODO FIXME - Why is the key always null??? What value should be used here???
+                    final String key = null;
 					siDataHashTable.put(key, new String(responseGate.getData()));
 				}
 				return siDataHashTable;
@@ -308,28 +306,28 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 
 		}
 
-		public Hashtable<String, String> getRemoveDecs() {
-			return removeDecs;
+		public Map<String, String> getRemoveDecs() {
+			return new HashMap<>(removeDecs);
 		}
 
-		public void setRemoveDecs(Hashtable<String, String> removeDecs) {
-			this.removeDecs = removeDecs;
+		public void setRemoveDecs(final Map<String, String> removeDecs) {
+			this.removeDecs = new HashMap<>(removeDecs);
 		}
 
-		public Hashtable<String, String> getInstallDecs() {
-			return installDecs;
+		public Map<String, String> getInstallDecs() {
+			return new HashMap<>(installDecs);
 		}
 
-		public void setInstallDecs(Hashtable<String, String> installDecs) {
-			this.installDecs = installDecs;
+		public void setInstallDecs(final Map<String, String> installDecs) {
+			this.installDecs = new HashMap<>(installDecs);
 		}
 
-		public Hashtable<String, String> getErrorDecs() {
+		public Map<String, String> getErrorDecs() {
 			return errorDecs;
 		}
 
-		public void setErrorDecs(Hashtable<String, String> errorDecs) {
-			this.errorDecs = errorDecs;
+		public void setErrorDecs(final Map<String, String> errorDecs) {
+			this.errorDecs = new HashMap<>(errorDecs);
 		}
 
 		public COPSPepReqStateMan getStateManager() {

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
 import java.net.Socket;
@@ -74,7 +75,7 @@ public class PCMMPdpReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected short _clientType;
+    protected ClientType _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -100,7 +101,7 @@ public class PCMMPdpReqStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public PCMMPdpReqStateMan(short clientType, String clientHandle) {
+    public PCMMPdpReqStateMan(final ClientType clientType, final String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _status = ST_CREATE;
@@ -118,7 +119,7 @@ public class PCMMPdpReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -249,76 +250,50 @@ public class PCMMPdpReqStateMan {
      * @param msg   Report message from the PEP
      * @throws COPSPdpException
      */
-    protected void processReport(COPSReportMsg msg)
-    throws COPSPdpException {
-
-        //** Analyze the report
-        //**
-
-        /*
-           * <Report State> ::= <Common Header>
-           *                        <Client Handle>
-          *                     <Report Type>
-         *                      *(<Named ClientSI>)
-          *                     [<Integrity>]
-         * <Named ClientSI: Report> ::= <[<GPERR>] *(<report>)>
-         * <report> ::= <ErrorPRID> <CPERR> *(<PRID><EPD>)
-         *
-         * Important, <Named ClientSI> is not parsed
-        */
-
-        // COPSHeader hdrmsg = msg.getHeader();
-        // COPSHandle handlemsg = msg.getClientHandle();
-
-        // WriteBinaryDump("COPSReportMessage", msg.getData().getData());
+    protected void processReport(COPSReportMsg msg) throws COPSPdpException {
         // Report Type
-        COPSReportType rtypemsg = msg.getReport();
+        final COPSReportType rtypemsg = msg.getReport();
 
-        // Named ClientSI
-        Vector clientSIs = msg.getClientSI();
-        COPSClientSI myclientSI = (COPSClientSI) msg.getClientSI().elementAt(0);
-        byte[] data = Arrays.copyOfRange(myclientSI.getData().getData(), 0, myclientSI.getData().getData().length );
+        if (msg.getClientSI() != null) {
+            final COPSClientSI clientSI = msg.getClientSI();
+            // Named ClientSI
+            final byte[] data = Arrays.copyOfRange(clientSI.getData().getData(), 0, clientSI.getData().getData().length);
 
-        // PCMMUtils.WriteBinaryDump("COPSReportClientSI", data);
-        logger.info("PCMMGateReq Parse Gate Message");
-        PCMMGateReq gateMsg = new PCMMGateReq(data);
+            // PCMMUtils.WriteBinaryDump("COPSReportClientSI", data);
+            logger.info("PCMMGateReq Parse Gate Message");
+            PCMMGateReq gateMsg = new PCMMGateReq(data);
 
-        // TODO - Determine why this Map is being populated but never used???
-        Map<String, String> repSIs = new HashMap<>();
-        String strobjprid = "";
-        for (Enumeration e = clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-
-            COPSPrObjBase obj = new COPSPrObjBase(clientSI.getData().getData());
+            final Map<String, String> repSIs = new HashMap<>();
+            String strobjprid = "";
+            final COPSPrObjBase obj = new COPSPrObjBase(clientSI.getData().getData());
             switch (obj.getSNum()) {
-            case COPSPrObjBase.PR_PRID:
-                logger.info("COPSPrObjBase.PR_PRID");
-                strobjprid = obj.getData().str();
-                break;
-            case COPSPrObjBase.PR_EPD:
-                logger.info("COPSPrObjBase.PR_EPD");
-                repSIs.put(strobjprid, obj.getData().str());
-                // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
-                // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
-                break;
-            default:
-                logger.error("Object s-num: " + obj.getSNum() + "stype " + obj.getSType());
-                logger.error("PRID: " + strobjprid);
-                logger.error("EPD: " + obj.getData().str());
-                break;
+                case COPSPrObjBase.PR_PRID:
+                    logger.info("COPSPrObjBase.PR_PRID");
+                    strobjprid = obj.getData().str();
+                    break;
+                case COPSPrObjBase.PR_EPD:
+                    logger.info("COPSPrObjBase.PR_EPD");
+                    repSIs.put(strobjprid, obj.getData().str());
+                    // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
+                    // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
+                    break;
+                default:
+                    logger.error("Object s-num: " + obj.getSNum() + "stype " + obj.getSType());
+                    logger.error("PRID: " + strobjprid);
+                    logger.error("EPD: " + obj.getData().str());
+                    break;
             }
-        }
 
-        logger.info("rtypemsg process");
-        //** Here we must act in accordance with
-        //** the report received
-        if (rtypemsg.getReportType().equals(ReportType.SUCCESS)) {
-            logger.info("rtypemsg success");
-            _status = ST_REPORT;
-            if (_process != null)
-            _process.successReport(this, gateMsg);
-            else {
-                if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck ) {
+            logger.info("rtypemsg process");
+            //** Here we must act in accordance with
+            //** the report received
+            if (rtypemsg.getReportType().equals(ReportType.SUCCESS)) {
+                logger.info("rtypemsg success");
+                _status = ST_REPORT;
+                if (_process != null)
+                    _process.successReport(this, gateMsg);
+            } else {
+                if (gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck) {
                     logger.info("GateDeleteAck: GateID = " + gateMsg.getGateID().getGateID());
                     if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID1())
                         PCMMGlobalConfig.setGateID1(0);
@@ -326,7 +301,7 @@ public class PCMMPdpReqStateMan {
                         PCMMGlobalConfig.setGateID2(0);
 
                 }
-                if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck ) {
+                if (gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck) {
                     logger.info("GateSetAck: GateID = " + gateMsg.getGateID().getGateID());
                     if (0 == PCMMGlobalConfig.getGateID1())
                         PCMMGlobalConfig.setGateID1(gateMsg.getGateID().getGateID());
@@ -334,20 +309,21 @@ public class PCMMPdpReqStateMan {
                         PCMMGlobalConfig.setGateID2(gateMsg.getGateID().getGateID());
                 }
             }
-        } else if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
-            logger.info("rtypemsg failure");
-            _status = ST_REPORT;
-            if (_process != null)
-            _process.failReport(this, gateMsg);
-            else
-                logger.info("Gate message error - " + gateMsg.getError().toString());
-        } else if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
-            logger.info("rtypemsg account");
-            _status = ST_ACCT;
-            if (_process != null)
-            _process.acctReport(this, gateMsg);
+            if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
+                logger.info("rtypemsg failure");
+                _status = ST_REPORT;
+                if (_process != null)
+                    _process.failReport(this, gateMsg);
+                else
+                    logger.info("Gate message error - " + gateMsg.getError().toString());
+            } else
+                if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
+                    logger.info("rtypemsg account");
+                    _status = ST_ACCT;
+                    if (_process != null)
+                        _process.acctReport(this, gateMsg);
+                }
         }
-        logger.info("Out processReport");
     }
 
     /**

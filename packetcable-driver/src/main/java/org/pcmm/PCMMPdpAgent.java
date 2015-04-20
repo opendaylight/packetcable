@@ -11,10 +11,14 @@ import org.umu.cops.prpdp.COPSPdpAgent;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSError.ErrorTypes;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Core PDP agent for provisioning
@@ -48,6 +52,12 @@ public class PCMMPdpAgent extends COPSPdpAgent {
 //    private short _transactionID;
 
     /**
+     * Temporary until can refactor PdpAgent classes
+     */
+    @Deprecated
+    private final Map<String, PCMMPdpConnection> _connectionMap;
+
+    /**
      * Creates a PDP Agent
      *
      * @param clientType
@@ -55,7 +65,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @param process
      *            Object to perform policy data processing
      */
-    public PCMMPdpAgent(short clientType, PCMMPdpDataProcess process) {
+    public PCMMPdpAgent(ClientType clientType, PCMMPdpDataProcess process) {
         this(clientType, null, WELL_KNOWN_PDP_PORT, process);
     }
 
@@ -71,10 +81,11 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @param process
      *            Object to perform policy data processing
      */
-    public PCMMPdpAgent(short clientType, String psHost, int psPort, PCMMPdpDataProcess process) {
+    public PCMMPdpAgent(ClientType clientType, String psHost, int psPort, PCMMPdpDataProcess process) {
         super(psPort, clientType, null);
         this._process = process;
         this.psHost = psHost;
+        this._connectionMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -121,7 +132,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             try {
                 logger.info("PDP  COPSTransceiver.receiveMsg");
                 COPSMsg msg = COPSTransceiver.receiveMsg(socket);
-                if (msg.getHeader().isAClientOpen()) {
+                if (msg.getHeader().getOpCode().equals(OPCode.OPN)) {
                     logger.info("PDP msg.getHeader().isAClientOpen");
                     handleClientOpenMsg(socket, msg);
                 } else {
@@ -153,20 +164,15 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @throws COPSException
      * @throws IOException
      */
-    private void handleClientOpenMsg(Socket conn, COPSMsg msg)
-    throws COPSException, IOException {
-        COPSClientOpenMsg cMsg = (COPSClientOpenMsg) msg;
-        COPSPepId pepId = cMsg.getPepId();
+    private void handleClientOpenMsg(final Socket conn, final COPSMsg msg) throws COPSException, IOException {
+        final COPSClientOpenMsg cMsg = (COPSClientOpenMsg) msg;
+        final COPSPepId pepId = cMsg.getPepId();
 
         // Validate Client Type
         if (msg.getHeader().getClientType() != getClientType()) {
             // Unsupported client type
-            COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
-                                             .getHeader().getClientType());
-            COPSError err = new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA);
-            COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-            closeMsg.add(cHdr);
-            closeMsg.add(err);
+            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(msg.getHeader().getClientType(),
+                    new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA), null, null);
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
@@ -179,13 +185,8 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         // PEPId is mandatory
         if (pepId == null) {
             // Mandatory COPS object missing
-            COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
-                                             .getHeader().getClientType());
-            COPSError err = new COPSError(
-                    ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA);
-            COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-            closeMsg.add(cHdr);
-            closeMsg.add(err);
+            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(msg.getHeader().getClientType(),
+                    new COPSError(ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA), null, null);
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
@@ -202,13 +203,8 @@ public class PCMMPdpAgent extends COPSPdpAgent {
                     _mminfo.getMinorVersionNB());
 
         } else {
-            // Unsupported objects
-            COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
-                                             .getHeader().getClientType());
-            COPSError err = new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA);
-            COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-            closeMsg.add(cHdr);
-            closeMsg.add(err);
+            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(msg.getHeader().getClientType(),
+                    new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA), null, null);
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
@@ -221,30 +217,25 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         */
 
         // Connection accepted
-        COPSHeader ahdr = new COPSHeader(COPSHeader.COPS_OP_CAT, msg
-                                         .getHeader().getClientType());
-        COPSKATimer katimer = new COPSKATimer(getKaTimer());
-        COPSAcctTimer acctTimer = new COPSAcctTimer(getAcctTimer());
-        COPSClientAcceptMsg acceptMsg = new COPSClientAcceptMsg();
-        acceptMsg.add(ahdr);
-        acceptMsg.add(katimer);
+        final COPSKATimer katimer = new COPSKATimer(getKaTimer());
+        final COPSAcctTimer acctTimer = new COPSAcctTimer(getAcctTimer());
+        final COPSClientAcceptMsg acceptMsg;
         if (getAcctTimer() != 0)
-            acceptMsg.add(acctTimer);
+            acceptMsg = new COPSClientAcceptMsg(msg.getHeader().getClientType(), katimer, acctTimer, null);
+        else
+            acceptMsg = new COPSClientAcceptMsg(msg.getHeader().getClientType(), katimer, null, null);
+
         acceptMsg.writeData(conn);
         // XXX - handleRequestMsg
         try {
             logger.info("PDP COPSTransceiver.receiveMsg");
             COPSMsg rmsg = COPSTransceiver.receiveMsg(socket);
             // Client-Close
-            if (rmsg.getHeader().isAClientClose()) {
+            if (rmsg.getHeader().getOpCode().equals(OPCode.CC)) {
                 logger.info("Client close description - " + ((COPSClientCloseMsg) rmsg).getError().getDescription());
                 // close the socket
-                COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
-                                                 .getHeader().getClientType());
-                COPSError err = new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA);
-                COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-                closeMsg.add(cHdr);
-                closeMsg.add(err);
+                final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(msg.getHeader().getClientType(),
+                        new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA), null, null);
                 try {
                     closeMsg.writeData(conn);
                 } catch (IOException unae) {
@@ -253,7 +244,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
                 throw new COPSException("CMTS requetsed Client-Close");
             } else {
                 // Request
-                if (rmsg.getHeader().isARequest()) {
+                if (rmsg.getHeader().getOpCode().equals(OPCode.REQ)) {
                     COPSReqMsg rMsg = (COPSReqMsg) rmsg;
                     _handle = rMsg.getClientHandle();
                 } else
@@ -284,7 +275,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
 
         logger.info("PDP Thread(pdpConn).start");
         new Thread(pdpConn).start();
-        getConnectionMap().put(pepId.getData().str(), pdpConn);
+        _connectionMap.put(pepId.getData().str(), pdpConn);
     }
 
     /**

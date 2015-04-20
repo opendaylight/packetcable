@@ -7,11 +7,10 @@
 package org.umu.cops.prpdp;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * State manager class for provisioning requests, at the PDP side.
@@ -70,7 +69,7 @@ public class COPSPdpReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected short _clientType;
+    protected ClientType _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -96,7 +95,7 @@ public class COPSPdpReqStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public COPSPdpReqStateMan(short clientType, String clientHandle) {
+    public COPSPdpReqStateMan(ClientType clientType, String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _status = ST_CREATE;
@@ -114,7 +113,7 @@ public class COPSPdpReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -243,8 +242,7 @@ public class COPSPdpReqStateMan {
      * @param msg   Report message from the PEP
      * @throws COPSPdpException
      */
-    protected void processReport(COPSReportMsg msg)
-    throws COPSPdpException {
+    protected void processReport(final COPSReportMsg msg) throws COPSPdpException {
 
         //** Analyze the report
         //**
@@ -264,47 +262,49 @@ public class COPSPdpReqStateMan {
         // COPSHeader hdrmsg = msg.getHeader();
         // COPSHandle handlemsg = msg.getClientHandle();
 
-        // Report Type
-        COPSReportType rtypemsg = msg.getReport();
+        if (msg.getClientSI() != null) {
+            // Report Type
+            final COPSReportType rtypemsg = msg.getReport();
 
-        // Named ClientSI
-        Vector clientSIs = msg.getClientSI();
-        Hashtable repSIs = new Hashtable(40);
-        String strobjprid = "";
-        for (Enumeration e = clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-
-            COPSPrObjBase obj = new COPSPrObjBase(clientSI.getData().getData());
+            // Named ClientSI
+            //        final Set<COPSClientSI> clientSIs = msg.getClientSI();
+            final Map<String, String> repSIs = new HashMap<>();
+            String strobjprid = "";
+            //        for (final COPSClientSI clientSI : clientSIs) {
+            final COPSPrObjBase obj = new COPSPrObjBase(msg.getClientSI().getData().getData());
             switch (obj.getSNum()) {
-            case COPSPrObjBase.PR_PRID:
-                strobjprid = obj.getData().str();
-                break;
-            case COPSPrObjBase.PR_EPD:
-                repSIs.put(strobjprid, obj.getData().str());
-                // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
-                // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
-                break;
-            default:
-                break;
+                case COPSPrObjBase.PR_PRID:
+                    strobjprid = obj.getData().str();
+                    break;
+                case COPSPrObjBase.PR_EPD:
+                    repSIs.put(strobjprid, obj.getData().str());
+                    // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
+                    // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
+                    break;
+                default:
+                    break;
+            }
+            //        }
+
+            //** Here we must act in accordance with
+            //** the report received
+            switch (rtypemsg.getReportType()) {
+                case SUCCESS:
+                    _status = ST_REPORT;
+                    _process.successReport(this, repSIs);
+                    break;
+                case FAILURE:
+                    _status = ST_REPORT;
+                    _process.failReport(this, repSIs);
+                    break;
+                case ACCOUNTING:
+                    _status = ST_ACCT;
+                    _process.acctReport(this, repSIs);
+                    break;
             }
         }
 
-        //** Here we must act in accordance with
-        //** the report received
-        switch (rtypemsg.getReportType()) {
-            case SUCCESS:
-                _status = ST_REPORT;
-                _process.successReport(this, repSIs);
-                break;
-            case FAILURE:
-                _status = ST_REPORT;
-                _process.failReport(this, repSIs);
-                break;
-            case ACCOUNTING:
-                _status = ST_ACCT;
-                _process.acctReport(this, repSIs);
-                break;
-        }
+
     }
 
     /**

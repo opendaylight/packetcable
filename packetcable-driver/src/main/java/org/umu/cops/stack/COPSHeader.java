@@ -9,6 +9,8 @@ package org.umu.cops.stack;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * COPS Header (RFC 2748 pag. 6)
@@ -57,313 +59,233 @@ import java.net.Socket;
  */
 public class COPSHeader {
 
-    public final static byte COPS_OP_REQ = 1;
-    public final static byte COPS_OP_DEC = 2;
-    public final static byte COPS_OP_RPT = 3;
-    public final static byte COPS_OP_DRQ = 4;
-    public final static byte COPS_OP_SSQ = 5;
-    public final static byte COPS_OP_OPN = 6;
-    public final static byte COPS_OP_CAT = 7;
-    public final static byte COPS_OP_CC = 8;
-    public final static byte COPS_OP_KA = 9;
-    public final static byte COPS_OP_SSC = 10;
-
-    public final static byte COPS_FLAG_NULL = 0;
-    public final static byte COPS_FLAG_SOLICITED = 1;
-
-    private byte _versionNflg;
-    private byte _opCode;
-    private short _cType;
-    private int _msgLength;
-
-    public COPSHeader() {
-        _versionNflg = 0x10;
-        _opCode = 0;
-        _cType = 0;
-        _msgLength = 0;
+    /**
+     * Map allowing for the quick retrieval of the client type based on the numeric value coming in via the
+     * COPS payload.
+     */
+    final static Map<Integer, ClientType> VAL_TO_CT = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_CT.put(ClientType.NA.ordinal(), ClientType.NA);
+        VAL_TO_CT.put(ClientType.TYPE_1.ordinal(), ClientType.TYPE_1);
+        VAL_TO_CT.put(ClientType.TYPE_2.ordinal(), ClientType.TYPE_2);
+        VAL_TO_CT.put(ClientType.TYPE_3.ordinal(), ClientType.TYPE_3);
     }
 
-    public COPSHeader(byte opCode, short clientType) {
-        _versionNflg = 0x10;
+    /**
+     * Map allowing for the quick retrieval of the operation based on the numeric value coming in via the
+     * COPS payload.
+     */
+    final static Map<Integer, OPCode> VAL_TO_OP = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_OP.put(OPCode.NA.ordinal(), OPCode.NA);
+        VAL_TO_OP.put(OPCode.REQ.ordinal(), OPCode.REQ);
+        VAL_TO_OP.put(OPCode.DEC.ordinal(), OPCode.DEC);
+        VAL_TO_OP.put(OPCode.RPT.ordinal(), OPCode.RPT);
+        VAL_TO_OP.put(OPCode.DRQ.ordinal(), OPCode.DRQ);
+        VAL_TO_OP.put(OPCode.SSQ.ordinal(), OPCode.SSQ);
+        VAL_TO_OP.put(OPCode.OPN.ordinal(), OPCode.OPN);
+        VAL_TO_OP.put(OPCode.CAT.ordinal(), OPCode.CAT);
+        VAL_TO_OP.put(OPCode.CC.ordinal(), OPCode.CC);
+        VAL_TO_OP.put(OPCode.KA.ordinal(), OPCode.KA);
+        VAL_TO_OP.put(OPCode.SSC.ordinal(), OPCode.SSC);
+    }
+
+    /**
+     * Represents the PCMM version number of the message
+     * Holds the first nibble of the COPS message
+     */
+    private final int _pcmmVersion;
+
+    /**
+     * Represents the second nibble of the message where solicited decisions will be set to 1 else 0
+     * Values 0 = UNSOLICITED | 1 = SOLICITED
+     */
+    private final Flag _flag;
+
+    /**
+     * Represents the type of operation which will be used to determine the type of COPSMsg this header will be a
+     * part of.
+     * Uses the byte value contained in the second byte of the message and inbound messages should use the constant
+     * Map VAL_TO_CT during construction
+     */
+    private final OPCode _opCode;
+
+    /**
+     * Represents client type which there are currently 3 types supported.
+     * Uses the 3rd byte of the message and inbound messages should use the constant Map VAL_TO_OP during construction
+     */
+    private final ClientType _cType;
+
+    /**
+     * Easy constructor that implies version 1 and UNSOLICITED flag.
+     *
+     * User should leverage the main constructor below and set the version and flags.
+     *
+     * @param opCode - the Operation code denoting the type of message
+     * @param clientType - the client type generally denotes if it is an Ipv4 (TYPE_1) else Ipv6
+     * @throws java.lang.IllegalArgumentException
+     */
+    @Deprecated
+    public COPSHeader(final OPCode opCode, final ClientType clientType) {
+        this(1, Flag.UNSOLICITED, opCode, clientType);
+    }
+
+    /**
+     * Should be the main constructor.
+     * @param version - PCMM Version
+     * @param flag - the header flag
+     * @param opCode - the COPS operation code
+     * @param clientType - the type of client interfacing
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSHeader(final int version, final Flag flag, final OPCode opCode, final ClientType clientType) {
+        if(version < 1) throw new IllegalArgumentException("Invalid version number - " + version);
+        if(flag == null) throw new IllegalArgumentException("Flag is null");
+        if(opCode == null) throw new IllegalArgumentException("OPCode is null");
+        if(clientType == null) throw new IllegalArgumentException("clientType is null");
+        _pcmmVersion = version;
+        _flag = flag;
         _opCode = opCode;
         _cType = clientType;
-        _msgLength = 0;
-        if (isAKeepAlive()) _cType = 0;
+
+        // TODO - Determine why this??? - remove until this makes some sense
+//        if (opCode.equals(OPCode.KA)) _cType = ClientType.NA;
+//        else _cType = clientType;
     }
 
-    public COPSHeader(byte opCode) {
-        _versionNflg = 0x10;
-        _opCode = opCode;
-        _cType = 0;
-        _msgLength = 0;
-        if (isAKeepAlive()) _cType = 0;
-    }
-
-    /**
-          Parse data and create COPSHeader object
-     */
-    public COPSHeader(byte[] buf) {
-        _versionNflg = (byte) buf[0];
-        _opCode = (byte) buf[1];
-        _cType |= ((short) buf[2]) << 8;
-        _cType |= ((short) buf[3]) & 0xFF;
-        _msgLength |= ((short) buf[4]) << 24;
-        _msgLength |= ((short) buf[5]) << 16;
-        _msgLength |= ((short) buf[6]) << 8;
-        _msgLength |= ((short) buf[7]) & 0xFF;
-    }
-
-    /**
-     * If the operation code corresponds with a message Request, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isARequest() {
-        return (_opCode == COPS_OP_REQ);
-    }
-
-    /**
-     * If the operation code corresponds with a message Decision, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isADecision() {
-        return (_opCode == COPS_OP_DEC);
-    }
-
-    /**
-     * If the operation code corresponds with a message Report, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAReport() {
-        return (_opCode == COPS_OP_RPT);
-    }
-
-    /**
-     * If the operation code corresponds with a message DeleteRequest, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isADeleteReq() {
-        return (_opCode == COPS_OP_DRQ);
-    }
-
-    /**
-     * If the operation code corresponds with a message SyncStateReq, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isASyncStateReq() {
-        return (_opCode == COPS_OP_SSQ);
-    }
-
-    /**
-     * If the operation code corresponds with a message ClientOpen, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAClientOpen() {
-        return (_opCode == COPS_OP_OPN);
-    }
-
-    /**
-     * If the operation code corresponds with a message ClientAccept, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAClientAccept() {
-        return (_opCode == COPS_OP_CAT);
-    }
-
-    /**
-     * If operation code corresponds with a message ClientClose, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAClientClose() {
-        return (_opCode == COPS_OP_CC);
-    }
-
-    /**
-     * If the operation code corresponds with a message KeepAlive, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAKeepAlive() {
-        return (_opCode == COPS_OP_KA);
-    }
-
-    /**
-     * If the operation code corresponds with a message SSC, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isASyncComplete() {
-        return (_opCode == COPS_OP_SSC);
-    }
-
-    /**
-     * Get message length
-     *
-     * @return   an int
-     *
-     */
-    public int getMsgLength() {
-        return _msgLength;
-    }
+    // Getters
+    public int getPcmmVersion() { return _pcmmVersion; }
+    public Flag getFlag() { return _flag; }
 
     /**
      * Get header length
-     *
      * @return   an int
-     *
      */
     public int getHdrLength() {
-        // return (sizeof(u_int32_t) * 2);
-        return ( 8 );
+        return 8;
     }
 
     /**
      * Get Operation Code
-     *
      * @return   a byte
-     *
      */
-    public byte getOpCode() {
+    public OPCode getOpCode() {
         return _opCode;
     }
 
     /**
-     * Set the solicitation flag
-     *
-     * @param    flg                 a  byte
-     *
-     */
-    public void setFlag(byte flg) {
-        _versionNflg &= 0x10;
-        _versionNflg |= flg;
-    }
-
-    /**
-     * Returns the flags field
-     * @return aByte     Flags field in header
-     */
-    public byte getFlags() { //OJO
-        return (byte) (_versionNflg & 0x0f);
-    }
-
-    /**
-     * Set the client-type
-     *
-     * @param    cType               a  short
-     *
-     */
-    public void setClientType(short cType) {
-        _cType = cType;
-    };
-
-    /**
-     * Set the message length
-     *
-     * @param    len                 an int
-     *
-     * @throws   COPSException
-     *
-     */
-    public void setMsgLength(int len) throws COPSException {
-        if ((len % 4) != 0)
-            throw new COPSException ("Message is not aligned on 32 bit intervals");
-        _msgLength = len + 8;
-    }
-
-    /**
      * Get client-type
-     *
      * @return   a short
-     *
      */
-    public short getClientType() {
-        return (_cType);
-    };
-
-    /**
-     * Always return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isCOPSHeader() {
-        return true;
-    };
+    public ClientType getClientType() {
+        return _cType;
+    }
 
     /**
      * Writes object to given network socket in network byte order
-     *
-     * @param    id                  a  Socket
-     *
+     * @param    socket                  a  Socket
      * @throws   IOException
-     *
      */
-    public void writeData(Socket id) throws IOException {
+    public void writeData(final Socket socket, final int msgLength) throws IOException {
         byte buf[] = new byte[8];
-
-        buf[0] = (byte) _versionNflg;
-        buf[1] = (byte) _opCode;
-        buf[2] = (byte) (_cType >> 8);
-        buf[3] = (byte) _cType;
-        buf[4] = (byte) (_msgLength >> 24);
-        buf[5] = (byte) (_msgLength >> 16);
-        buf[6] = (byte) (_msgLength >> 8);
-        buf[7] = (byte) _msgLength;
-
-        COPSUtil.writeData(id, buf, 8);
+        buf[0] = (byte) COPSMsgParser.combineNibbles((byte)_pcmmVersion, (byte) _flag.ordinal());
+        buf[1] = (byte) _opCode.ordinal();
+        buf[2] = (byte) (_cType.ordinal() >> 8);
+        buf[3] = (byte) _cType.ordinal();
+        buf[4] = (byte) (msgLength >> 24);
+        buf[5] = (byte) (msgLength >> 16);
+        buf[6] = (byte) (msgLength >> 8);
+        buf[7] = (byte) msgLength;
+        COPSUtil.writeData(socket, buf, 8);
     }
 
-    /**
-     * Get an object textual description
-     *
-     * @return   a String
-     *
-     */
+    @Override
     public String toString() {
-        String str = new String();
-
-        str += "**MSG HEADER** \n";
-        str += "Version: " + (_versionNflg >> 4) + "\n";
-        str += "Flags: " + (_versionNflg & 0x01) + "\n";
-        str += "OpCode: " + _opCode + "\n";
-        str += "Client-type: " + _cType + "\n";
-        str += "Message-length(bytes): " + _msgLength + "\n";
-        return str;
+        return "**MSG HEADER** \n"
+                + "Version: " + _pcmmVersion + "\n"
+                + "Flags: " + _flag + "\n"
+                + "OpCode: " + _opCode + "\n"
+                + "Client-type: " + _cType + "\n";
     }
 
     /**
      * Write an object textual description in the output stream
-     *
      * @param    os                  an OutputStream
-     *
      * @throws   IOException
-     *
      */
     public void dump(OutputStream os) throws IOException {
-        os.write(new String("**MSG HEADER**" + "\n").getBytes());
-        os.write(new String("Version: " + (_versionNflg >> 4) + "\n").getBytes());
-        os.write(new String("Flags: " + (_versionNflg & 0x01) + "\n").getBytes());
-        os.write(new String("OpCode: " + _opCode + "\n").getBytes());
-        os.write(new String("Client-type: " + _cType + "\n").getBytes());
-        os.write(new String("Message-length(bytes): " + _msgLength + "\n").getBytes());
+        os.write(("**MSG HEADER**" + "\n").getBytes());
+        os.write(("Version: " + _pcmmVersion + "\n").getBytes());
+        os.write(("Flags: " + _flag + "\n").getBytes());
+        os.write(("OpCode: " + _opCode + "\n").getBytes());
+        os.write(("Client-type: " + _cType + "\n").getBytes());
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSHeader)) {
+            return false;
+        }
+
+        final COPSHeader header = (COPSHeader) o;
+
+        return _pcmmVersion == header._pcmmVersion && _cType == header._cType && _flag == header._flag &&
+                _opCode == header._opCode;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = _pcmmVersion;
+        result = 31 * result + _flag.hashCode();
+        result = 31 * result + _opCode.hashCode();
+        result = 31 * result + _cType.hashCode();
+        return result;
+    }
+
+    /**
+     * The types of COPS clients
+     *
+     * 0 = N/A - placeholder for the invalid value of 0
+     * 1 = TYPE_1 - Represents legacy endpoints (PC applications, game consoles) lacking QoS awareness or
+     *              signaling capabilities.
+     * 2 = TYPE_2 - Represents a client that is similar to PacketCable 1.x telophony MTA which should support Qos
+     *              signaling.
+     * 3 = TYPE_3 - Represents QoS treatment from the access network withouth Application Manager interaction
+     */
+    public enum ClientType {
+        NA, TYPE_1, TYPE_2, TYPE_3
+    }
+
+    /**
+     * Represents the COPS Operation code and byte value corresponds to the item's ordinal value
+     *            The COPS operations:
+     *              0 = N/A - placeholder for the invalid value of 0
+     *              1 = Request                 (REQ)
+     *              2 = Decision                (DEC)
+     *              3 = Report State            (RPT)
+     *              4 = Delete Request State    (DRQ)
+     *              5 = Synchronize State Req   (SSQ)
+     *              6 = Client-Open             (OPN)
+     *              7 = Client-Accept           (CAT)
+     *              8 = Client-Close            (CC)
+     *              9 = Keep-Alive              (KA)
+     *              10= Synchronize Complete    (SSC)
+     */
+    public enum OPCode {
+        NA, REQ, DEC, RPT, DRQ, SSQ, OPN, CAT, CC, KA, SSC
+    }
+
+    /**
+     * Represents the COPS flags value where the inbound nibble value maps to the ordinal values.
+     */
+    public enum Flag {
+        UNSOLICITED, SOLICITED
+    }
+
 }
 
 

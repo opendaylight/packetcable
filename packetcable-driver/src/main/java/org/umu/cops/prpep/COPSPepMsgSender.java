@@ -9,13 +9,15 @@ package org.umu.cops.prpep;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSClientSI.CSIType;
 import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSReason.ReasonCode;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * COPSPepMsgSender sends COPS messages to PDP.
@@ -33,7 +35,7 @@ public class COPSPepMsgSender {
     /**
      * The client-type identifies the policy client
      */
-    protected short _clientType;
+    protected ClientType _clientType;
 
     /**
      * The client handle is used to uniquely identify a particular
@@ -48,7 +50,7 @@ public class COPSPepMsgSender {
      * @param clientHandle      client handle
      * @param sock              socket of PDP connection
      */
-    public COPSPepMsgSender (short clientType, COPSHandle clientHandle, Socket sock) {
+    public COPSPepMsgSender (ClientType clientType, COPSHandle clientHandle, Socket sock) {
         // COPS Handle
         _handle = clientHandle;
         _clientType = clientType;
@@ -72,7 +74,7 @@ public class COPSPepMsgSender {
      * @return   a short
      *
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -86,46 +88,22 @@ public class COPSPepMsgSender {
      * @throws   COPSPepException
      *
      */
-    public void sendRequest(Hashtable clientSIs)
-    throws COPSPepException {
-        // Create COPS Message
-        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_REQ, _clientType);
-        COPSContext cntxt = new COPSContext(RType.CONFIG , (short) 0);
-
-        COPSHandle handle = _handle;
-
+    public void sendRequest(final Map<String, String> clientSIs) throws COPSPepException {
+        final Set<COPSClientSI> clientSISet = new HashSet<>();
         // Add the clientSIs
-        COPSReqMsg msg = new COPSReqMsg();
-        try {
-            msg.add(hdr) ;
-            msg.add(handle) ;
-            msg.add(cntxt) ;
+        for (final Map.Entry<String, String> entry : clientSIs.entrySet()) {
+            //  (PRID)
+            final COPSPrID prid = new COPSPrID();
+            prid.setData(new COPSData(entry.getKey()));
+            clientSISet.add(new COPSClientSI(CSIType.NAMED, new COPSData(prid.getDataRep(), 0, prid.getDataLength())));
 
-            if (clientSIs.size() > 0) {
-                for (Enumeration e = clientSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) clientSIs.get(strprid);
-
-                    //  (PRID)
-                    COPSPrID prid = new COPSPrID();
-                    prid.setData(new COPSData(strprid));
-                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
-
-                    //  (EPD)
-                    COPSPrEPD epd = new COPSPrEPD();
-                    epd.setData(new COPSData(strepd));
-                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
-
-                    msg.add(cSi);
-                    msg.add(cSi2);
-                }
-            }
-
-        } catch (COPSException e) {
-            throw new COPSPepException("Error making Request Msg, reason: " + e.getMessage());
+            //  (EPD)
+            final COPSPrEPD epd = new COPSPrEPD();
+            epd.setData(new COPSData(entry.getValue()));
+            clientSISet.add(new COPSClientSI(CSIType.NAMED, new COPSData(epd.getDataRep(), 0, epd.getDataLength())));
         }
+        final COPSReqMsg msg = new COPSReqMsg(_clientType, _handle, new COPSContext(RType.CONFIG, (short)0),
+                null, null, null, clientSISet, null);
 
         // Send message
         try {
@@ -144,50 +122,8 @@ public class COPSPepMsgSender {
      * @throws   COPSPepException
      *
      */
-    public void sendFailReport(Hashtable clientSIs)
-    throws COPSPepException {
-        COPSReportMsg msg = new COPSReportMsg();
-        // Report FAIL
-        try {
-            COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
-            COPSHandle hnd = _handle;
-
-            COPSReportType report = new COPSReportType(ReportType.FAILURE);
-
-            msg.add(hdr);
-            msg.add(hnd);
-            msg.add(report);
-            if (clientSIs.size() > 0) {
-                for (Enumeration e = clientSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) clientSIs.get(strprid);
-
-                    //  (PRID)
-                    COPSPrID prid = new COPSPrID();
-                    prid.setData(new COPSData(strprid));
-                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
-
-                    //  (EPD)
-                    COPSPrEPD epd = new COPSPrEPD();
-                    epd.setData(new COPSData(strepd));
-                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
-
-                    msg.add(cSi);
-                    msg.add(cSi2);
-                }
-            }
-
-        } catch (COPSException ex) {
-            throw new COPSPepException("Error making Msg");
-        }
-
-        try {
-            msg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPepException("Failed to send the report, reason: " + e.getMessage());
-        }
+    public void sendFailReport(final Map<String, String> clientSIs) throws COPSPepException {
+        sendReport(clientSIs, new COPSReportType(ReportType.FAILURE));
     }
 
     /**
@@ -199,97 +135,40 @@ public class COPSPepMsgSender {
      * @throws   COPSPepException
      *
      */
-    public void sendSuccessReport(Hashtable clientSIs)
-    throws COPSPepException {
-        COPSReportMsg msg = new COPSReportMsg();
-        // Report SUCESS
-        try {
-            COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
-            COPSHandle hnd = _handle;
-
-            COPSReportType report = new COPSReportType(ReportType.SUCCESS);
-
-            msg.add(hdr);
-            msg.add(hnd);
-            msg.add(report);
-
-            if (clientSIs.size() > 0) {
-                for (Enumeration e = clientSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) clientSIs.get(strprid);
-
-                    //  (PRID)
-                    COPSPrID prid = new COPSPrID();
-                    prid.setData(new COPSData(strprid));
-                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
-
-                    //  (EPD)
-                    COPSPrEPD epd = new COPSPrEPD();
-                    epd.setData(new COPSData(strepd));
-                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
-
-                    msg.add(cSi);
-                    msg.add(cSi2);
-                }
-            }
-
-        } catch (COPSException ex) {
-            throw new COPSPepException("Error making Msg");
-        }
-
-        try {
-            msg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPepException("Failed to send the report, reason: " + e.getMessage());
-        }
+    public void sendSuccessReport(final Map<String, String> clientSIs) throws COPSPepException {
+        sendReport(clientSIs, new COPSReportType(ReportType.SUCCESS));
     }
 
-    public void sendAcctReport(Hashtable clientSIs)
-    throws COPSPepException {
-        COPSReportMsg msg = new COPSReportMsg();
+    public void sendAcctReport(final Map<String, String> clientSIs) throws COPSPepException {
+        sendReport(clientSIs, new COPSReportType(ReportType.ACCOUNTING));
+    }
+
+    private void sendReport(final Map<String, String> clientSIs, final COPSReportType reportType)
+            throws COPSPepException {
         // Report SUCESS
-        try {
-            COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
-            COPSHandle hnd = _handle;
+        for (final Map.Entry<String, String> entry : clientSIs.entrySet()) {
+            //  (PRID)
+            final COPSPrID prid = new COPSPrID();
+            prid.setData(new COPSData(entry.getKey()));
 
-            COPSReportType report = new COPSReportType(ReportType.ACCOUNTING);
-
-            msg.add(hdr);
-            msg.add(hnd);
-            msg.add(report);
-
-            if (clientSIs.size() > 0) {
-                for (Enumeration e = clientSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) clientSIs.get(strprid);
-
-                    //  (PRID)
-                    COPSPrID prid = new COPSPrID();
-                    prid.setData(new COPSData(strprid));
-                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
-
-                    //  (EPD)
-                    COPSPrEPD epd = new COPSPrEPD();
-                    epd.setData(new COPSData(strepd));
-                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
-                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
-
-                    msg.add(cSi);
-                    msg.add(cSi2);
-                }
+            final COPSReportMsg pridMsg = new COPSReportMsg(_clientType, _handle, reportType,
+                    new COPSClientSI(CSIType.NAMED, new COPSData(prid.getDataRep(), 0, prid.getDataLength())), null);
+            try {
+                pridMsg.writeData(_sock);
+            } catch (IOException e) {
+                throw new COPSPepException("Failed to send the report, reason: " + e.getMessage());
             }
 
-        } catch (COPSException ex) {
-            throw new COPSPepException("Error making Msg");
-        }
-
-        try {
-            msg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPepException("Failed to send the report, reason: " + e.getMessage());
+            //  (EPD)
+            final COPSPrEPD epd = new COPSPrEPD();
+            epd.setData(new COPSData(entry.getValue()));
+            final COPSReportMsg epdMsg = new COPSReportMsg(_clientType, _handle, reportType,
+                    new COPSClientSI(CSIType.NAMED, new COPSData(epd.getDataRep(), 0, epd.getDataLength())), null);
+            try {
+                pridMsg.writeData(_sock);
+            } catch (IOException e) {
+                throw new COPSPepException("Failed to send the report, reason: " + e.getMessage());
+            }
         }
     }
 
@@ -302,22 +181,8 @@ public class COPSPepMsgSender {
      * @throws   COPSPepException
      *
      */
-    public void sendSyncComplete()
-    throws COPSPepException {
-        // Common Header with the same ClientType as the request
-        COPSHeader hdr = new COPSHeader (COPSHeader.COPS_OP_SSC, _clientType);
-
-        // Client Handle with the same clientHandle as the request
-        COPSHandle clienthandle = _handle;
-
-        COPSSyncStateMsg msg = new COPSSyncStateMsg();
-        try {
-            msg.add(hdr);
-            msg.add(clienthandle);
-        } catch (Exception e) {
-            throw new COPSPepException("Error making Msg");
-        }
-
+    public void sendSyncComplete() throws COPSPepException {
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, _handle, null);
         try {
             msg.writeData(_sock);
         } catch (IOException e) {
@@ -334,22 +199,10 @@ public class COPSPepMsgSender {
      * @throws   COPSPepException
      *
      */
-    public void sendDeleteRequest()
-    throws COPSPepException {
-        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DRQ, _clientType);
-        COPSHandle handle = _handle;
-
+    public void sendDeleteRequest() throws COPSPepException {
         // *** TODO: send a real reason
-        COPSReason reason = new COPSReason(ReasonCode.NA, ReasonCode.NA);
-
-        COPSDeleteMsg msg = new COPSDeleteMsg();
-        try {
-            msg.add(hdr);
-            msg.add(handle);
-            msg.add(reason);
-        } catch (COPSException ex) {
-            throw new COPSPepException("Error making Msg");
-        }
+        final COPSReason reason = new COPSReason(ReasonCode.UNSPECIFIED, ReasonCode.NA);
+        final COPSDeleteMsg msg = new COPSDeleteMsg(_clientType, _handle, reason, null);
         try {
             msg.writeData(_sock);
         } catch (IOException e) {

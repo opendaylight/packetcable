@@ -3,9 +3,10 @@
  */
 package org.pcmm.messages;
 
-import java.util.Properties;
-
+import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSMsg;
+
+import java.util.Properties;
 
 /**
  * 
@@ -22,7 +23,7 @@ public interface IMessageFactory {
      *            message type
      * @return new message.
      */
-    COPSMsg create(byte messageType);
+    COPSMsg create(OPCode messageType);
 
     /**
      * creates a new message with the specified message type and content
@@ -33,5 +34,5 @@ public interface IMessageFactory {
      *            message content.
      * @return new message.
      */
-    COPSMsg create(byte messageType, Properties properties);
+    COPSMsg create(OPCode messageType, Properties properties);
 }

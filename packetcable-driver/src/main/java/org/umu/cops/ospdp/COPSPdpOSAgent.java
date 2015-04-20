@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSError.ErrorTypes;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -33,7 +35,7 @@ public class COPSPdpOSAgent extends Thread {
     /**
         Client-type of connecting PEP
      */
-    private short _clientType;
+    private ClientType _clientType;
 
     /**
         Accounting timer (secs)
@@ -62,7 +64,7 @@ public class COPSPdpOSAgent extends Thread {
      * @param clientType    COPS Client-type
      * @param process       Object to perform policy data processing
      */
-    public COPSPdpOSAgent(short clientType, COPSPdpOSDataProcess process) {
+    public COPSPdpOSAgent(final ClientType clientType, final COPSPdpOSDataProcess process) {
         _serverPort = WELL_KNOWN_PDP_PORT;
         _kaTimer = KA_TIMER_VALUE;
         _acctTimer = ACCT_TIMER_VALUE;
@@ -79,7 +81,7 @@ public class COPSPdpOSAgent extends Thread {
      * @param clientType    COPS Client-type
      * @param process   Object to perform policy data processing
      */
-    public COPSPdpOSAgent(int port, short clientType, COPSPdpOSDataProcess process) {
+    public COPSPdpOSAgent(final int port, final ClientType clientType, final COPSPdpOSDataProcess process) {
         _serverPort = port;
 
         _kaTimer = KA_TIMER_VALUE;
@@ -126,7 +128,7 @@ public class COPSPdpOSAgent extends Thread {
      * Gets the client-type
      * @return   The client-type
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -137,15 +139,9 @@ public class COPSPdpOSAgent extends Thread {
      * @throws COPSException
      * @throws IOException
      */
-    public void disconnect (String pepID, COPSError error) throws COPSException, IOException {
-        COPSPdpOSConnection pdpConn = _connectionMap.get(pepID);
-
-        COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, _clientType);
-        COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-        closeMsg.add(cHdr);
-        if (error != null)
-            closeMsg.add(error);
-
+    public void disconnect(final String pepID, final COPSError error) throws COPSException, IOException {
+        final COPSPdpOSConnection pdpConn = _connectionMap.get(pepID);
+        final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType, error, null, null);
         closeMsg.writeData(pdpConn.getSocket());
         pdpConn.close();
     }
@@ -190,7 +186,7 @@ public class COPSPdpOSAgent extends Thread {
                 // We're waiting for an OPN message
                 try {
                     COPSMsg msg = COPSTransceiver.receiveMsg(socket);
-                    if (msg.getHeader().isAClientOpen()) {
+                    if (msg.getHeader().getOpCode().equals(OPCode.OPN)) {
                         handleClientOpenMsg(socket, msg);
                     } else {
                         // COPSDebug.err(getClass().getName(), COPSDebug.ERROR_NOEXPECTEDMSG);
@@ -229,11 +225,8 @@ public class COPSPdpOSAgent extends Thread {
         // Validate Client Type
         if (msg.getHeader().getClientType() != _clientType) {
             // Unsupported client type
-            COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg.getHeader().getClientType());
-            COPSError err = new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA);
-            COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-            closeMsg.add(cHdr);
-            closeMsg.add(err);
+            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
+                    new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA), null, null);
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
@@ -246,11 +239,8 @@ public class COPSPdpOSAgent extends Thread {
         // PEPId is mandatory
         if (pepId == null) {
             // Mandatory COPS object missing
-            COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg.getHeader().getClientType());
-            COPSError err = new COPSError(ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA);
-            COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-            closeMsg.add(cHdr);
-            closeMsg.add(err);
+            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
+                    new COPSError(ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA), null, null);
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
@@ -261,16 +251,11 @@ public class COPSPdpOSAgent extends Thread {
         }
 
         // Support
-        if ( (cMsg.getClientSI() != null) ||
-                (cMsg.getPdpAddress() != null) ||
-                (cMsg.getIntegrity() != null)) {
+        if ( (cMsg.getClientSI() != null) || (cMsg.getPdpAddress() != null) || (cMsg.getIntegrity() != null)) {
 
             // Unsupported objects
-            COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg.getHeader().getClientType());
-            COPSError err = new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA);
-            COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-            closeMsg.add(cHdr);
-            closeMsg.add(err);
+            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
+                    new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA), null, null);
             try {
                 closeMsg.writeData(conn);
             } catch (IOException unae) {
@@ -281,16 +266,17 @@ public class COPSPdpOSAgent extends Thread {
         }
 
         // Connection accepted
-        COPSHeader ahdr = new COPSHeader(COPSHeader.COPS_OP_CAT, msg.getHeader().getClientType());
-        COPSKATimer katimer = new COPSKATimer(_kaTimer);
-        COPSAcctTimer acctTimer = new COPSAcctTimer(_acctTimer);
-        COPSClientAcceptMsg acceptMsg = new COPSClientAcceptMsg();
-        acceptMsg.add(ahdr);
-        acceptMsg.add(katimer) ;
-        if (_acctTimer != 0) acceptMsg.add(acctTimer);
+        final COPSKATimer katimer = new COPSKATimer(_kaTimer);
+        final COPSClientAcceptMsg acceptMsg;
+        if (_acctTimer != 0)
+            acceptMsg = new COPSClientAcceptMsg(msg.getHeader().getClientType(), katimer, new COPSAcctTimer(_acctTimer),
+                    null);
+        else
+            acceptMsg = new COPSClientAcceptMsg(msg.getHeader().getClientType(), katimer, null, null);
+
         acceptMsg.writeData(conn);
 
-        COPSPdpOSConnection pdpConn = new COPSPdpOSConnection(pepId, conn, _process);
+        final COPSPdpOSConnection pdpConn = new COPSPdpOSConnection(pepId, conn, _process);
         pdpConn.setKaTimer(_kaTimer);
         if (_acctTimer != 0) pdpConn.setAccTimer(_acctTimer);
         new Thread(pdpConn).start();
