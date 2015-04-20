@@ -216,9 +216,9 @@
         <configuration>
           <bootFeatures>
             <feature>standard</feature>
-            <feature>odl-restconf</feature>
+            <!--<feature>odl-restconf</feature>-->
             <!--<feature>odl-l2switch-switch</feature>-->
-            <feature>odl-dlux-core</feature>
+            <!--<feature>odl-dlux-core</feature>-->
             <feature>odl-mdsal-apidocs</feature>
             <feature>odl-packetcable-all</feature>
             <!--
