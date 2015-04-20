@@ -6,35 +6,68 @@
 
 package org.umu.cops.stack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
- * COPS Utils
+ * Class to hold static utilitarian methods for streaming bytes over a Socket.
  *
  * @version COPSUtil.java, v 2.00 2004
  *
  */
 public class COPSUtil {
 
+    private final static Logger logger = LoggerFactory.getLogger(COPSUtil.class);
+
     /**
-     * Method writeData
-     *
-     * @param    id                  a  Socket
+     * Streams COPS data
+     * @param    socket                  a  Socket
      * @param    data                a  byte[]
      * @param    len                 an int
-     *
      * @throws   IOException
-     *
      */
-    static void writeData(Socket id, byte[] data, int len) throws IOException {
-        OutputStream output;
-        output = id.getOutputStream();
+    public static void writeData(final Socket socket, final byte[] data, final int len) throws IOException {
+        logger.info("Writing COPS data");
+        socket.getOutputStream().write(data, 0, len);
+    }
 
-        output.write(data,0,len);
+    /**
+     * Returns true if the data contained within data1 + padding1 is equivalent to data2 + padding2
+     * @param data1 - the data from the first
+     * @param padding1 - the padding from the first
+     * @param data2 - the data from the second
+     * @param padding2 - the padding from the second
+     * @return - t/f
+     */
+    public static boolean copsDataPaddingEquals(final COPSData data1, final COPSData padding1,
+                                                final COPSData data2, final COPSData padding2) {
+        final byte[] data1Bytes = data1.getData();
+        final byte[] padding1Bytes = padding1.getData();
+
+        final byte[] data2Bytes = data2.getData();
+        final byte[] padding2Bytes = padding2.getData();
+
+        if (data1Bytes.length + padding1Bytes.length != data2Bytes.length + padding2Bytes.length)
+            return false;
+
+        final ByteArrayOutputStream thisStream = new ByteArrayOutputStream();
+        final ByteArrayOutputStream thatStream = new ByteArrayOutputStream();
+        try {
+            thisStream.write(data1Bytes);
+            thisStream.write(padding1Bytes);
+            thatStream.write(data2Bytes);
+            thatStream.write(padding2Bytes);
+            return Arrays.equals(thisStream.toByteArray(), thatStream.toByteArray());
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     /**
@@ -50,6 +83,7 @@ public class COPSUtil {
      * @throws   IOException
      *
      */
+    @Deprecated
     static int readData(Socket connId, byte[] dataRead, int nchar)  throws IOException {
         InputStream input;
         input = connId.getInputStream();
@@ -62,7 +96,7 @@ public class COPSUtil {
                 startTime = (int) (new Date().getTime());
             } else {
                 int nowTime = (int) (new Date().getTime());
-                if ((int)(nowTime - startTime) > 2000)
+                if ((nowTime - startTime) > 2000)
                     break;
             }
         } while (nread != nchar);
@@ -70,4 +104,3 @@ public class COPSUtil {
         return nread;
     }
 }
-

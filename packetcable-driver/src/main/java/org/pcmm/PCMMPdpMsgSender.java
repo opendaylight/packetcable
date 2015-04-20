@@ -12,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSObjHeader.CNum;
-import org.umu.cops.stack.COPSObjHeader.CType;
+import org.umu.cops.stack.COPSClientSI.CSIType;
+import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -127,7 +129,7 @@ public class PCMMPdpMsgSender {
     /**
      * Sends a PCMM GateSet COPS Decision message
      *
-     * @param
+     * @param gate - the gate to set
      * @throws COPSPdpException
      */
     public void sendGateSet(IPCMMGate gate)
@@ -150,18 +152,15 @@ public class PCMMPdpMsgSender {
 
 
         // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
-        byte[] data = gate.getData();
-        clientSD.setData(new COPSData(data, 0, data.length));
+        // TODO - determine if NAMED is correct.
+        COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(gate.getData(), 0, gate.getData().length));
         try {
             decisionMsg.add(hdr);
             decisionMsg.add(handle);
             // Decisions (no flags supplied)
             // <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
-            COPSDecision install = new COPSDecision();
-            install.setCmdCode(COPSDecision.DEC_INSTALL);
-            install.setFlags(COPSDecision.F_REQERROR);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
+            COPSDecision install = new COPSDecision(Command.INSTALL, DecisionFlag.REQERROR);
             decisionMsg.addDecision(install, cntxt);
             decisionMsg.add(clientSD); // setting up the gate
             /*
@@ -189,11 +188,10 @@ public class PCMMPdpMsgSender {
     /**
      * Sends a PCMM GateSet COPS Decision message
      *
-     * @param
+     * @param num - parameter used to set the traffic rate
      * @throws COPSPdpException
      */
-    public void sendGateSetDemo(int num)
-    throws COPSPdpException {
+    public void sendGateSetDemo(int num) throws COPSPdpException {
 
         // Common Header with the same ClientType as the request
 
@@ -264,9 +262,6 @@ public class PCMMPdpMsgSender {
 
 
 
-        // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
-
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
         // set transaction ID to gate set
@@ -351,16 +346,14 @@ public class PCMMPdpMsgSender {
         byte[] data = gate.getData();
 
         // new pcmm specific clientsi
-        clientSD.setData(new COPSData(data, 0, data.length));
+        COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
         try {
             decisionMsg.add(hdr);
             decisionMsg.add(handle);
             // Decisions (no flags supplied)
             // <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
-            COPSDecision install = new COPSDecision();
-            install.setCmdCode(COPSDecision.DEC_INSTALL);
-            install.setFlags(COPSDecision.F_REQERROR);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
+            COPSDecision install = new COPSDecision(Command.INSTALL, DecisionFlag.REQERROR);
             decisionMsg.addDecision(install, cntxt);
             decisionMsg.add(clientSD); // setting up the gate
             /*
@@ -387,11 +380,9 @@ public class PCMMPdpMsgSender {
     /**
      * Sends a PCMM GateSet COPS Decision message
      *
-     * @param
      * @throws COPSPdpException
      */
-    public void sendGateSetBestEffortWithExtendedClassifier()
-    throws COPSPdpException {
+    public void sendGateSetBestEffortWithExtendedClassifier() throws COPSPdpException {
         // Common Header with the same ClientType as the request
 
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, getClientType());
@@ -453,9 +444,6 @@ public class PCMMPdpMsgSender {
 
 
 
-        // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
-
         // Client Handle with the same clientHandle as the request
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
@@ -541,16 +529,14 @@ public class PCMMPdpMsgSender {
         byte[] data = gate.getData();
 
         // new pcmm specific clientsi
-        clientSD.setData(new COPSData(data, 0, data.length));
+        COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
         try {
             decisionMsg.add(hdr);
             decisionMsg.add(handle);
             // Decisions (no flags supplied)
             // <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
-            COPSDecision install = new COPSDecision();
-            install.setCmdCode(COPSDecision.DEC_INSTALL);
-            install.setFlags(COPSDecision.F_REQERROR);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
+            COPSDecision install = new COPSDecision(Command.INSTALL, DecisionFlag.REQERROR);
             decisionMsg.addDecision(install, cntxt);
             decisionMsg.add(clientSD); // setting up the gate
             /*
@@ -611,7 +597,6 @@ public class PCMMPdpMsgSender {
     /**
      * Sends a PCMM GateSet COPS Decision message
      *
-     * @param
      * @throws COPSPdpException
      */
     public void sendGateSet() throws COPSPdpException {
@@ -639,9 +624,6 @@ public class PCMMPdpMsgSender {
         ((BestEffortService) trafficProfile).getAuthorizedEnvelop()
         .setRequestTransmissionPolicy(
             PCMMGlobalConfig.BETransmissionPolicy);
-
-        // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
 
         // Client Handle with the same clientHandle as the request
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
@@ -692,17 +674,15 @@ public class PCMMPdpMsgSender {
         byte[] data = gate.getData();
 
         // new pcmm specific clientsi
-        clientSD.setData(new COPSData(data, 0, data.length));
+        COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
 
         try {
             decisionMsg.add(hdr);
             decisionMsg.add(handle);
             // Decisions (no flags supplied)
             // <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
-            COPSDecision install = new COPSDecision();
-            install.setCmdCode(COPSDecision.DEC_INSTALL);
-            install.setFlags(COPSDecision.F_REQERROR);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
+            COPSDecision install = new COPSDecision(Command.INSTALL, DecisionFlag.REQERROR);
             decisionMsg.addDecision(install, cntxt);
             decisionMsg.add(clientSD); // setting up the gate
             /*
@@ -753,9 +733,6 @@ public class PCMMPdpMsgSender {
         ISubscriberID subscriberID = new SubscriberID();
         IGateID gateID = new GateID();
 
-        // new pcmm specific clientsi
-        COPSClientSI clientSD = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
-
         final COPSHandle handle = new COPSHandle(getClientHandle().getId());
 
         // set transaction ID to gate set
@@ -783,17 +760,14 @@ public class PCMMPdpMsgSender {
         byte[] data = gate.getData();
 
         // new pcmm specific clientsi
-        clientSD.setData(new COPSData(data, 0, data.length));
-
+        COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
         try {
             decisionMsg.add(hdr);
             decisionMsg.add(handle);
             // Decisions (no flags supplied)
             // <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
-            COPSDecision install = new COPSDecision();
-            install.setCmdCode(COPSDecision.DEC_INSTALL);
-            install.setFlags(COPSDecision.F_REQERROR);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
+            COPSDecision install = new COPSDecision(Command.INSTALL, DecisionFlag.REQERROR);
             decisionMsg.addDecision(install, cntxt);
             decisionMsg.add(clientSD); // setting up the gate
             /*
@@ -839,12 +813,9 @@ public class PCMMPdpMsgSender {
 
         // Decisions
         // <Context>
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
         // <Decision: Flags>
-        COPSDecision dec = new COPSDecision();
-        dec.setCmdCode(COPSDecision.DEC_INSTALL);
-        dec.setFlags(COPSDecision.F_REQSTATE);
-
+        COPSDecision dec = new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE);
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         try {
             decisionMsg.add(hdr);

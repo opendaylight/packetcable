@@ -11,122 +11,58 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 /**
- * COPS Timer Object
- *
- * @version COPSTimer.java, v 1.00 2003
- *
+ * For extension by other COPS Timer Objects such as COPSAcctTimer & COPSKATimer
  */
 public abstract class COPSTimer extends COPSObjBase {
 
-    protected COPSObjHeader _objHdr;
-    private short _reserved;
-    private short _timerValue;
+    // TODO - determine what is the function of this member
+    private final short _reserved;
 
     /**
-     * Returns size in number of octects, including header
-     *
-     * @return   a short
-     *
+     * The timer values
      */
-    public short getDataLength() {
-        //Add the size of the header also
-        return (_objHdr.getDataLength());
+    private final short _timerValue;
+
+    /**
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSObjHeader information is known
+     * @param header - the object header
+     * @param reserved - ???
+     * @param timerVal - the timer value
+     */
+    protected COPSTimer(final COPSObjHeader header, final short reserved, final short timerVal) {
+        super(header);
+        _reserved = reserved;
+        _timerValue = timerVal;
     }
 
     /**
      * Method getTimerVal
-     *
      * @return   a short
-     *
      */
     public short getTimerVal() {
         return _timerValue;
-    };
+    }
 
-    /**
-     * Method isTimer
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isTimer() {
-        return true;
-    };
-
-    /**
-     * Method isKATimer
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isKATimer() {
-        return false;
-    };
-
-    /**
-     * Method isAcctTimer
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAcctTimer() {
-        return false;
-    };
-
-    /**
-     * Write data to given socket in Network byte order
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        _objHdr.writeData(id);
-
+    @Override
+    public void writeBody(Socket socket) throws IOException {
         byte[] buf = new byte[4];
 
         buf[0] = (byte) (_reserved >> 8);
         buf[1] = (byte) _reserved;
         buf[2] = (byte) (_timerValue >> 8);
         buf[3] = (byte) _timerValue;
-        COPSUtil.writeData(id, buf, 4);
+        COPSUtil.writeData(socket, buf, 4);
     }
 
-    protected COPSTimer(COPSObjHeader hdr, short timeVal) {
-        _objHdr = hdr;
-        //Time range is 1 - 65535 seconds
-        _timerValue = timeVal;
-        // _objHdr.setDataLength(sizeof(u_int32_t));
-        _objHdr.setDataLength((short) 4);
+    @Override
+    protected int getDataLength() {
+        return 4;
     }
 
-    /**
-     * Receive data that is in netwrok byte order and fill in the obj.
-     */
-    protected COPSTimer(byte[] dataPtr) {
-        _objHdr = COPSObjHeader.parse(dataPtr);
-
-        _reserved |= ((short) dataPtr[4]) << 8;
-        _reserved |= ((short) dataPtr[5]) & 0xFF;
-        _timerValue |= ((short) dataPtr[6]) << 8;
-        _timerValue |= ((short) dataPtr[7]) & 0xFF;
-
-        // _objHdr.setDataLength(sizeof(u_int32_t));
-        _objHdr.setDataLength((short) 4);
-    }
-
-    /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
-     */
-    public void dump(OutputStream os) throws IOException {
-        _objHdr.dump(os);
-        os.write(new String("Timer val: " + _timerValue + "\n").getBytes());
+    @Override
+    public void dumpBody(final OutputStream os) throws IOException {
+        os.write(("Timer val: " + _timerValue + "\n").getBytes());
     }
 
 }

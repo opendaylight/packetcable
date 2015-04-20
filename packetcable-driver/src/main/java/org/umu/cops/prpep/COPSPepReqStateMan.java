@@ -7,6 +7,7 @@
 package org.umu.cops.prpep;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSDecision.Command;
 
 import java.net.Socket;
 import java.util.Enumeration;
@@ -244,8 +245,8 @@ public class COPSPepReqStateMan {
 
             // cmddecision --> we must check whether it is an error!
 
-            if (cmddecision.isInstallDecision()) {
-                String prid = new String();
+            if (cmddecision.getCommand().equals(Command.INSTALL)) {
+                String prid = "";
                 for (; ee.hasMoreElements() ;) {
                     COPSDecision decision = (COPSDecision) ee.nextElement();
 
@@ -263,9 +264,9 @@ public class COPSPepReqStateMan {
                 }
             }
 
-            if (cmddecision.isRemoveDecision()) {
+            if (cmddecision.getCommand().equals(Command.REMOVE)) {
 
-                String prid = new String();
+                String prid = "";
                 for (; ee.hasMoreElements() ;) {
                     COPSDecision decision = (COPSDecision) ee.nextElement();
 

@@ -6,8 +6,6 @@
 
 package org.umu.cops.stack;
 
-import java.net.UnknownHostException;
-
 /**
  * COPS IPv4 Interface
  *
@@ -16,86 +14,47 @@ import java.net.UnknownHostException;
  */
 public abstract class COPSIpv4Interface extends COPSInterface {
 
-    protected COPSObjHeader _objHdr;
-    private COPSIpv4Address _addr;
-    private int _ifindex;
+    /**
+     * Constructor
+     * @param objHdr - the header
+     * @param ifindex - the interface value
+     * @param addr - the address object
+     * @throws java.lang.IllegalArgumentException
+     */
+    protected COPSIpv4Interface(final COPSObjHeader objHdr, final COPSIpv4Address addr, final int ifindex) {
+        super(objHdr, addr, ifindex);
+    }
 
+    @Override
+    public boolean isIPv6() { return false; }
 
     /**
-     * Method isIpv4Address
-     *
-     * @return   a boolean
-     *
+     * Creates a COPSIpv4Address object from a byte array.
+     * @param dataPtr - the byte array
+     * @return - the address
+     * @throws java.lang.IllegalArgumentException
      */
-    public boolean isIpv4Address() {
-        return true;
-    }
-
-    /**
-     * Method setIpAddress
-     *
-     * @param    hostName            a  String
-     *
-     * @throws   UnknownHostException
-     *
-     */
-    public void setIpAddress(String hostName) throws UnknownHostException {
-        _addr.setIpAddress(hostName);
-    }
-
-    /**
-     * Method getIpName
-     *
-     * @return   a String
-     *
-     * @throws   UnknownHostException
-     *
-     */
-    public String getIpName() throws UnknownHostException {
-        return (_addr.getIpName());
-    }
-
-    /**
-     * Method getIpAddress
-     *
-     * @return   an int
-     *
-     */
-    public int getIpAddress() {
-        return (_addr.getIpAddress());
-    }
-
-    /**
-     * Returns size in number of octects, including header
-     *
-     * @return   a short
-     *
-     */
-    public short getDataLength() {
-        //Add the size of the header also
-        return (_objHdr.getDataLength());
-    }
-
-    protected COPSIpv4Interface(COPSObjHeader hdr) {
-        _objHdr = hdr;
-//        _objHdr.setCType((byte) 1);
-        _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
-    }
-
-    protected COPSIpv4Interface(byte[] dataPtr) {
-        _objHdr = COPSObjHeader.parse(dataPtr);
-
+    protected static COPSIpv4Address parseAddress(final byte[] dataPtr) {
         byte[] buf = new byte[4];
-        System.arraycopy(dataPtr,4,buf,0,4);
+        buf[0] = dataPtr[4];
+        buf[1] = dataPtr[5];
+        buf[2] = dataPtr[6];
+        buf[3] = dataPtr[7];
+        return new COPSIpv4Address(buf);
+    }
 
-        _addr.parse(buf);
-
-        _ifindex |= ((int) dataPtr[8]) << 24;
-        _ifindex |= ((int) dataPtr[9]) << 16;
-        _ifindex |= ((int) dataPtr[10]) << 8;
-        _ifindex |= ((int) dataPtr[11]) & 0xFF;
-
-        _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
+    /**
+     * Parses the ifindex value from a byte array.
+     * @param dataPtr - the byte array
+     * @return - the index value
+     */
+    protected static int parseIfIndex(final byte[] dataPtr) {
+        int ifindex = 0;
+        ifindex |= ((int) dataPtr[8]) << 24;
+        ifindex |= ((int) dataPtr[9]) << 16;
+        ifindex |= ((int) dataPtr[10]) << 8;
+        ifindex |= ((int) dataPtr[11]) & 0xFF;
+        return ifindex;
     }
 
 }

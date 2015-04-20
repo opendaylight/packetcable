@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSObjHeader.CType;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -126,7 +129,7 @@ public class COPSReqMsg extends COPSMsg {
      *
      */
     public void add (COPSInterface inter) throws COPSException {
-        if (!(inter.isInInterface() || inter.isOutInterface()))
+        if (inter == null)
             throw new COPSException ("No Interface");
 
         //Message integrity object should be the very last one
@@ -137,25 +140,11 @@ public class COPSReqMsg extends COPSMsg {
         if (inter.isInInterface()) {
             if (_inInterface != null)
                 throw new COPSException ("Object inInterface exits");
-
-            if (inter.isIpv4Address()) {
-                COPSIpv4InInterface inInter = (COPSIpv4InInterface) inter;
-                _inInterface = inInter;
-            } else {
-                COPSIpv6InInterface inInter = (COPSIpv6InInterface) inter;
-                _inInterface = inInter;
-            }
+            _inInterface = inter;
         } else {
             if (_outInterface != null)
-                throw new COPSException ("Object outInterface exits");
-
-            if (inter.isIpv4Address()) {
-                COPSIpv4OutInterface outInter = (COPSIpv4OutInterface) inter;
-                _outInterface = outInter;
-            } else {
-                COPSIpv6OutInterface outInter = (COPSIpv6OutInterface) inter;
-                _outInterface = outInter;
-            }
+                throw new COPSException("Object outInterface exits");
+            _outInterface = inter;
         }
         setMsgLength();
     }
@@ -234,11 +223,8 @@ public class COPSReqMsg extends COPSMsg {
      *
      */
     public void addLocalDecision(COPSLPDPDecision decision, COPSContext context) throws COPSException {
-        if (!decision.isLocalDecision())
-            throw new COPSException ("Local Decision");
-
         Vector v = (Vector) _decisions.get(context);
-        if (decision.isFlagSet()) {
+        if (!decision.getFlag().equals(DecisionFlag.NA)) {
             if (v.size() != 0) {
                 //Only one set of decision flags is allowed
                 //for each context
@@ -269,8 +255,6 @@ public class COPSReqMsg extends COPSMsg {
     public void add (COPSIntegrity integrity) throws COPSException {
         if (integrity == null)
             throw new COPSException ("Null Integrity");
-        if (!integrity.isMessageIntegrity())
-            throw new COPSException ("Error Integrity");
         _integrity = integrity;
         setMsgLength();
     }
@@ -436,51 +420,51 @@ public class COPSReqMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
-            switch (objHdr.getCNum()) {
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
                 case HANDLE:
-                    _clientHandle = new COPSHandle(buf);
+                    _clientHandle = COPSHandle.parse(objHdrData, buf);
                     _dataStart += _clientHandle.getDataLength();
                     break;
                 case CONTEXT:
                     if (_context == null) {
                         //Message context
-                        _context = new COPSContext(buf);
+                        _context = COPSContext.parse(objHdrData, buf);
                         _dataStart += _context.getDataLength();
                     } else {
                         //lpdp context
-                        _lpdpContext = new COPSContext(buf);
+                        _lpdpContext = COPSContext.parse(objHdrData, buf);
                         _dataStart += _lpdpContext.getDataLength();
                     }
                     break;
                 case ININTF:
-                    if (objHdr.getCType().ordinal() == 1) {
-                        _inInterface = new COPSIpv4InInterface(buf);
+                    if (objHdrData.header.getCType().equals(CType.DEF)) {
+                        _inInterface = COPSObjectParser.parseIpv4Interface(objHdrData, buf, true);
                     } else {
-                        _inInterface = new COPSIpv6InInterface(buf);
+                        _inInterface = COPSObjectParser.parseIpv6Interface(objHdrData, buf, true);
                     }
                     _dataStart += _inInterface.getDataLength();
                     break;
                 case OUTINTF:
-                    if (objHdr.getCType().ordinal() == 1) {
-                        _outInterface = new COPSIpv4OutInterface(buf);
+                    if (objHdrData.header.getCType().equals(CType.DEF)) {
+                        _outInterface = COPSObjectParser.parseIpv4Interface(objHdrData, buf, false);
                     } else {
-                        _outInterface = new COPSIpv6OutInterface(buf);
+                        _outInterface = COPSObjectParser.parseIpv6Interface(objHdrData, buf, false);
                     }
                     _dataStart += _outInterface.getDataLength();
-                break;
+                    break;
                 case LPDP_DEC:
-                    COPSLPDPDecision lpdp = new COPSLPDPDecision(buf);
+                    COPSLPDPDecision lpdp = COPSLPDPDecision.parse(objHdrData, buf);
                     _dataStart += lpdp.getDataLength();
                     addLocalDecision(lpdp, _lpdpContext);
                     break;
                 case CSI:
-                    COPSClientSI csi = new COPSClientSI (buf);
+                    COPSClientSI csi = COPSClientSI.parse(objHdrData, buf);
                     _dataStart += csi.getDataLength();
                     _clientSIs.add(csi);
                     break;
                 case MSG_INTEGRITY:
-                    _integrity = new COPSIntegrity(buf);
+                    _integrity = COPSIntegrity.parse(objHdrData, buf);
                     _dataStart += _integrity.getDataLength();
                     break;
                 default:

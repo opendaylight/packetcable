@@ -6,25 +6,16 @@
 
 package org.umu.cops.prpep;
 
+import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSClientSI.CSIType;
+import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSReason.ReasonCode;
+import org.umu.cops.stack.COPSReportType.ReportType;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Hashtable;
-
-import org.umu.cops.stack.COPSClientSI;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDeleteMsg;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSPrEPD;
-import org.umu.cops.stack.COPSPrID;
-import org.umu.cops.stack.COPSReason;
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReportType;
-import org.umu.cops.stack.COPSReqMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
 
 /**
  * COPSPepMsgSender sends COPS messages to PDP.
@@ -99,7 +90,7 @@ public class COPSPepMsgSender {
     throws COPSPepException {
         // Create COPS Message
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_REQ, _clientType);
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG , (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG , (short) 0);
 
         COPSHandle handle = _handle;
 
@@ -116,16 +107,16 @@ public class COPSPepMsgSender {
                     String strepd = (String) clientSIs.get(strprid);
 
                     //  (PRID)
-                    COPSClientSI cSi = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrID prid = new COPSPrID();
                     prid.setData(new COPSData(strprid));
-                    cSi.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
 
                     //  (EPD)
-                    COPSClientSI cSi2 = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrEPD epd = new COPSPrEPD();
                     epd.setData(new COPSData(strepd));
-                    cSi2.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                     msg.add(cSi);
                     msg.add(cSi2);
@@ -161,7 +152,7 @@ public class COPSPepMsgSender {
             COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
             COPSHandle hnd = _handle;
 
-            COPSReportType report = new COPSReportType(COPSReportType.FAILURE);
+            COPSReportType report = new COPSReportType(ReportType.FAILURE);
 
             msg.add(hdr);
             msg.add(hnd);
@@ -172,16 +163,16 @@ public class COPSPepMsgSender {
                     String strepd = (String) clientSIs.get(strprid);
 
                     //  (PRID)
-                    COPSClientSI cSi = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrID prid = new COPSPrID();
                     prid.setData(new COPSData(strprid));
-                    cSi.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
 
                     //  (EPD)
-                    COPSClientSI cSi2 = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrEPD epd = new COPSPrEPD();
                     epd.setData(new COPSData(strepd));
-                    cSi2.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                     msg.add(cSi);
                     msg.add(cSi2);
@@ -216,7 +207,7 @@ public class COPSPepMsgSender {
             COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
             COPSHandle hnd = _handle;
 
-            COPSReportType report = new COPSReportType(COPSReportType.SUCCESS);
+            COPSReportType report = new COPSReportType(ReportType.SUCCESS);
 
             msg.add(hdr);
             msg.add(hnd);
@@ -228,16 +219,16 @@ public class COPSPepMsgSender {
                     String strepd = (String) clientSIs.get(strprid);
 
                     //  (PRID)
-                    COPSClientSI cSi = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrID prid = new COPSPrID();
                     prid.setData(new COPSData(strprid));
-                    cSi.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
 
                     //  (EPD)
-                    COPSClientSI cSi2 = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrEPD epd = new COPSPrEPD();
                     epd.setData(new COPSData(strepd));
-                    cSi2.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                     msg.add(cSi);
                     msg.add(cSi2);
@@ -263,7 +254,7 @@ public class COPSPepMsgSender {
             COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
             COPSHandle hnd = _handle;
 
-            COPSReportType report = new COPSReportType(COPSReportType.ACCT);
+            COPSReportType report = new COPSReportType(ReportType.ACCOUNTING);
 
             msg.add(hdr);
             msg.add(hnd);
@@ -275,16 +266,16 @@ public class COPSPepMsgSender {
                     String strepd = (String) clientSIs.get(strprid);
 
                     //  (PRID)
-                    COPSClientSI cSi = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrID prid = new COPSPrID();
                     prid.setData(new COPSData(strprid));
-                    cSi.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                    COPSClientSI cSi = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
 
                     //  (EPD)
-                    COPSClientSI cSi2 = new COPSClientSI(COPSClientSI.CSI_NAMED);
                     COPSPrEPD epd = new COPSPrEPD();
                     epd.setData(new COPSData(strepd));
-                    cSi2.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                    COPSClientSI cSi2 = new COPSClientSI(CSIType.NAMED,
+                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                     msg.add(cSi);
                     msg.add(cSi2);
@@ -349,7 +340,7 @@ public class COPSPepMsgSender {
         COPSHandle handle = _handle;
 
         // *** TODO: send a real reason
-        COPSReason reason = new COPSReason((short) 234, (short) 345);
+        COPSReason reason = new COPSReason(ReasonCode.NA, ReasonCode.NA);
 
         COPSDeleteMsg msg = new COPSDeleteMsg();
         try {

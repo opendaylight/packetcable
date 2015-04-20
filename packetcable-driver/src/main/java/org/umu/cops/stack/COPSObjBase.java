@@ -7,153 +7,81 @@
 package org.umu.cops.stack;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 
 /**
- * COPS Object
- *
- * TODO - this should be an interface and all of these default return values can be dangerous
- * @version COPSObjBase.java, v 1.00 2003
- *
+ * Represents objects that can be contained within COPS messages.
  */
 public abstract class COPSObjBase {
+
     /**
-     * Add padding in the data, if the data does not fall on 32-bit boundary
-     * @param    len                 an int
-     * @return   a COPSData
+     * Generally used to determine the type of message
      */
-    static COPSData getPadding(final int len) {
-        byte[] padBuf = new byte[len];
-        Arrays.fill(padBuf, (byte) 0);
-        return new COPSData(padBuf, 0, len);
+    private final COPSObjHeader _objHdr;
+
+    /**
+     * The base object constructor
+     * @param objHdr - the header (required)
+     */
+    public COPSObjBase(final COPSObjHeader objHdr) {
+        if (objHdr == null) throw new IllegalArgumentException("Object header must not be null");
+        this._objHdr = objHdr;
     }
+
+    /**
+     * Returns the header
+     * @return - the header
+     */
+    public COPSObjHeader getHeader() { return _objHdr; }
 
     /**
      * Writes data to a given network _socket
-     * @param    id                  a  Socket
+     * @param    socket                  a  Socket
      * @throws   IOException
      */
-    public abstract void writeData(Socket id) throws IOException;
+    final public void writeData(final Socket socket) throws IOException {
+        _objHdr.writeData(socket, getDataLength());
+        writeBody(socket);
+    }
+
+    protected abstract void writeBody(Socket socket) throws IOException;
 
     /**
-     * Method getDataLength
+     * Returns the length of the body data to be output (not including header)
      * @return   a short
      */
-    short getDataLength() {
-        return 0;
-    }
+    protected abstract int getDataLength();
 
     /**
-     * Method isCOPSHeader
-     * @return   a boolean
+     * Write an object textual description in the output stream
+     * @param    os                  an OutputStream
+     * @throws   IOException
      */
-    boolean isCOPSHeader() {
-        return false;
+    final public void dump(final OutputStream os) throws IOException {
+        _objHdr.dump(os);
+        dumpBody(os);
     }
 
-    /**
-     * Method isClientHandle
-     * @return   a boolean
-     */
-    boolean isClientHandle() {
-        return false;
+    protected abstract void dumpBody(OutputStream os) throws IOException;
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSObjBase)) {
+            return false;
+        }
+
+        final COPSObjBase that = (COPSObjBase) o;
+
+        return !(!_objHdr.equals(that._objHdr));
+
     }
 
-    /**
-     * Method isContext
-     * @return   a boolean
-     */
-    boolean isContext() {
-        return false;
+    @Override
+    public int hashCode() {
+        return _objHdr.hashCode();
     }
-
-    /**
-     * Method isInterface
-     * @return   a boolean
-     */
-    boolean isInterface() {
-        return false;
-    }
-
-    /**
-     * Method isDecision
-     * @return   a boolean
-     */
-    boolean isDecision() {
-        return false;
-    }
-
-    /**
-     * Method isLocalDecision
-     * @return   a boolean
-     */
-    boolean isLocalDecision() {
-        return false;
-    }
-
-    /**
-     * Method isReport
-     * @return   a boolean
-     */
-    boolean isReport() {
-        return false;
-    }
-
-    /**
-     * Method isError
-     * @return   a boolean
-     */
-    boolean isError() {
-        return false;
-    }
-
-    /**
-     * Method isTimer
-     * @return   a boolean
-     */
-    boolean isTimer() {
-        return false;
-    }
-
-    /**
-     * Method isPepId
-     * @return   a boolean
-     */
-    boolean isPepId() {
-        return false;
-    }
-
-    /**
-     * Method isReason
-     * @return   a boolean
-     */
-    boolean isReason() {
-        return false;
-    }
-
-    /**
-     * Method isPdpAddress
-     * @return   a boolean
-     */
-    boolean isPdpAddress() {
-        return false;
-    }
-
-    /**
-     * Method isClientSI
-     * @return   a boolean
-     */
-    boolean isClientSI() {
-        return false;
-    }
-
-    /**
-     * Method isMessageIntegrity
-     * @return   a boolean
-     */
-    boolean isMessageIntegrity() {
-        return false;
-    }
-
 }

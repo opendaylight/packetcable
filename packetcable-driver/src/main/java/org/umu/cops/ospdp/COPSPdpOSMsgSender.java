@@ -1,6 +1,9 @@
 package org.umu.cops.ospdp;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -104,14 +107,12 @@ public class COPSPdpOSMsgSender {
 
             // Decisions (no flags supplied)
             //  <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
 
             // Remove Decisions
             //  <Decision: Flags>
             if (removeDecs.size() > 0) {
-                COPSDecision rdec1 = new COPSDecision();
-                rdec1.setCmdCode(COPSDecision.DEC_REMOVE);
-
+                COPSDecision rdec1 = new COPSDecision(Command.REMOVE);
                 decisionMsg.addDecision(rdec1, cntxt);
 
                 Enumeration removeDecsEnum = removeDecs.elements();
@@ -122,9 +123,7 @@ public class COPSPdpOSMsgSender {
             // Install Decisions
             //  <Decision: Flags>
             if (installDecs.size() > 0) {
-                COPSDecision idec1 = new COPSDecision();
-                idec1.setCmdCode(COPSDecision.DEC_INSTALL);
-
+                COPSDecision idec1 = new COPSDecision(Command.INSTALL);
                 decisionMsg.addDecision(idec1, cntxt);
 
                 Enumeration installDecsEnum = installDecs.elements();
@@ -175,12 +174,9 @@ public class COPSPdpOSMsgSender {
 
         // Decisions
         //  <Context>
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
         //  <Decision: Flags>
-        COPSDecision dec = new COPSDecision();
-        dec.setCmdCode(COPSDecision.DEC_REMOVE);
-        dec.setFlags(COPSDecision.F_REQSTATE);
-
+        COPSDecision dec = new COPSDecision(Command.REMOVE, DecisionFlag.REQSTATE);
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         try {
             decisionMsg.add(hdr);
@@ -223,12 +219,9 @@ public class COPSPdpOSMsgSender {
 
         // Decisions
         //  <Context>
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
         //  <Decision: Flags>
-        COPSDecision dec = new COPSDecision();
-        dec.setCmdCode(COPSDecision.DEC_INSTALL);
-        dec.setFlags(COPSDecision.F_REQSTATE);
-
+        COPSDecision dec = new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE);
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         try {
             decisionMsg.add(hdr);

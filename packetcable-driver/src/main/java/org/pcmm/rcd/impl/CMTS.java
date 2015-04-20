@@ -3,13 +3,6 @@
  */
 package org.pcmm.rcd.impl;
 
-import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
@@ -19,20 +12,15 @@ import org.umu.cops.prpep.COPSPepConnection;
 import org.umu.cops.prpep.COPSPepDataProcess;
 import org.umu.cops.prpep.COPSPepException;
 import org.umu.cops.prpep.COPSPepReqStateMan;
-import org.umu.cops.stack.COPSAcctTimer;
-import org.umu.cops.stack.COPSClientAcceptMsg;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDecision;
-import org.umu.cops.stack.COPSDecisionMsg;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKATimer;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPrObjBase;
-import org.umu.cops.stack.COPSReqMsg;
+import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSDecision.Command;
+
+import java.net.Socket;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.Vector;
+import java.util.concurrent.Callable;
 
 /**
  *
@@ -179,8 +167,8 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 
 				// cmddecision --> we must check whether it is an error!
 
-				if (cmddecision.isInstallDecision()) {
-					String prid = new String();
+				if (cmddecision.getCommand().equals(Command.INSTALL)) {
+					String prid = "";
 					for (; ee.hasMoreElements();) {
 						COPSDecision decision = (COPSDecision) ee.nextElement();
 						COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
@@ -200,7 +188,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 						}
 					}
 				}
-				if (cmddecision.isRemoveDecision()) {
+				if (cmddecision.getCommand().equals(Command.REMOVE)) {
 					String prid = new String();
 					for (; ee.hasMoreElements();) {
 						COPSDecision decision = (COPSDecision) ee.nextElement();

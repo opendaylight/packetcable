@@ -62,12 +62,6 @@ public class COPSObjHeader  {
     private final CType _cType;
 
     /**
-     * TODO - remove this attribute as the body of the COPS message should return the body length
-     */
-    @Deprecated
-    private short _len;
-
-    /**
      * Constructor
      * @param cNum - the cNum value
      * @param cType - the cType value
@@ -77,7 +71,6 @@ public class COPSObjHeader  {
         if (cNum == null || cType == null) throw new IllegalArgumentException("CNum and CType must not be null");
         _cNum = cNum;
         _cType = cType;
-        _len = 4;
     }
 
     /**
@@ -149,47 +142,19 @@ public class COPSObjHeader  {
     }
 
     /**
-     * Set the obj length, the length is the length of the data following
-     * the object header.The length of the object header (4 bytes) is added
-     * to the length passed.
-     *
-     * TODO - The data length will be removed from the header in a subsequent patch
-     *
-     * @param    len                 a  short
-     */
-    @Deprecated
-    public void setDataLength(short len) {
-        //Add the length of the header also
-        _len = (short) (len + 4);
-    }
-
-    /**
-     * Get the data length in number of octets
-     *
-     * @return   a short
-     *
-     */
-    public short getDataLength() {
-        return _len;
-    }
-
-    /**
-     * Writes data to a given network socket
-     *
-     * @param    id                  a  Socket
-     *
+     * Writes data to a given network _socket
+     * @param    socket                  a  Socket
      * @throws   IOException
-     *
      */
-    public void writeData(Socket id) throws IOException {
-        byte[] buf = new byte[4];
+    public void writeData(final Socket socket, final int dataLength) throws IOException {
+        final int payloadSize = + getHdrLength() + dataLength;
+        final byte[] buf = new byte[4];
+        buf[0] = (byte) (payloadSize >> 8);
+        buf[1] = (byte) payloadSize;
+        buf[2] = (byte)_cNum.ordinal();
+        buf[3] = (byte)_cType.ordinal();
 
-        buf[0] = (byte) (_len >> 8);
-        buf[1] = (byte) _len;
-        buf[2] = (byte) _cNum.ordinal();
-        buf[3] = (byte) _cType.ordinal();
-
-        COPSUtil.writeData(id, buf, 4);
+        COPSUtil.writeData(socket, buf, 4);
     }
 
     /**
@@ -223,29 +188,6 @@ public class COPSObjHeader  {
         int result = _cNum.hashCode();
         result = 31 * result + _cType.hashCode();
         return result;
-    }
-
-    /**
-     * Method parse
-     *
-     * @param    data                a  byte[]
-     *
-     */
-    public final static COPSObjHeader parse(byte[] data) {
-        short len = 0;
-        len = 0;
-        len |= ((short) data[0]) << 8;
-        len |= ((short) data[1]) & 0xFF;
-
-        int cNum = 0;
-        cNum |= data[2];
-
-        int cType = 0;
-        cType |= data[3];
-
-        final COPSObjHeader hdr = new COPSObjHeader(VAL_TO_CNUM.get(cNum), VAL_TO_CTYPE.get(cType));
-        hdr.setDataLength(len);
-        return hdr;
     }
 
     public enum CNum {

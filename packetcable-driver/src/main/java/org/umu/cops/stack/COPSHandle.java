@@ -43,8 +43,14 @@ import java.net.Socket;
  */
 public class COPSHandle extends COPSObjBase {
 
-    private final COPSObjHeader _objHdr;
+    /**
+     * The payload data
+     */
     private final COPSData _id;
+
+    /**
+     * Bytes to add to outbound payload to ensure the length is divisible by 4 bytes
+     */
     private final COPSData _padding;
 
     /**
@@ -53,50 +59,34 @@ public class COPSHandle extends COPSObjBase {
      * @throws java.lang.IllegalArgumentException when the id parameter is null
      */
     public COPSHandle(final COPSData id) {
-        if (id == null) throw new IllegalArgumentException("COPSData must not be null");
-        _objHdr = new COPSObjHeader(CNum.HANDLE, CType.DEF);
-        _id = id;
-        if ((_id.length() % 4) != 0) {
-            final int padLen = 4 - (_id.length() % 4);
-            _padding = getPadding(padLen);
-        } else {
-            _padding = new COPSData();
-        }
-        _objHdr.setDataLength((short) _id.length());
+        this(new COPSObjHeader(CNum.HANDLE, CType.DEF), id);
     }
 
     /**
      * Constructor
-     * @param dataPtr - the data to parse for setting this object's attributes
+     * @param id - the identifier (must not be null)
+     * @throws java.lang.IllegalArgumentException when the id parameter is null
      */
-    protected COPSHandle(final byte[] dataPtr) {
-        if (dataPtr == null || dataPtr.length < 5)
-            throw new IllegalArgumentException("Data cannot be null or fewer than 5 bytes");
+    protected COPSHandle(final COPSObjHeader objHeader, final COPSData id) {
+        super(objHeader);
+        if (! objHeader.getCNum().equals(CNum.HANDLE))
+            throw new IllegalArgumentException("CNum on header must be of type HANDLE");
+        if (! objHeader.getCType().equals(CType.DEF))
+            throw new IllegalArgumentException("Invalid CType value. Must be " + CType.DEF);
+        if (id == null) throw new IllegalArgumentException("COPSData must not be null");
 
-        _objHdr = COPSObjHeader.parse(dataPtr);
-
-        //Get the length of data following the obj header
-        final int dLen = _objHdr.getDataLength() - 4;
-        _id = new COPSData(dataPtr, 4, dLen);
+        _id = id;
         if ((_id.length() % 4) != 0) {
             final int padLen = 4 - (_id.length() % 4);
-            _padding = getPadding(padLen);
+            _padding = COPSObjectParser.getPadding(padLen);
         } else {
             _padding = new COPSData();
         }
-        _objHdr.setDataLength((short) _id.length());
     }
 
-    /**
-     * Returns size in number of octects, including header
-     * @return   a short
-     */
-    public short getDataLength() {
-        //Add the size of the header also
-        final int lpadding;
-        if (_padding != null) lpadding = _padding.length();
-        else lpadding = 0;
-        return ((short) (_objHdr.getDataLength() + lpadding));
+    @Override
+    public int getDataLength() {
+        return _id.length() + _padding.length();
     }
 
     /**
@@ -108,47 +98,56 @@ public class COPSHandle extends COPSObjBase {
     }
 
     @Override
-    public boolean isClientHandle() {
-        return true;
+    public void writeBody(final Socket socket) throws IOException {
+        COPSUtil.writeData(socket, _id.getData(), _id.length());
+        COPSUtil.writeData(socket, _padding.getData(), _padding.length());
     }
 
     @Override
-    public void writeData(final Socket socket) throws IOException {
-        _objHdr.writeData(socket);
-
-        COPSUtil.writeData(socket, _id.getData(), _id.length());
-        if (_padding != null) {
-            COPSUtil.writeData(socket, _padding.getData(), _padding.length());
-        }
-    }
-
-    /**
-     * Write an object textual description in the output stream
-     * @param    os                  an OutputStream
-     * @throws   IOException
-     */
-    public void dump(final OutputStream os) throws IOException {
-        _objHdr.dump(os);
+    public void dumpBody(final OutputStream os) throws IOException {
         os.write(("client-handle: " + _id.str() + "\n").getBytes());
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (!(o instanceof COPSHandle)) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
+
         final COPSHandle that = (COPSHandle) o;
-        return _id.equals(that._id) && _objHdr.equals(that._objHdr);
+
+        return _id.equals(that._id) && _padding.equals(that._padding);
+
     }
 
     @Override
     public int hashCode() {
-        int result = _objHdr.hashCode();
+        int result = super.hashCode();
         result = 31 * result + _id.hashCode();
+        result = 31 * result + _padding.hashCode();
         return result;
+    }
+
+    /**
+     * Parses bytes to return a COPSHandle object
+     * @param objHdrData - the associated header
+     * @param dataPtr - the data to parse
+     * @return - the object
+     * @throws java.lang.IllegalArgumentException
+     */
+    public static COPSHandle parse(final COPSObjHeaderData objHdrData, final byte[] dataPtr) {
+        if (dataPtr == null || dataPtr.length < 5)
+            throw new IllegalArgumentException("Data cannot be null or fewer than 5 bytes");
+
+        //Get the length of data following the obj header
+        final COPSData id = new COPSData(dataPtr, 4, objHdrData.msgByteCount - objHdrData.header.getHdrLength());
+        return new COPSHandle(objHdrData.header, id);
     }
 
 }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpAgent;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSError.ErrorTypes;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -43,9 +44,8 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * Policy data processing object
      */
     private PCMMPdpDataProcess _process;
-    private MMVersionInfo _mminfo;
     private COPSHandle _handle;
-    private short _transactionID;
+//    private short _transactionID;
 
     /**
      * Creates a PDP Agent
@@ -163,8 +163,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             // Unsupported client type
             COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
                                              .getHeader().getClientType());
-            COPSError err = new COPSError(
-                COPSError.COPS_ERR_UNSUPPORTED_CLIENT_TYPE, (short) 0);
+            COPSError err = new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA);
             COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
             closeMsg.add(cHdr);
             closeMsg.add(err);
@@ -183,7 +182,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
             COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
                                              .getHeader().getClientType());
             COPSError err = new COPSError(
-                COPSError.COPS_ERR_MANDATORY_OBJECT_MISSING, (short) 0);
+                    ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA);
             COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
             closeMsg.add(cHdr);
             closeMsg.add(err);
@@ -198,18 +197,15 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         setPepId(pepId);
         // Support
         if ((cMsg.getClientSI() != null) ) {
-            _mminfo = new MMVersionInfo(cMsg
-                                        .getClientSI().getData().getData());
-            logger.info("CMTS sent MMVersion info : major:"
-                               + _mminfo.getMajorVersionNB() + "  minor:"
-                               + _mminfo.getMinorVersionNB());
+            final MMVersionInfo _mminfo = new MMVersionInfo(cMsg.getClientSI().getData().getData());
+            logger.info("CMTS sent MMVersion info : major:" + _mminfo.getMajorVersionNB() + "  minor:" +
+                    _mminfo.getMinorVersionNB());
 
         } else {
             // Unsupported objects
             COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
                                              .getHeader().getClientType());
-            COPSError err = new COPSError(COPSError.COPS_ERR_UNKNOWN_OBJECT,
-                                          (short) 0);
+            COPSError err = new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA);
             COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
             closeMsg.add(cHdr);
             closeMsg.add(err);
@@ -245,8 +241,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
                 // close the socket
                 COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg
                                                  .getHeader().getClientType());
-                COPSError err = new COPSError(COPSError.COPS_ERR_UNKNOWN_OBJECT,
-                                              (short) 0);
+                COPSError err = new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA);
                 COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
                 closeMsg.add(cHdr);
                 closeMsg.add(err);

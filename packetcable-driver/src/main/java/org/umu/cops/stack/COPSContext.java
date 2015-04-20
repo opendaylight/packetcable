@@ -12,199 +12,180 @@ import org.umu.cops.stack.COPSObjHeader.CType;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * COPS Context Object
+ * COPS Context Object (RFC 2748)
  *
- * @version COPSContext.java, v 1.00 2003
+ * Specifies the type of event(s) that triggered the query. Required for
+ * request messages. Admission control, resource allocation, and
+ * forwarding requests are all amenable to client-types that outsource
+ * their decision making facility to the PDP. For applicable client-
+ * types a PEP can also make a request to receive named configuration
+ * information from the PDP. This named configuration data may be in a
+ * form useful for setting system attributes on a PEP, or it may be in
+ * the form of policy rules that are to be directly verified by the PEP.
  *
+ * Multiple flags can be set for the same request. This is only allowed,
+ * however, if the set of client specific information in the combined
+ * request is identical to the client specific information that would be
+ * specified if individual requests were made for each specified flag.
+ *
+ * C-num = 2, C-Type = 1
+ *
+ * R-Type (Request Type Flag)
+ *
+ * 0x01 = Incoming-Message/Admission Control request
+ * 0x02 = Resource-Allocation request
+ * 0x04 = Outgoing-Message request
+ * 0x08 = Configuration request
+ *
+ * M-Type (Message Type)
+ *
+ * Client Specific 16 bit values of protocol message types
  */
 public class COPSContext extends COPSObjBase {
 
-    public final static byte IN_ADMIN = 0x01;
-    public final static byte RES_ALLOC = 0x02;
-    public final static byte OUT = 0x04;
-    public final static byte CONFIG = 0x08;
+    public final static Map<Integer, RType> VAL_TO_RTYPE = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_RTYPE.put(RType.NA.ordinal(), RType.NA);
+        VAL_TO_RTYPE.put(RType.IN_ADMIN.ordinal(), RType.IN_ADMIN);
+        VAL_TO_RTYPE.put(RType.RES_ALLOC.ordinal(), RType.RES_ALLOC);
+        VAL_TO_RTYPE.put(RType.OUT.ordinal(), RType.OUT);
+        VAL_TO_RTYPE.put(RType.CONFIG.ordinal(), RType.CONFIG);
+    }
 
-    private COPSObjHeader _objHdr;
-    private short _rType;
+    /**
+     * The request type
+     */
+    private final RType _rType;
+
+    /**
+     * The message type
+     * Cannot find a list of types in order to make this an enumeration
+     */
     private short _mType;
 
-    ///
-    public COPSContext(short rType, short mType ) {
-        _objHdr = new COPSObjHeader(CNum.CONTEXT, CType.DEF);
+    /**
+     * Constructor generally used for sending messages
+     * @param rType - the type of request
+     * @param mType - the type of message
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSContext(final RType rType, final short mType ) {
+        this(new COPSObjHeader(CNum.CONTEXT, CType.DEF), rType, mType);
+    }
+
+    /**
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSObjHeader information is known
+     * @param rType - the type of request
+     * @param mType - the type of message
+     * @throws java.lang.IllegalArgumentException
+     */
+    protected COPSContext(final COPSObjHeader objHdr, final RType rType, final short mType ) {
+        super(objHdr);
+
+        if (!objHdr.getCNum().equals(CNum.CONTEXT))
+            throw new IllegalArgumentException("CNum must be equal to " + CNum.CONTEXT);
+        if (!objHdr.getCType().equals(CType.DEF))
+            throw new IllegalArgumentException("Invalid CType value. Must be " + CType.DEF);
+        if (rType == null || rType.ordinal() == 0) throw new IllegalArgumentException("Must have a valid RType");
+
         _rType = rType;
         _mType = mType;
-        _objHdr.setDataLength((short) 4);
     }
 
-    /**
-          Parse the data and create a Context object
-     */
-    protected COPSContext(byte[] dataPtr) {
-        _objHdr = COPSObjHeader.parse(dataPtr);
-
-        _rType |= ((short) dataPtr[4]) << 8;
-        _rType |= ((short) dataPtr[5]) & 0xFF;
-
-        _mType |= ((short) dataPtr[6]) << 8;
-        _mType |= ((short) dataPtr[7]) & 0xFF;
-
-        _objHdr.setDataLength( (short) 4);
-    }
-
-    /**
-     * Write object in network byte order to a given network socket
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        _objHdr.writeData(id);
-
+    @Override
+    public void writeBody(final Socket socket) throws IOException {
         byte[] buf = new byte[4];
 
-        buf[0] = (byte) (_rType >> 8);
-        buf[1] = (byte) _rType;
+        buf[0] = (byte)((byte)_rType.ordinal() >> 8);
+        buf[1] = (byte)_rType.ordinal();
 
-        buf[2] = (byte) (_mType >> 8);
-        buf[3] = (byte) _mType;
+        buf[2] = (byte)(_mType >> 8);
+        buf[3] = (byte)_mType;
 
-        COPSUtil.writeData(id, buf, 4);
+        COPSUtil.writeData(socket, buf, 4);
     }
 
-    /**
-     * Returns size in number of octects, including header
-     *
-     * @return   a short
-     *
-     */
-    public short getDataLength() {
-        //Add the size of the header also
-        return (_objHdr.getDataLength());
+    @Override
+    public int getDataLength() {
+        return 4;
     }
 
     /**
      * Returns the detail description of the request type
-     *
      * @return   a String
-     *
      */
     public String getDescription() {
-        String retStr = new String();
-        if ((_rType & 0x01) != 0) {
-            retStr += (retStr.length() != 0) ? "," : "";
-            retStr += "Incoming Message/Admission Control";
+        switch (_rType) {
+            case IN_ADMIN: return "Incoming Message/Admission Control";
+            case RES_ALLOC: return "Resource allocation";
+            case OUT: return "Outgoing message";
+            case CONFIG: return "Configuration";
+            default: return "";
         }
-        if ((_rType & 0x02) != 0) {
-            retStr += (retStr.length() != 0) ? "," : "";
-            retStr += "Resource allocation";
+    }
+
+    @Override
+    public void dumpBody(final OutputStream os) throws IOException {
+        os.write(("context: " + getDescription() + "," + _mType + "\n").getBytes());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
-        if ((_rType & 0x04) != 0) {
-            retStr += (retStr.length() != 0) ? "," : "";
-            retStr += "Outgoing message";
+        if (!(o instanceof COPSContext)) {
+            return false;
         }
-        if ((_rType & 0x08) != 0) {
-            retStr += (retStr.length() != 0) ? "," : "";
-            retStr += "Configuration";
+        if (!super.equals(o)) {
+            return false;
         }
-        return retStr;
+
+        final COPSContext that = (COPSContext) o;
+
+        return _mType == that._mType && _rType == that._rType;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + _rType.hashCode();
+        result = 31 * result + (int) _mType;
+        return result;
     }
 
     /**
-     * Method isIncomingMessage
-     *
-     * @return   a boolean
-     *
+     * Parses bytes to return a COPSContext object
+     * @param objHdrData - the associated header
+     * @param dataPtr - the data to parse
+     * @return - the object
+     * @throws java.lang.IllegalArgumentException
      */
-    public boolean isIncomingMessage() {
-        return (_rType & IN_ADMIN) != 0;
-    };
+    public static COPSContext parse(final COPSObjHeaderData objHdrData, final byte[] dataPtr) {
+        short rType = 0;
+        rType |= ((short) dataPtr[4]) << 8;
+        rType |= ((short) dataPtr[5]) & 0xFF;
 
-    /**
-     * Method isAdminControl
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAdminControl() {
-        return (_rType & IN_ADMIN) != 0;
-    };
+        short mType = 0;
+        mType |= ((short) dataPtr[6]) << 8;
+        mType |= ((short) dataPtr[7]) & 0xFF;
 
-    /**
-     * Method isResourceAllocationReq
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isResourceAllocationReq() {
-        return (_rType & RES_ALLOC) != 0;
-    };
-
-    /**
-     * Method isOutgoingMessage
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isOutgoingMessage() {
-        return (_rType & OUT) != 0;
-    };
-
-    /**
-     * Method isConfigRequest
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isConfigRequest() {
-        return (_rType & CONFIG) != 0;
-    };
-
-    /**
-     * Method getMessageType
-     *
-     * @return   a short
-     *
-     */
-    public short getMessageType() {
-        return (_mType) ;
-    };
-
-    /**
-     * Method getRequestType
-     *
-     * @return   a short
-     *
-     */
-    public short getRequestType() {
-        return (_rType);
-    };
-
-    /**
-     * Method isContext
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isContext() {
-        return true;
+        return new COPSContext(objHdrData.header, VAL_TO_RTYPE.get((int)rType), mType);
     }
 
     /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
+     * The request type
      */
-    public void dump(OutputStream os) throws IOException {
-        _objHdr.dump(os);
-        os.write(new String("context: " + getDescription() + "," + _mType + "\n").getBytes());
+    public enum RType {
+        NA, IN_ADMIN, RES_ALLOC, OUT, CONFIG,
     }
+
 }
 
 

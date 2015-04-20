@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpConnection;
 import org.umu.cops.prpdp.COPSPdpDataProcess;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSDecision.Command;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -78,7 +79,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
                     if (opnMessage.getHeader().isAClientClose()) {
                         COPSError error = ((COPSClientCloseMsg) opnMessage).getError();
                         logger.debug("CMTS requetsed Client-Close");
-                        throw new PCMMException(new PCMMError(error.getErrCode(), error.getErrSubCode()));
+                        throw new PCMMException(new PCMMError((short)error.getErrCode().ordinal(),
+                                (short)error.getErrSubCode().ordinal()));
                     } else // Client-Open
                     {
                         if (opnMessage.getHeader().isAClientOpen()) {
@@ -111,7 +113,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
                             if (reqMsg.getHeader().isAClientClose()) {
                                 COPSError error = ((COPSClientCloseMsg) opnMessage).getError();
                                 logger.debug("CMTS requetsed Client-Close");
-                                throw new PCMMException(new PCMMError(error.getErrCode(), error.getErrSubCode()));
+                                throw new PCMMException(new PCMMError((short)error.getErrCode().ordinal(),
+                                        (short)error.getErrSubCode().ordinal()));
                             } else // Request
                             {
                                 if (reqMsg.getHeader().isARequest()) {
@@ -208,8 +211,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             // configure message properties
             Properties prop = new Properties();
             prop.put(MessageProperties.CLIENT_HANDLE, getClientHandle());
-            prop.put(MessageProperties.DECISION_CMD_CODE, COPSDecision.DEC_INSTALL);
-            prop.put(MessageProperties.DECISION_FLAG, (short) COPSDecision.DEC_NULL);
+            prop.put(MessageProperties.DECISION_CMD_CODE, Command.INSTALL);
+            prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
             COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
             // ** Send the GateSet Decision
@@ -284,8 +287,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             // configure message properties
             Properties prop = new Properties();
             prop.put(MessageProperties.CLIENT_HANDLE, getClientHandle());
-            prop.put(MessageProperties.DECISION_CMD_CODE, COPSDecision.DEC_INSTALL);
-            prop.put(MessageProperties.DECISION_FLAG, (short) COPSDecision.DEC_NULL);
+            prop.put(MessageProperties.DECISION_CMD_CODE, Command.INSTALL);
+            prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             byte[] data = gate.getData();
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
             COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
@@ -365,8 +368,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             // configure message properties
             Properties prop = new Properties();
             prop.put(MessageProperties.CLIENT_HANDLE, getClientHandle());
-            prop.put(MessageProperties.DECISION_CMD_CODE, COPSDecision.DEC_INSTALL);
-            prop.put(MessageProperties.DECISION_FLAG, (short) COPSDecision.DEC_NULL);
+            prop.put(MessageProperties.DECISION_CMD_CODE, Command.INSTALL);
+            prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             byte[] data = gate.getData();
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
             COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
@@ -459,8 +462,8 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             // configure message properties
             Properties prop = new Properties();
             prop.put(MessageProperties.CLIENT_HANDLE, getClientHandle());
-            prop.put(MessageProperties.DECISION_CMD_CODE, COPSDecision.DEC_INSTALL);
-            prop.put(MessageProperties.DECISION_FLAG, (short) COPSDecision.DEC_NULL);
+            prop.put(MessageProperties.DECISION_CMD_CODE, Command.INSTALL);
+            prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             byte[] data = gate.getData();
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
             COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);

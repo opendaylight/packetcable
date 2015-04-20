@@ -6,7 +6,7 @@
 
 package org.umu.cops.stack;
 
-import java.net.UnknownHostException;
+import java.io.ByteArrayInputStream;
 
 /**
  * COPS IPv6 Interface
@@ -17,77 +17,46 @@ import java.net.UnknownHostException;
 public abstract class COPSIpv6Interface extends COPSInterface {
 
     /**
-     * Method isIpv6Address
-     *
-     * @return   a boolean
-     *
+     * Constructor
+     * @param objHdr - the header
+     * @param ifindex - the interface value
+     * @param addr - the address object
+     * @throws java.lang.IllegalArgumentException
      */
-    public boolean isIpv6Address() {
-        return true;
+    protected COPSIpv6Interface(final COPSObjHeader objHdr, final COPSIpv6Address addr, final int ifindex) {
+        super(objHdr, addr, ifindex);
+    }
+
+    @Override
+    public boolean isIPv6() { return true; }
+
+    /**
+     * Creates a COPSIpv6Address object from a byte array.
+     * @param dataPtr - the byte array
+     * @return - the address
+     * @throws java.lang.IllegalArgumentException
+     */
+    protected static COPSIpv6Address parseAddress(final byte[] dataPtr) {
+        byte[] buf = new byte[16];
+        System.arraycopy(dataPtr, 4, buf, 0, 16);
+        new ByteArrayInputStream(dataPtr).read(buf, 0, 16);
+        return new COPSIpv6Address(buf);
     }
 
     /**
-     * Method setIpAddress
-     *
-     * @param    hostName            a  String
-     *
-     * @throws   UnknownHostException
-     *
+     * Parses the ifindex value from a byte array.
+     * @param dataPtr - the byte array
+     * @return - the index value
      */
-    public void setIpAddress(String hostName) throws UnknownHostException {
-        _addr.setIpAddress(hostName);
+    protected static int parseIfIndex(final byte[] dataPtr) {
+        int ifindex = 0;
+        ifindex |= ((int) dataPtr[20]) << 24;
+        ifindex |= ((int) dataPtr[21]) << 16;
+        ifindex |= ((int) dataPtr[22]) << 8;
+        ifindex |= ((int) dataPtr[23]) & 0xFF;
+        return ifindex;
     }
 
-    /**
-     * Method getIpName
-     *
-     * @return   a String
-     *
-     * @throws   UnknownHostException
-     *
-     */
-    public String getIpName() throws UnknownHostException {
-        return (_addr.getIpName());
-    }
-
-    /**
-     * Returns size in number of octects, including header
-     *
-     * @return   a short
-     *
-     */
-    public short getDataLength() {
-        //Add the size of the header also
-        return (_objHdr.getDataLength());
-    }
-
-    protected COPSIpv6Interface(COPSObjHeader hdr) {
-        _objHdr = hdr;
-//        _objHdr.setCType((byte) 2);
-        _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
-    }
-
-    protected COPSIpv6Interface(byte[] dataPtr) {
-        _objHdr = COPSObjHeader.parse(dataPtr);
-        _objHdr.parse(dataPtr);
-        // _objHdr.checkDataLength();
-
-        byte[] buf = new byte[4];
-        System.arraycopy(dataPtr,4,buf,0,16);
-
-        _addr.parse(buf);
-
-        _ifindex |= ((int) dataPtr[20]) << 24;
-        _ifindex |= ((int) dataPtr[21]) << 16;
-        _ifindex |= ((int) dataPtr[22]) << 8;
-        _ifindex |= ((int) dataPtr[23]) & 0xFF;
-
-        _objHdr.setDataLength((short) (_addr.getDataLength() + 4));
-    }
-
-    private COPSObjHeader _objHdr;
-    private COPSIpv6Address _addr;
-    private int _ifindex;
 }
 
 

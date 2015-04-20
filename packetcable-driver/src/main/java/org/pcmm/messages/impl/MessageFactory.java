@@ -11,8 +11,11 @@ import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSObjHeader.CNum;
-import org.umu.cops.stack.COPSObjHeader.CType;
+import org.umu.cops.stack.COPSClientSI.CSIType;
+import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSError.ErrorTypes;
 
 import java.net.InetAddress;
 import java.util.Properties;
@@ -93,17 +96,25 @@ public class MessageFactory implements IMessageFactory {
         final COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_DEC, IPCMMClient.CLIENT_TYPE);
         // handle
         // context
-        final COPSContext context = new COPSContext(COPSContext.CONFIG, (short) 0);
+        final COPSContext context = new COPSContext(RType.CONFIG, (short) 0);
         // decision
-        final COPSDecision decision = new COPSDecision();
-        if (prop.get(MessageProperties.DECISION_CMD_CODE) != null)
-            decision.setCmdCode((byte) prop.get(MessageProperties.DECISION_CMD_CODE));
-        if (prop.get(MessageProperties.DECISION_FLAG) != null)
-            decision.setFlags((short) prop.get(MessageProperties.DECISION_FLAG));
 
-        final COPSClientSI si = new COPSClientSI((byte)CNum.DEC.ordinal(), (byte)CType.CSI.ordinal());
+        Command cmd = null;
+        if (prop.get(MessageProperties.DECISION_CMD_CODE) != null)
+            cmd = (Command) prop.get(MessageProperties.DECISION_CMD_CODE);
+
+        DecisionFlag flag = null;
+        if (prop.get(MessageProperties.DECISION_FLAG) != null)
+            flag = (DecisionFlag) prop.get(MessageProperties.DECISION_FLAG);
+
+        final COPSDecision decision = new COPSDecision(cmd, flag);
+
+        COPSData data = null;
         if (prop.get(MessageProperties.GATE_CONTROL) != null)
-            si.setData((COPSData) prop.get(MessageProperties.GATE_CONTROL));
+            data = (COPSData) prop.get(MessageProperties.GATE_CONTROL);
+
+        // TODO - Determine the proper type here.
+        final COPSClientSI si = new COPSClientSI(CSIType.SIGNALED, data);
         try {
             msg.add(hdr);
             final COPSHandle handle;
@@ -140,7 +151,6 @@ public class MessageFactory implements IMessageFactory {
      */
     protected COPSMsg createOPNMessage(final Properties prop) {
         final COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, IPCMMClient.CLIENT_TYPE);
-        final COPSPepId pepId = new COPSPepId();
         // version infor object
         short majorVersion = MMVersionInfo.DEFAULT_MAJOR_VERSION_INFO;
         short minorVersion = MMVersionInfo.DEFAULT_MINOR_VERSION_INFO;
@@ -149,9 +159,9 @@ public class MessageFactory implements IMessageFactory {
         if (prop.get(MessageProperties.MM_MINOR_VERSION_INFO) != null)
             minorVersion = (Short) prop.get(MessageProperties.MM_MINOR_VERSION_INFO);
         // Mandatory MM version.
-        final COPSClientSI clientSI = new COPSClientSI((byte) 1);
         byte[] versionInfo = new MMVersionInfo(majorVersion, minorVersion).getAsBinaryArray();
-        clientSI.setData(new COPSData(versionInfo, 0, versionInfo.length));
+        final COPSClientSI clientSI = new COPSClientSI(CSIType.SIGNALED,
+                new COPSData(versionInfo, 0, versionInfo.length));
         final COPSClientOpenMsg msg = new COPSClientOpenMsg();
         try {
             final COPSData d;
@@ -159,7 +169,7 @@ public class MessageFactory implements IMessageFactory {
                 d = new COPSData((String) prop.get(MessageProperties.PEP_ID));
             else
                 d = new COPSData(InetAddress.getLocalHost().getHostName());
-            pepId.setData(d);
+            final COPSPepId pepId = new COPSPepId(d);
             msg.add(hdr);
             msg.add(pepId);
             msg.add(clientSI);
@@ -211,13 +221,13 @@ public class MessageFactory implements IMessageFactory {
         final COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, IPCMMClient.CLIENT_TYPE);
         final COPSError err;
         if (prop.get(MessageProperties.ERR_MESSAGE) != null) {
-            short code = (short) 0;
-            final short error = (short) prop.get(MessageProperties.ERR_MESSAGE);
+            ErrorTypes code = ErrorTypes.NA;
+            final ErrorTypes error = (ErrorTypes) prop.get(MessageProperties.ERR_MESSAGE);
             if (prop.get(MessageProperties.ERR_MESSAGE_SUB_CODE) != null)
-                code = (short) prop.get(MessageProperties.ERR_MESSAGE_SUB_CODE);
+                code = (ErrorTypes) prop.get(MessageProperties.ERR_MESSAGE_SUB_CODE);
             err = new COPSError(error, code);
         } else
-            err = new COPSError(COPSError.COPS_ERR_UNKNOWN, (short) 0);
+            err = new COPSError(ErrorTypes.UNKNOWN, ErrorTypes.NA);
 
         final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
         try {
@@ -240,10 +250,10 @@ public class MessageFactory implements IMessageFactory {
         final COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_REQ, IPCMMClient.CLIENT_TYPE);
         final COPSReqMsg req = new COPSReqMsg();
 
-        final short rType;
+        final RType rType;
         if (prop.get(MessageProperties.R_TYPE) != null)
-            rType = (Short) prop.get(MessageProperties.R_TYPE);
-        else rType = ICMTS.DEFAULT_R_TYPE;
+            rType = (RType) prop.get(MessageProperties.R_TYPE);
+        else rType = RType.NA; //ICMTS.DEFAULT_R_TYPE;
 
         final short mType;
         if (prop.get(MessageProperties.M_TYPE) != null)
@@ -282,7 +292,7 @@ public class MessageFactory implements IMessageFactory {
         if (prop.get(MessageProperties.KA_TIMER) != null)
             timer = new COPSKATimer((Short) prop.get(MessageProperties.KA_TIMER));
         else
-            timer = new COPSKATimer();
+            timer = new COPSKATimer((short)1);
         try {
             kaMsg.add(cHdr);
         } catch (COPSException e) {
