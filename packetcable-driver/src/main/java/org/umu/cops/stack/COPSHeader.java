@@ -60,18 +60,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class COPSHeader {
 
     /**
-     * Map allowing for the quick retrieval of the client type based on the numeric value coming in via the
-     * COPS payload.
-     */
-    final static Map<Integer, ClientType> VAL_TO_CT = new ConcurrentHashMap<>();
-    static {
-        VAL_TO_CT.put(ClientType.NA.ordinal(), ClientType.NA);
-        VAL_TO_CT.put(ClientType.TYPE_1.ordinal(), ClientType.TYPE_1);
-        VAL_TO_CT.put(ClientType.TYPE_2.ordinal(), ClientType.TYPE_2);
-        VAL_TO_CT.put(ClientType.TYPE_3.ordinal(), ClientType.TYPE_3);
-    }
-
-    /**
      * Map allowing for the quick retrieval of the operation based on the numeric value coming in via the
      * COPS payload.
      */
@@ -114,7 +102,7 @@ public class COPSHeader {
      * Represents client type which there are currently 3 types supported.
      * Uses the 3rd byte of the message and inbound messages should use the constant Map VAL_TO_OP during construction
      */
-    private final ClientType _cType;
+    private final short _cType;
 
     /**
      * Easy constructor that implies version 1 and UNSOLICITED flag.
@@ -126,7 +114,7 @@ public class COPSHeader {
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSHeader(final OPCode opCode, final ClientType clientType) {
+    public COPSHeader(final OPCode opCode, final short clientType) {
         this(1, Flag.UNSOLICITED, opCode, clientType);
     }
 
@@ -138,11 +126,10 @@ public class COPSHeader {
      * @param clientType - the type of client interfacing
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSHeader(final int version, final Flag flag, final OPCode opCode, final ClientType clientType) {
+    public COPSHeader(final int version, final Flag flag, final OPCode opCode, final short clientType) {
         if(version < 1) throw new IllegalArgumentException("Invalid version number - " + version);
         if(flag == null) throw new IllegalArgumentException("Flag is null");
         if(opCode == null) throw new IllegalArgumentException("OPCode is null");
-        if(clientType == null) throw new IllegalArgumentException("clientType is null");
         _pcmmVersion = version;
         _flag = flag;
         _opCode = opCode;
@@ -177,7 +164,7 @@ public class COPSHeader {
      * Get client-type
      * @return   a short
      */
-    public ClientType getClientType() {
+    public short getClientType() {
         return _cType;
     }
 
@@ -190,8 +177,10 @@ public class COPSHeader {
         byte buf[] = new byte[8];
         buf[0] = (byte) COPSMsgParser.combineNibbles((byte)_pcmmVersion, (byte) _flag.ordinal());
         buf[1] = (byte) _opCode.ordinal();
-        buf[2] = (byte) (_cType.ordinal() >> 8);
-        buf[3] = (byte) _cType.ordinal();
+
+        final byte[] cTypeBytes = COPSMsgParser.shortToBytes(_cType);
+        buf[2] = cTypeBytes[0];
+        buf[3] = cTypeBytes[1];
         buf[4] = (byte) (msgLength >> 24);
         buf[5] = (byte) (msgLength >> 16);
         buf[6] = (byte) (msgLength >> 8);
@@ -242,22 +231,8 @@ public class COPSHeader {
         int result = _pcmmVersion;
         result = 31 * result + _flag.hashCode();
         result = 31 * result + _opCode.hashCode();
-        result = 31 * result + _cType.hashCode();
+        result = 31 * result + _cType;
         return result;
-    }
-
-    /**
-     * The types of COPS clients
-     *
-     * 0 = N/A - placeholder for the invalid value of 0
-     * 1 = TYPE_1 - Represents legacy endpoints (PC applications, game consoles) lacking QoS awareness or
-     *              signaling capabilities.
-     * 2 = TYPE_2 - Represents a client that is similar to PacketCable 1.x telophony MTA which should support Qos
-     *              signaling.
-     * 3 = TYPE_3 - Represents QoS treatment from the access network withouth Application Manager interaction
-     */
-    public enum ClientType {
-        NA, TYPE_1, TYPE_2, TYPE_3
     }
 
     /**

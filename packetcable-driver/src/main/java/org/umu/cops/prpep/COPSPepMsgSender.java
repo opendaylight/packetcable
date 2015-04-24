@@ -9,7 +9,6 @@ package org.umu.cops.prpep;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSClientSI.CSIType;
 import org.umu.cops.stack.COPSContext.RType;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSReason.ReasonCode;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
@@ -35,7 +34,7 @@ public class COPSPepMsgSender {
     /**
      * The client-type identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      * The client handle is used to uniquely identify a particular
@@ -50,7 +49,7 @@ public class COPSPepMsgSender {
      * @param clientHandle      client handle
      * @param sock              socket of PDP connection
      */
-    public COPSPepMsgSender (ClientType clientType, COPSHandle clientHandle, Socket sock) {
+    public COPSPepMsgSender (short clientType, COPSHandle clientHandle, Socket sock) {
         // COPS Handle
         _handle = clientHandle;
         _clientType = clientType;
@@ -74,7 +73,7 @@ public class COPSPepMsgSender {
      * @return   a short
      *
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

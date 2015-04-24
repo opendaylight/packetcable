@@ -4,7 +4,6 @@
 package org.pcmm.messages.impl;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -30,7 +29,7 @@ public class COPSDecisionMsgEX extends COPSMsg {
     private final COPSClientSI clientSI;
     private final Map<COPSContext, List<COPSDecision>> _decisions;
 
-    public COPSDecisionMsgEX(final ClientType clientType, final COPSHandle _clientHandle, final COPSError _error,
+    public COPSDecisionMsgEX(final short clientType, final COPSHandle _clientHandle, final COPSError _error,
                              final COPSIntegrity _integrity, final COPSClientSI clientSI,
                              final Map<COPSContext, List<COPSDecision>> _decisions) {
         super(new COPSHeader(OPCode.DEC, clientType));

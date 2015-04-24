@@ -10,7 +10,6 @@ import org.umu.cops.prpep.COPSPepAgent;
 import org.umu.cops.prpep.COPSPepConnection;
 import org.umu.cops.prpep.COPSPepException;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -51,7 +50,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
      * @param clientType
      *            Client-type
      */
-    public PCMMPepAgent(final String pepID, final ClientType clientType) {
+    public PCMMPepAgent(final String pepID, final short clientType) {
         super(pepID, clientType);
         serverPort = WELL_KNOWN_CMTS_PORT;
     }
@@ -62,7 +61,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
      * @param clientType
      *            Client-type
      */
-    public PCMMPepAgent(final ClientType clientType) {
+    public PCMMPepAgent(final short clientType) {
         super(clientType);
         serverPort = WELL_KNOWN_CMTS_PORT;
     }

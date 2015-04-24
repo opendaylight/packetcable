@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -47,25 +46,23 @@ public class COPSKAMsg extends COPSMsg {
     /**
      * Constructor (generally used for sending messages) which probably should not be used as the PCMM version and
      * Flag values on the header are being hardcoded to 1 and UNSOLICITED respectively. Use the next one below instead
-     * @param clientType - the type of client that created the message (required)
      * @param integrity - the integrity (optional)
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSKAMsg(final ClientType clientType, final COPSIntegrity integrity) {
-        this(new COPSHeader(OPCode.KA, clientType), integrity);
+    public COPSKAMsg(final COPSIntegrity integrity) {
+        this(new COPSHeader(OPCode.KA, (short)0), integrity);
     }
 
     /**
      * Constructor (generally used for sending messages).
      * @param version - the supported PCMM Version
      * @param flag - the flag...
-     * @param clientType - the type of client that created the message (required)
      * @param integrity - the integrity (optional)
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSKAMsg(final int version, final Flag flag, final ClientType clientType, final COPSIntegrity integrity) {
-        this(new COPSHeader(version, flag, OPCode.KA, clientType), integrity);
+    public COPSKAMsg(final int version, final Flag flag, final COPSIntegrity integrity) {
+        this(new COPSHeader(version, flag, OPCode.KA, (short)0), integrity);
     }
 
     /**
@@ -79,6 +76,7 @@ public class COPSKAMsg extends COPSMsg {
         super(hdr);
         if (!hdr.getOpCode().equals(OPCode.KA))
             throw new IllegalArgumentException("OPCode must be of type - " + OPCode.KA);
+        if (hdr.getClientType() != 0) throw new IllegalArgumentException("Client type must be 0");
         _integrity = integrity;
     }
 

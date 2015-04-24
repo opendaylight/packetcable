@@ -11,7 +11,6 @@ import org.umu.cops.prpdp.COPSPdpAgent;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSError.ErrorTypes;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -65,7 +64,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @param process
      *            Object to perform policy data processing
      */
-    public PCMMPdpAgent(ClientType clientType, PCMMPdpDataProcess process) {
+    public PCMMPdpAgent(short clientType, PCMMPdpDataProcess process) {
         this(clientType, null, WELL_KNOWN_PDP_PORT, process);
     }
 
@@ -81,7 +80,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @param process
      *            Object to perform policy data processing
      */
-    public PCMMPdpAgent(ClientType clientType, String psHost, int psPort, PCMMPdpDataProcess process) {
+    public PCMMPdpAgent(short clientType, String psHost, int psPort, PCMMPdpDataProcess process) {
         super(psPort, clientType, null);
         this._process = process;
         this.psHost = psHost;

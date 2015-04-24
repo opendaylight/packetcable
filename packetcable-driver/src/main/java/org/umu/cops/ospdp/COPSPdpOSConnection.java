@@ -3,7 +3,6 @@ package org.umu.cops.ospdp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -187,7 +186,7 @@ public class COPSPdpOSConnection implements Runnable {
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
                         // TODO - is 0 ok for a clientType here???
-                        final COPSKAMsg msg = new COPSKAMsg(ClientType.NA, null);
+                        final COPSKAMsg msg = new COPSKAMsg(null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }
@@ -372,7 +371,7 @@ public class COPSPdpOSConnection implements Runnable {
     private void handleRequestMsg(Socket conn, COPSMsg msg) throws COPSPdpException {
         final COPSReqMsg reqMsg = (COPSReqMsg) msg;
         final COPSHeader header = reqMsg.getHeader();
-        final ClientType cType = header.getClientType();
+        final short cType = header.getClientType();
 
         // Support
         if (reqMsg.getIntegrity() != null) {
@@ -416,7 +415,7 @@ public class COPSPdpOSConnection implements Runnable {
             logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
-        COPSPdpOSReqStateMan man = (COPSPdpOSReqStateMan) _managerMap.get(repMsg.getClientHandle().getId().str());
+        COPSPdpOSReqStateMan man = _managerMap.get(repMsg.getClientHandle().getId().str());
         if (man == null) {
             logger.warn("State manager not found for ID - " + repMsg.getClientHandle().getId().str());
         } else {
@@ -431,18 +430,15 @@ public class COPSPdpOSConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleSyncComplete(Socket conn, COPSMsg msg)
-    throws COPSPdpException {
-        COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
-        // COPSHandle handle = cMsg.getClientHandle();
-        // COPSHeader header = cMsg.getHeader();
+    private void handleSyncComplete(Socket conn, COPSMsg msg) throws COPSPdpException {
+        final COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
 
         // Support
         if (cMsg.getIntegrity() != null) {
             logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
-        COPSPdpOSReqStateMan man = (COPSPdpOSReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        final COPSPdpOSReqStateMan man = _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
             logger.warn("State manager not found for ID - " + cMsg.getClientHandle().getId().str());
         } else {

@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -65,7 +64,7 @@ public class COPSClientOpenMsg extends COPSMsg {
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSClientOpenMsg(final ClientType clientType, final COPSPepId pepId, final COPSClientSI clientSI,
+    public COPSClientOpenMsg(final short clientType, final COPSPepId pepId, final COPSClientSI clientSI,
                              final COPSPdpAddress pdpAddress, final COPSIntegrity integrity) {
         this(new COPSHeader(OPCode.OPN, clientType), pepId, clientSI, pdpAddress, integrity);
     }
@@ -81,7 +80,7 @@ public class COPSClientOpenMsg extends COPSMsg {
      * @param integrity - the COPS Integrity (optional)
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSClientOpenMsg(final int version, final Flag flag, final ClientType clientType, final COPSPepId pepId,
+    public COPSClientOpenMsg(final int version, final Flag flag, final short clientType, final COPSPepId pepId,
                              final COPSClientSI clientSI, final COPSPdpAddress pdpAddress,
                              final COPSIntegrity integrity) {
         this(new COPSHeader(version, flag, OPCode.OPN, clientType), pepId, clientSI, pdpAddress, integrity);

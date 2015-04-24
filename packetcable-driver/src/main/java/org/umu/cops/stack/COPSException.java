@@ -27,6 +27,10 @@ public class COPSException extends Exception {
         rc = retCode;
     }
 
+    public COPSException(String msg, Throwable t) {
+        super(msg, t);
+    }
+
     /**
      * Method returnCode
      *

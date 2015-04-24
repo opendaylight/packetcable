@@ -1,7 +1,6 @@
 package org.umu.cops.ospep;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
 import java.util.List;
@@ -64,7 +63,7 @@ public class COPSPepOSReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -102,7 +101,7 @@ public class COPSPepOSReqStateMan {
      * @param    clientType Client-type
      * @param   clientHandle    Client's <tt>COPSHandle</tt>
      */
-    public COPSPepOSReqStateMan(final ClientType clientType, final String clientHandle) {
+    public COPSPepOSReqStateMan(final short clientType, final String clientHandle) {
         // COPS Handle
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
@@ -131,7 +130,7 @@ public class COPSPepOSReqStateMan {
      * Gets the client-type
      * @return  Client-type value
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

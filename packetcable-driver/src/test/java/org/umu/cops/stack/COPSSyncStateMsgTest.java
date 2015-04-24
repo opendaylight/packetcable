@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.umu.cops.stack.COPSHeader.ClientType;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -38,17 +38,12 @@ public class COPSSyncStateMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSSyncStateMsg(0, Flag.SOLICITED, ClientType.TYPE_1, null, null);
+        new COPSSyncStateMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSSyncStateMsg(1, null, ClientType.TYPE_1, null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSSyncStateMsg(1, Flag.SOLICITED, null, null, null);
+        new COPSSyncStateMsg(1, null, IPCMMClient.CLIENT_TYPE, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -59,30 +54,30 @@ public class COPSSyncStateMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.NA, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.NA, IPCMMClient.CLIENT_TYPE);
         new COPSSyncStateMsg(hdr, null, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null, null);
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertNull(msg.getClientHandle());
         Assert.assertNull(msg.getIntegrity());
     }
 
     @Test
     public void validAll() throws Exception {
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSHandle(new COPSData()),
                 new COPSIntegrity());
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSIntegrity(), msg.getIntegrity());
     }
@@ -94,7 +89,7 @@ public class COPSSyncStateMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSHandle(new COPSData()),
                 new COPSIntegrity());
 
@@ -111,7 +106,7 @@ public class COPSSyncStateMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: SSQ", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -121,7 +116,7 @@ public class COPSSyncStateMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null, null);
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null, null);
 
         msg.writeData(outSocket);
 
@@ -142,7 +137,7 @@ public class COPSSyncStateMsgTest {
      */
     @Test
     public void testWriteAll() throws Exception {
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSHandle(new COPSData()),
                 new COPSIntegrity(8, 9, new COPSData("12345")));
 

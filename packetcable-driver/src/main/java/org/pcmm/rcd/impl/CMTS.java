@@ -13,7 +13,6 @@ import org.umu.cops.prpep.COPSPepDataProcess;
 import org.umu.cops.prpep.COPSPepException;
 import org.umu.cops.prpep.COPSPepReqStateMan;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.net.Socket;
@@ -122,7 +121,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 
 	/* public */class PCMMCmtsConnection extends COPSPepConnection {
 
-		public PCMMCmtsConnection(final ClientType clientType, final Socket sock) {
+		public PCMMCmtsConnection(final short clientType, final Socket sock) {
 			super(clientType, sock);
 		}
 
@@ -140,7 +139,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 	@SuppressWarnings("rawtypes")
 	class PCMMPSReqStateMan extends COPSPepReqStateMan {
 
-		public PCMMPSReqStateMan(final ClientType clientType, final String clientHandle) {
+		public PCMMPSReqStateMan(final short clientType, final String clientHandle) {
 			super(clientType, clientHandle);
 			_process = new CmtsDataProcessor();
 

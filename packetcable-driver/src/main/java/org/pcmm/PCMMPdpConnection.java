@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -170,7 +169,7 @@ public class PCMMPdpConnection implements Runnable {
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
                         // TODO - determine what is the client type to be used here?
-                        final COPSKAMsg msg = new COPSKAMsg(ClientType.NA, null);
+                        final COPSKAMsg msg = new COPSKAMsg(null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }
@@ -354,7 +353,7 @@ public class PCMMPdpConnection implements Runnable {
 //        COPSContext cntxt = reqMsg.getContext();
         final COPSHeader header = reqMsg.getHeader();
         //short reqType = cntxt.getRequestType();
-        final ClientType cType = header.getClientType();
+        final short cType = header.getClientType();
 
         // Support
         if (reqMsg.getIntegrity() != null) {

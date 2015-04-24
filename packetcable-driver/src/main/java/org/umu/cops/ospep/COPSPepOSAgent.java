@@ -3,7 +3,6 @@ package org.umu.cops.ospep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -28,7 +27,7 @@ public class COPSPepOSAgent {
     /**
         PEP's client-type
      */
-    private ClientType _clientType;
+    private short _clientType;
 
     /**
         PDP host name
@@ -60,7 +59,7 @@ public class COPSPepOSAgent {
      * @param    pepID              PEP-ID
      * @param    clientType         Client-type
      */
-    public COPSPepOSAgent(final String pepID, final ClientType clientType) {
+    public COPSPepOSAgent(final String pepID, final short clientType) {
         _pepID = pepID;
         _clientType = clientType;
     }
@@ -69,7 +68,7 @@ public class COPSPepOSAgent {
      * Creates a PEP agent with a PEP-ID equal to "noname"
      * @param    clientType         Client-type
      */
-    public COPSPepOSAgent(final ClientType clientType) {
+    public COPSPepOSAgent(final short clientType) {
         // PEPId
         try {
             _pepID = InetAddress.getLocalHost().getHostName();
@@ -100,7 +99,7 @@ public class COPSPepOSAgent {
      * Gets the COPS client-type
      * @return  PEP's client-type
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

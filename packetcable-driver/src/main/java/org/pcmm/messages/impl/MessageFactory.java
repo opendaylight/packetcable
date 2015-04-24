@@ -16,7 +16,6 @@ import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
 import org.umu.cops.stack.COPSError.ErrorTypes;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSObjHeader.CType;
 
@@ -133,7 +132,7 @@ public class MessageFactory implements IMessageFactory {
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
-        final COPSDecisionMsg msg = new COPSDecisionMsg(ClientType.TYPE_1, handle, decisionMap, null);
+        final COPSDecisionMsg msg = new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, handle, decisionMap, null);
 
         // TODO - determine why this block has been commented out
         // try {
@@ -169,7 +168,7 @@ public class MessageFactory implements IMessageFactory {
             else
                 d = new COPSData(InetAddress.getLocalHost().getHostName());
             final COPSPepId pepId = new COPSPepId(d);
-            return new COPSClientOpenMsg(ClientType.NA, pepId, clientSI, null, null);
+            return new COPSClientOpenMsg(IPCMMClient.CLIENT_TYPE, pepId, clientSI, null, null);
         } catch (Exception e) {
             logger.error("Error creating OPN message", e);
         }
@@ -251,7 +250,7 @@ public class MessageFactory implements IMessageFactory {
             // just a random handle
             copsHandle = new COPSHandle(new COPSData("" + Math.random() * 82730));
 
-        return new COPSReqMsg(ClientType.TYPE_1, copsHandle, copsContext, null, null, null, null, null);
+        return new COPSReqMsg(IPCMMClient.CLIENT_TYPE, copsHandle, copsContext, null, null, null, null, null);
     }
 
     /**
@@ -264,7 +263,7 @@ public class MessageFactory implements IMessageFactory {
      */
     protected COPSMsg createKAMessage(final Properties prop) {
         // TODO - determine why this isn't really doing anything
-        return new COPSKAMsg(ClientType.NA, null);
+        return new COPSKAMsg(null);
 /*
         final COPSKATimer timer;
         if (prop.get(MessageProperties.KA_TIMER) != null)

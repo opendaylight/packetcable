@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.umu.cops.stack.COPSHeader.ClientType;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSReason.ReasonCode;
@@ -39,31 +39,25 @@ public class COPSDeleteMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSDeleteMsg(0, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        new COPSDeleteMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSDeleteMsg(1, null, ClientType.TYPE_1, new COPSHandle(new COPSData()),
-                new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSDeleteMsg(1, Flag.SOLICITED, null, new COPSHandle(new COPSData()),
+        new COPSDeleteMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandle() {
-        new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null,
+        new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null,
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullReasonType() {
-        new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()), null, null);
+        new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -75,19 +69,19 @@ public class COPSDeleteMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, IPCMMClient.CLIENT_TYPE);
         new COPSDeleteMsg(hdr, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), msg.getReason());
         Assert.assertNull(msg.getIntegrity());
@@ -95,13 +89,13 @@ public class COPSDeleteMsgTest {
 
     @Test
     public void validAll() {
-        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA),
                 new COPSIntegrity(4, 5, new COPSData("123456")));
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), msg.getReason());
         Assert.assertEquals(new COPSIntegrity(4, 5, new COPSData("123456")), msg.getIntegrity());
@@ -114,7 +108,7 @@ public class COPSDeleteMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA),
                 new COPSIntegrity(4, 5, new COPSData("123456")));
 
@@ -131,7 +125,7 @@ public class COPSDeleteMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: DRQ", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -141,7 +135,7 @@ public class COPSDeleteMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA), null);
 
         msg.writeData(outSocket);
@@ -163,7 +157,7 @@ public class COPSDeleteMsgTest {
      */
     @Test
     public void testWriteAll() throws Exception {
-        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSDeleteMsg msg = new COPSDeleteMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReason(ReasonCode.INSUFF_RESOURCES, ReasonCode.NA),
                 new COPSIntegrity(4, 5, new COPSData("123456")));
 

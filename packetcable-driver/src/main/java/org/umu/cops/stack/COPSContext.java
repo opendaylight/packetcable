@@ -47,13 +47,25 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class COPSContext extends COPSObjBase {
 
+    /**
+     * A Map containing each RType by the byte value
+     */
     public final static Map<Integer, RType> VAL_TO_RTYPE = new ConcurrentHashMap<>();
     static {
-        VAL_TO_RTYPE.put(RType.NA.ordinal(), RType.NA);
-        VAL_TO_RTYPE.put(RType.IN_ADMIN.ordinal(), RType.IN_ADMIN);
-        VAL_TO_RTYPE.put(RType.RES_ALLOC.ordinal(), RType.RES_ALLOC);
-        VAL_TO_RTYPE.put(RType.OUT.ordinal(), RType.OUT);
-        VAL_TO_RTYPE.put(RType.CONFIG.ordinal(), RType.CONFIG);
+        VAL_TO_RTYPE.put(1, RType.IN_ADMIN);
+        VAL_TO_RTYPE.put(2, RType.RES_ALLOC);
+        VAL_TO_RTYPE.put(4, RType.OUT);
+        VAL_TO_RTYPE.put(8, RType.CONFIG);
+    }
+
+    /**
+     * A Map containing the byte value by RType
+     */
+    private final static Map<RType, Integer> RTYPE_TO_VAL = new ConcurrentHashMap<>();
+    static {
+        for (final Map.Entry<Integer, RType> entry : VAL_TO_RTYPE.entrySet()) {
+            RTYPE_TO_VAL.put(entry.getValue(), entry.getKey());
+        }
     }
 
     /**
@@ -91,7 +103,7 @@ public class COPSContext extends COPSObjBase {
             throw new IllegalArgumentException("CNum must be equal to " + CNum.CONTEXT);
         if (!objHdr.getCType().equals(CType.DEF))
             throw new IllegalArgumentException("Invalid CType value. Must be " + CType.DEF);
-        if (rType == null || rType.ordinal() == 0) throw new IllegalArgumentException("Must have a valid RType");
+        if (rType == null) throw new IllegalArgumentException("Must have a valid RType");
 
         _rType = rType;
         _mType = mType;
@@ -101,8 +113,9 @@ public class COPSContext extends COPSObjBase {
     public void writeBody(final Socket socket) throws IOException {
         byte[] buf = new byte[4];
 
-        buf[0] = (byte)((byte)_rType.ordinal() >> 8);
-        buf[1] = (byte)_rType.ordinal();
+        final int rType = RTYPE_TO_VAL.get(_rType);
+        buf[0] = (byte)((byte)rType >> 8);
+        buf[1] = (byte)rType;
 
         buf[2] = (byte)(_mType >> 8);
         buf[3] = (byte)_mType;
@@ -183,7 +196,7 @@ public class COPSContext extends COPSObjBase {
      * The request type
      */
     public enum RType {
-        NA, IN_ADMIN, RES_ALLOC, OUT, CONFIG,
+        IN_ADMIN, RES_ALLOC, OUT, CONFIG,
     }
 
 }

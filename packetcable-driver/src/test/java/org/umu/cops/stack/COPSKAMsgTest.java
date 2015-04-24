@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.umu.cops.stack.COPSHeader.ClientType;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -38,12 +38,12 @@ public class COPSKAMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSKAMsg(0, Flag.SOLICITED, ClientType.TYPE_1, null);
+        new COPSKAMsg(0, Flag.SOLICITED, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSKAMsg(1, null, ClientType.TYPE_1, null);
+        new COPSKAMsg(1, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -54,27 +54,27 @@ public class COPSKAMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.NA, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.NA, IPCMMClient.CLIENT_TYPE);
         new COPSKAMsg(hdr, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null);
+        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals((short)0, msg.getHeader().getClientType());
         Assert.assertNull(msg.getIntegrity());
     }
 
     @Test
     public void validAll() throws Exception {
-        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSIntegrity());
+        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, new COPSIntegrity());
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals((short)0, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSIntegrity(), msg.getIntegrity());
     }
 
@@ -85,7 +85,7 @@ public class COPSKAMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSIntegrity());
+        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, new COPSIntegrity());
 
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         msg.dump(os);
@@ -100,7 +100,7 @@ public class COPSKAMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: KA", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: 0", lines[4]);
     }
 
     /**
@@ -110,7 +110,7 @@ public class COPSKAMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null);
+        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, null);
 
         msg.writeData(outSocket);
 
@@ -131,8 +131,7 @@ public class COPSKAMsgTest {
      */
     @Test
     public void testWriteAll() throws Exception {
-        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
-                new COPSIntegrity(8, 9, new COPSData("12345")));
+        final COPSKAMsg msg = new COPSKAMsg(1, Flag.SOLICITED, new COPSIntegrity(8, 9, new COPSData("12345")));
 
         msg.writeData(outSocket);
 

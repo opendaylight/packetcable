@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSError.ErrorTypes;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -35,7 +34,7 @@ public class COPSPdpOSAgent extends Thread {
     /**
         Client-type of connecting PEP
      */
-    private ClientType _clientType;
+    private short _clientType;
 
     /**
         Accounting timer (secs)
@@ -64,7 +63,7 @@ public class COPSPdpOSAgent extends Thread {
      * @param clientType    COPS Client-type
      * @param process       Object to perform policy data processing
      */
-    public COPSPdpOSAgent(final ClientType clientType, final COPSPdpOSDataProcess process) {
+    public COPSPdpOSAgent(final short clientType, final COPSPdpOSDataProcess process) {
         _serverPort = WELL_KNOWN_PDP_PORT;
         _kaTimer = KA_TIMER_VALUE;
         _acctTimer = ACCT_TIMER_VALUE;
@@ -81,7 +80,7 @@ public class COPSPdpOSAgent extends Thread {
      * @param clientType    COPS Client-type
      * @param process   Object to perform policy data processing
      */
-    public COPSPdpOSAgent(final int port, final ClientType clientType, final COPSPdpOSDataProcess process) {
+    public COPSPdpOSAgent(final int port, final short clientType, final COPSPdpOSDataProcess process) {
         _serverPort = port;
 
         _kaTimer = KA_TIMER_VALUE;
@@ -128,7 +127,7 @@ public class COPSPdpOSAgent extends Thread {
      * Gets the client-type
      * @return   The client-type
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

@@ -2,6 +2,7 @@ package org.umu.cops.stack;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.pcmm.rcd.IPCMMClient;
 
 /**
  * Tests the public static COPSMsgParser methods
@@ -33,6 +34,34 @@ public class COPSMsgParserTest {
                 Assert.assertEquals("Nibble 2 value = " + nibbles[1], byte2, nibbles[1]);
             }
         }
+    }
+
+    @Test
+    public void testBytesToShortMin() {
+        final byte byte1 = (byte)0;
+        final byte byte2 = (byte)0;
+        final short val = COPSMsgParser.bytesToShort(byte1, byte2);
+        final byte[] outBytes = COPSMsgParser.shortToBytes(val);
+        Assert.assertEquals(byte1, outBytes[0]);
+        Assert.assertEquals(byte2, outBytes[1]);
+        Assert.assertEquals(0, val);
+    }
+
+    @Test
+    public void testBytesToShortMax() {
+        final byte byte1 = (byte)255;
+        final byte byte2 = (byte)255;
+        final short val = COPSMsgParser.bytesToShort(byte1, byte2);
+        final byte[] outBytes = COPSMsgParser.shortToBytes(val);
+        Assert.assertEquals(byte1, outBytes[0]);
+        Assert.assertEquals(byte2, outBytes[1]);
+    }
+
+    @Test
+    public void testBytesToShortPCMMClientType() {
+        final byte[] outBytes = COPSMsgParser.shortToBytes(IPCMMClient.CLIENT_TYPE);
+        final short val = COPSMsgParser.bytesToShort(outBytes[0], outBytes[1]);
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, val);
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -10,11 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
 import java.net.Socket;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * State manager class for provisioning requests, at the PDP side.
@@ -75,7 +76,7 @@ public class PCMMPdpReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -101,7 +102,7 @@ public class PCMMPdpReqStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public PCMMPdpReqStateMan(final ClientType clientType, final String clientHandle) {
+    public PCMMPdpReqStateMan(final short clientType, final String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _status = ST_CREATE;
@@ -119,7 +120,7 @@ public class PCMMPdpReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 
