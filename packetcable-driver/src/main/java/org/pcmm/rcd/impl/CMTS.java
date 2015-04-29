@@ -20,12 +20,24 @@ import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
- *
+ * This class starts a mock CMTS that can be used for testing.
  */
 public class CMTS extends AbstractPCMMServer implements ICMTS {
 
+	/**
+	 * Constructor for having the server port automatically assigned
+	 * Call getPort() after startServer() is called to determine the port number of the server
+	 */
 	public CMTS() {
-		super();
+		this(0);
+	}
+
+	/**
+	 * Constructor for starting the server to a pre-defined port number
+	 * @param port - the port number on which to start the server.
+	 */
+	public CMTS(final int port) {
+		super(port);
 	}
 
 	@Override

@@ -44,10 +44,18 @@ public abstract class AbstractPCMMServer implements IPCMMServer {
 
 	IWorkerPool pool;
 
+	/**
+	 * Constructor to use the port number contained within the PCMMProperties static object
+	 */
 	protected AbstractPCMMServer() {
 		this(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class));
 	}
 
+	/**
+	 * Constructor for starting the server to a pre-defined port number. When 0 is used, the server socket will
+	 * assign one for you. To determine which port is being used, call getPort() after startServer() is called.
+	 * @param port - the port number on which to start the server
+	 */
 	protected AbstractPCMMServer(int port) {
 		// XXX - Assert.assertTrue(port >= 0 && port <= 65535);
 		this.port = port;
@@ -67,6 +75,7 @@ public abstract class AbstractPCMMServer implements IPCMMServer {
 			return;
 		try {
 			serverSocket = new ServerSocket(port);
+			port = serverSocket.getLocalPort();
 			logger.info("Server started and listening on port :" + port);
 		} catch (IOException e) {
 			logger.error(e.getMessage());
@@ -149,21 +158,6 @@ public abstract class AbstractPCMMServer implements IPCMMServer {
 	 */
 	public IState getRecoredState() {
 		return null;
-	}
-
-	/**
-	 * @return the serverSocket
-	 */
-	public ServerSocket getServerSocket() {
-		return serverSocket;
-	}
-
-	/**
-	 * @param serverSocket
-	 *            the serverSocket to set
-	 */
-	public void setServerSocket(ServerSocket serverSocket) {
-		this.serverSocket = serverSocket;
 	}
 
 	/**
