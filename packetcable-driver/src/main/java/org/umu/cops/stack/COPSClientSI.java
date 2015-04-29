@@ -7,6 +7,7 @@
 package org.umu.cops.stack;
 
 import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -64,6 +65,19 @@ public class COPSClientSI extends COPSObjBase {
 
     /**
      * Constructor generally used for sending messages
+     * @param ctype - the CSIType
+     * @param data - the data
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSClientSI(final CNum cnum, final CType ctype, final COPSData data) {
+        /* The CSIType does not map directly to the CType, therefore the hook to map to a CType below is
+           required to ensure the header value outputs the correct value when streamed
+         */
+        this(new COPSObjHeader(cnum, ctype), data);
+    }
+
+    /**
+     * Constructor generally used for sending messages
      * @param csitype - the CSIType
      * @param data - the data
      * @throws java.lang.IllegalArgumentException
@@ -84,14 +98,17 @@ public class COPSClientSI extends COPSObjBase {
      */
     protected COPSClientSI(final COPSObjHeader hdr, final COPSData data) {
         super(hdr);
-        _csiType = VAL_TO_CSI.get(hdr.getCType().ordinal());
+        if (VAL_TO_CSI.get(hdr.getCType().ordinal()) == null) {
+            // TODO - determine if this is a good default value???
+            _csiType = CSIType.NAMED;
+        } else {
+            _csiType = VAL_TO_CSI.get(hdr.getCType().ordinal());
+        }
 
-        if (!hdr.getCNum().equals(CNum.CSI))
-            throw new IllegalArgumentException("CNum must be equal to " + CNum.CSI);
+        if (!hdr.getCNum().equals(CNum.CSI) && !hdr.getCNum().equals(CNum.DEC))
+            throw new IllegalArgumentException("CNum must be equal to " + CNum.CSI + " or " + CNum.DEC);
         if (_csiType == null || _csiType.equals(CSIType.NA))
             throw new IllegalArgumentException("Invalid CSIType");
-        if (_csiType.ordinal() != hdr.getCType().ordinal())
-            throw new IllegalArgumentException("Error mapping CSIType " + _csiType + " to CType" + hdr.getCType());
         if (data == null) throw new IllegalArgumentException("Data must not be null");
 
         _data = data;
@@ -125,7 +142,7 @@ public class COPSClientSI extends COPSObjBase {
     @Override
     public void writeBody(final Socket socket) throws IOException {
         COPSUtil.writeData(socket, _data.getData(), _data.length());
-        COPSUtil.writeData(socket, _padding.getData(), _padding.length());
+        if (_padding.length() > 0) COPSUtil.writeData(socket, _padding.getData(), _padding.length());
     }
 
     @Override

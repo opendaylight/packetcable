@@ -16,6 +16,31 @@ import java.io.ByteArrayOutputStream;
 public class COPSClientSITest {
 
     @Test(expected = IllegalArgumentException.class)
+    public void nullCNumConstructor1() {
+        new COPSClientSI(null, CType.CSI, new COPSData());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidCNumConstructor1() {
+        new COPSClientSI(CNum.ACCT_TIMER, CType.CSI, new COPSData());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void nullCTypeConstructor1() {
+        new COPSClientSI(CNum.DEC, null, new COPSData());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidCTypeConstructor1() {
+        new COPSClientSI(CNum.DEC, CType.NA, new COPSData());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void nullDataConstructor1() {
+        new COPSClientSI(CNum.DEC, CType.CSI, null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void invalidCSItype() {
         new COPSClientSI(CSIType.NA, new COPSData());
     }
@@ -33,6 +58,15 @@ public class COPSClientSITest {
     @Test(expected = IllegalArgumentException.class)
     public void invalidCType() {
         new COPSClientSI(new COPSObjHeader(CNum.ACCT_TIMER, CType.CSI), new COPSData());
+    }
+
+    @Test
+    public void validConstructor1() {
+        final COPSClientSI clientSI = new COPSClientSI(CNum.DEC, CType.CSI, new COPSData());
+        Assert.assertEquals(CSIType.NAMED, clientSI.getCsiType());
+        Assert.assertEquals(CNum.DEC, clientSI.getHeader().getCNum());
+        Assert.assertEquals(CType.CSI, clientSI.getHeader().getCType());
+        Assert.assertEquals(new COPSData(), clientSI.getData());
     }
 
     @Test
