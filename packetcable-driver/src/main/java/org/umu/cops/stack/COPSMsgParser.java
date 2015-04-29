@@ -6,6 +6,8 @@
 
 package org.umu.cops.stack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -19,6 +21,8 @@ import java.util.Date;
  */
 
 public class COPSMsgParser {
+
+    public final static Logger logger = LoggerFactory.getLogger(COPSMsgParser.class);
 
     /**
      * Transforms a COPS message streaming in from a Socket connection into a COPSMsg object
@@ -40,6 +44,7 @@ public class COPSMsgParser {
      * @throws IOException
      */
     private static COPSHeaderData readHeader(final Socket socket) throws IOException {
+        logger.info("Reading COPS Header");
         final byte[] data = new byte[8];
         final int bytesRead = readData(socket, data, 8);
         if (bytesRead != 8) throw new IOException("Expected 8 bytes, read in " + bytesRead);
@@ -89,6 +94,7 @@ public class COPSMsgParser {
     }
 
     private static COPSMsg readBody(final Socket socket, final COPSHeaderData hdrData) throws IOException, COPSException {
+        logger.info("Reading COPS Body of type - " + hdrData.header.getOpCode());
         final int expectedBytes = hdrData.msgByteCount - hdrData.header.getHdrLength();
         final byte[] buffer = new byte[expectedBytes];
         final int nread = readData(socket, buffer, expectedBytes);

@@ -34,7 +34,7 @@ public class COPSUtil {
      * @throws   IOException
      */
     public static void writeData(final Socket socket, final byte[] data, final int len) throws IOException {
-        logger.info("Writing COPS data");
+        logger.trace("Writing COPS data");
         socket.getOutputStream().write(data, 0, len);
     }
 
