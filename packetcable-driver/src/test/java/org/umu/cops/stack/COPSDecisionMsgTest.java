@@ -28,7 +28,6 @@ import java.util.Set;
  */
 public class COPSDecisionMsgTest {
 
-    private final static int testPort = 7777;
     TestCOPSServer server;
     Socket outSocket;
 
@@ -41,9 +40,9 @@ public class COPSDecisionMsgTest {
 
     @Before
     public void setup() throws Exception {
-        server = new TestCOPSServer(testPort);
+        server = new TestCOPSServer();
         server.start();
-        outSocket = new Socket(InetAddress.getLocalHost(), testPort);
+        outSocket = new Socket(InetAddress.getLocalHost(), server.getPort());
     }
 
     @After
