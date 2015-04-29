@@ -4,6 +4,14 @@
 
 package org.pcmm;
 
+import org.pcmm.gates.IPCMMGate;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * TODO - Remove all uses of this class which is evil as it contains environmental settings
+ */
 public class PCMMGlobalConfig {
     // System
     public static int Debug = 0;
@@ -93,6 +101,13 @@ public class PCMMGlobalConfig {
     public static int getGateID2() {
         return GateID2;
     }
+
+    /**
+     * Global TransactionId to Gate Request map allows recovery of CCAP GateIds
+     * TODO - need to find a better means to store shared state.
+     */
+
+    public static Map<Short, IPCMMGate> transactionGateMap = new ConcurrentHashMap<>();
 }
 
 /*
