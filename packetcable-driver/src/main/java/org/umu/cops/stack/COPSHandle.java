@@ -101,7 +101,7 @@ public class COPSHandle extends COPSObjBase {
     @Override
     protected void writeBody(final Socket socket) throws IOException {
         COPSUtil.writeData(socket, _data.getData(), _data.length());
-        COPSUtil.writeData(socket, _padding.getData(), _padding.length());
+        if (_padding.length() != 0) COPSUtil.writeData(socket, _padding.getData(), _padding.length());
     }
 
     @Override
