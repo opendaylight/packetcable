@@ -38,6 +38,15 @@ public class COPSPdpException extends Exception {
     }
 
     /**
+     * Creates a <tt>COPSPdpException</tt> with the given message and throwable.
+     * @param msg       Exception message
+     * @param t         the Throwable
+     */
+    public COPSPdpException(String msg, Throwable t) {
+        super(msg, t);
+    }
+
+    /**
      * Gets the return code of the exception
      * @return    Exception's return code
      */

@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -80,6 +79,10 @@ public class PCMMPdpConnection implements Runnable {
         _process = process;
     }
 
+    public void addStateMan(final String key, final PCMMPdpReqStateMan man) {
+        _managerMap.put(key, man);
+    }
+
     /**
      * Sets the keep-alive timer value
      * @param kaTimer Keep-alive timer value (secs)
@@ -142,12 +145,15 @@ public class PCMMPdpConnection implements Runnable {
      * Main loop
      */
     public void run () {
+        logger.info("Starting socket listener.");
         Date _lastSendKa = new Date();
         _lastRecKa = new Date();
         try {
             while (!_sock.isClosed()) {
                 if (_sock.getInputStream().available() != 0) {
+                    logger.info("Waiting to process socket messages");
                     processMessage(_sock);
+                    logger.info("Message processed");
                     _lastRecKa = new Date();
                 }
 
@@ -170,7 +176,9 @@ public class PCMMPdpConnection implements Runnable {
                     if ((cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
                         // TODO - determine what is the client type to be used here?
                         final COPSKAMsg msg = new COPSKAMsg(null);
+                        logger.info("Sending KA message to CCAP");
                         COPSTransceiver.sendMsg(msg, _sock);
+                        logger.info("Sent KA message gto CCAP");
                         _lastSendKa = new Date();
                     }
                 }
@@ -178,7 +186,8 @@ public class PCMMPdpConnection implements Runnable {
                 try {
                     Thread.sleep(500);
                 } catch (Exception e) {
-                    logger.error("Unexpected exception while sleeping", e);
+                    logger.info("Shutting down", e);
+                    break;
                 }
 
             }
@@ -209,20 +218,29 @@ public class PCMMPdpConnection implements Runnable {
     private void processMessage(final Socket conn) throws COPSPdpException, COPSException, IOException {
         final COPSMsg msg = COPSTransceiver.receiveMsg(conn);
 
-        if (msg.getHeader().getOpCode().equals(OPCode.CC)) {
-            handleClientCloseMsg(conn, msg);
-        } else if (msg.getHeader().getOpCode().equals(OPCode.KA)) {
-            handleKeepAliveMsg(conn, msg);
-        } else if (msg.getHeader().getOpCode().equals(OPCode.REQ)) {
-            handleRequestMsg(conn, msg);
-        } else if (msg.getHeader().getOpCode().equals(OPCode.RPT)) {
-            handleReportMsg(conn, msg);
-        } else if (msg.getHeader().getOpCode().equals(OPCode.DRQ)) {
-            handleDeleteRequestMsg(conn, msg);
-        } else if (msg.getHeader().getOpCode().equals(OPCode.SSQ)) {
-            handleSyncComplete(conn, msg);
-        } else {
-            throw new COPSPdpException("Message not expected (" + msg.getHeader().getOpCode() + ").");
+        logger.info("Processing message received of type - " + msg.getHeader().getOpCode());
+
+        switch (msg.getHeader().getOpCode()) {
+            case CC:
+                handleClientCloseMsg(conn, msg);
+                break;
+            case KA:
+                handleKeepAliveMsg(conn, msg);
+                break;
+            case REQ:
+                handleRequestMsg(conn, msg);
+                break;
+            case RPT:
+                handleReportMsg(conn, msg);
+                break;
+            case DRQ:
+                handleDeleteRequestMsg(conn, msg);
+                break;
+            case SSQ:
+                handleSyncComplete(conn, msg);
+                break;
+            default:
+                throw new COPSPdpException("Message not expected (" + msg.getHeader().getOpCode() + ").");
         }
     }
 
@@ -243,6 +261,7 @@ public class PCMMPdpConnection implements Runnable {
     private void handleClientCloseMsg(Socket conn, COPSMsg msg) {
         COPSClientCloseMsg cMsg = (COPSClientCloseMsg) msg;
         _error = cMsg.getError();
+        logger.info("Closing client with error - " + _error.getDescription());
         try {
             // Support
             if (cMsg.getIntegrity() != null) {

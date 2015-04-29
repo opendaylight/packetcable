@@ -534,7 +534,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             if (getVersionInfo().getMajorVersionNB() >= 4) {
                 classifier = new ExtendedClassifier();
                 // eclassifier.setProtocol(IClassifier.Protocol.NONE);
-                classifier.setProtocol(IClassifier.Protocol.TCP);
+//                classifier.setProtocol(IClassifier.Protocol.TCP);
                 try {
                     InetAddress subIP = InetAddress.getByName(PCMMGlobalConfig.SubscriberID);
                     InetAddress srcIP = InetAddress.getByName(PCMMGlobalConfig.srcIP);
@@ -569,7 +569,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
 
             } else {
                 classifier = new Classifier();
-                classifier.setProtocol(IClassifier.Protocol.TCP);
+//                classifier.setProtocol(IClassifier.Protocol.TCP);
                 try {
                     InetAddress subIP = InetAddress.getByName(PCMMGlobalConfig.SubscriberID);
                     InetAddress srcIP = InetAddress.getByName(PCMMGlobalConfig.srcIP);

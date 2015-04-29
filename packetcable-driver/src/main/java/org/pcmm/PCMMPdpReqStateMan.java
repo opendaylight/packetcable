@@ -4,6 +4,8 @@
 
 package org.pcmm;
 
+import org.pcmm.gates.IGateID;
+import org.pcmm.gates.IPCMMGate;
 import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
@@ -22,7 +24,7 @@ import java.util.Map;
  */
 public class PCMMPdpReqStateMan {
 
-    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpReqStateMan.class);
+    private final static Logger logger = LoggerFactory.getLogger(PCMMPdpReqStateMan.class);
 
     /**
      * Request State created
@@ -120,7 +122,7 @@ public class PCMMPdpReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public int getClientType() {
+    public short getClientType() {
         return _clientType;
     }
 
@@ -288,27 +290,45 @@ public class PCMMPdpReqStateMan {
             logger.info("rtypemsg process");
             //** Here we must act in accordance with
             //** the report received
+
+            // retrieve and remove the transactionId to gate request map entry
+            // see PCMMPdpMsgSender.sendGateSet(IPCMMGate gate)
+            final ITransactionID trID = gateMsg.getTransactionID();
+            final Short trIDnum = trID.getTransactionIdentifier();
+
+            logger.info("Removing gate from cache with key - " + trIDnum);
+            final IPCMMGate gate = PCMMGlobalConfig.transactionGateMap.remove(trIDnum);
+            if (gate != null) {
+                // capture the "error" message if any
+                gate.setError(gateMsg.getError());
+                logger.info("Setting error on gate - " + gateMsg.getError());
+            }else {
+                logger.error("processReport(): gateReq not found for transactionID {}", trIDnum);
+                return;
+            }
+
             if (rtypemsg.getReportType().equals(ReportType.SUCCESS)) {
                 logger.info("rtypemsg success");
                 _status = ST_REPORT;
+                final IGateID gateID = gateMsg.getGateID();
+                logger.info("Setting gate ID on gate object - " + gateID);
+                gate.setGateID(gateID);
                 if (_process != null)
                     _process.successReport(this, gateMsg);
             } else {
-                if (gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck) {
-                    logger.info("GateDeleteAck: GateID = " + gateMsg.getGateID().getGateID());
-                    if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID1())
-                        PCMMGlobalConfig.setGateID1(0);
-                    if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID2())
-                        PCMMGlobalConfig.setGateID2(0);
-
-                }
-                if (gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck) {
-                    logger.info("GateSetAck: GateID = " + gateMsg.getGateID().getGateID());
-                    if (0 == PCMMGlobalConfig.getGateID1())
-                        PCMMGlobalConfig.setGateID1(gateMsg.getGateID().getGateID());
-                    if (0 == PCMMGlobalConfig.getGateID2())
-                        PCMMGlobalConfig.setGateID2(gateMsg.getGateID().getGateID());
-                }
+                final String cmdType;
+                if ( trID.getGateCommandType() == ITransactionID.GateDeleteAck ) {
+                    cmdType = "GateDeleteAck";
+                } else if ( trID.getGateCommandType() == ITransactionID.GateSetAck ) {
+                    cmdType = "GateSetAck";
+                } else cmdType = null;
+                // capture the gateId from the response message
+                final IGateID gateID = gateMsg.getGateID();
+                logger.info("Setting gate ID on gate object - " + gateID);
+                gate.setGateID(gateID);
+                int gateIdInt = gateID.getGateID();
+                String gateIdHex = String.format("%08x", gateIdInt);
+                logger.info(getClass().getName() + ": " + cmdType + ": GateID = " + gateIdHex);
             }
             if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
                 logger.info("rtypemsg failure");
@@ -317,13 +337,21 @@ public class PCMMPdpReqStateMan {
                     _process.failReport(this, gateMsg);
                 else
                     logger.info("Gate message error - " + gateMsg.getError().toString());
-            } else
-                if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
+            } else if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
                     logger.info("rtypemsg account");
                     _status = ST_ACCT;
                     if (_process != null)
                         _process.acctReport(this, gateMsg);
-                }
+            }
+
+            // let the waiting gateSet/gateDelete sender proceed
+            // TODO - see PCMMService#processReport() gate.notify(). Should determine a better means to
+            // TODO - handle this synchronization.
+            logger.info("Notify gate request has been updated with ID - " + gate.getGateID());
+            synchronized(gate) {
+                gate.notify();
+            }
+            logger.info("Out processReport");
         }
     }
 
