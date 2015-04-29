@@ -39,6 +39,9 @@
 		<module>features-packetcable</module>
 		<module>packetcable-config</module>
 		<module>packetcable-karaf</module>
+
+		<!-- New modules for the new Arris API -->
+		<module>packetcable-policy-model</module>
 	</modules>
 	<scm>
 		<connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
