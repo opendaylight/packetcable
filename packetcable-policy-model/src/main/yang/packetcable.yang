@@ -1,0 +1,309 @@
+module packetcable
+{
+    namespace "urn:packetcable";
+    prefix "pcmm";
+
+    import ietf-yang-types 	{ prefix yang; }
+    import ietf-inet-types 	{ prefix inet; }
+
+    description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
+    organization "OpenDaylight Project";
+
+    revision 2015-03-27 {
+        description "Initial revision of PCMM CCAP definitions";
+    }
+
+
+	// Global typedefs
+	typedef service-class-name {
+        type string { length "2..16"; }
+        description "The Service Class Name is MUST be 2-16 bytes.";
+    }
+    typedef service-flow-direction {
+	    type enumeration {
+		      enum us {
+		        value "1";
+		        description "Upstream service flow.";
+		      }
+		      enum ds {
+		        value "2";
+		        description "Downstream service flow.";
+		      }
+	  	}
+    	description "This value represents the service flow direction.";
+  	}
+ 	typedef tp-protocol {
+ 		type uint16 {range "0..257";}
+	    description "This value represents the IP transport protocol (or Next Header) where 256 is any protocol and 257 is TCP or UDP";
+	 }
+	 typedef tos-byte {
+	 	type uint8;
+	 	description "TOS/TC byte or mask";
+	 }
+
+
+	// CCAP devices
+	container ccap {
+		list ccaps {
+			description "
+				CCAP devices are known by their network name which is any string.
+				Each CCAP device has a network address:port, a list of subscriber IP subnets,
+				and a list of available Service Class Names.
+				";
+		    key "ccapId";
+			leaf ccapId {
+			    type string;
+			    	description "CCAP Identity";
+			    }
+		    uses ccap-attributes;
+	    }
+    }
+
+	grouping ccap-attributes {
+		description "
+			Each CCAP device has a COPS connection address:port,
+			a list of subscriber IP subnets, and
+			a list of available Service Class Names.
+			";
+		container connection {
+			leaf ipAddress {
+	        	type inet:ip-address;
+	        	description "IP Address of CCAP";
+	    	}
+	    	leaf port {
+	        	type inet:port-number;
+	        	description "COPS session TCP port number";
+	        	default 3918;
+	    	}
+        }
+        container amId {
+        	leaf am-tag {
+        		type uint16;
+        		description "Application Manager Tag -- unique for this operator";
+        	}
+        	leaf am-type {
+         		type uint16;
+        		description "Application Manager Type -- unique for this AM tag";
+        	}
+        }
+		leaf-list subscriber-subnets {
+			type inet:ip-prefix;
+		}
+		leaf-list upstream-scns {
+			type service-class-name;
+		}
+		leaf-list downstream-scns {
+			type service-class-name;
+		}
+        leaf response {
+            type string;
+            description "HTTP response from the PUT operation provided by the API";
+        }
+	}
+
+	// PCMM QoS Gates
+    container qos {
+    	description "
+    		PCMM QoS Gates are organized as a tree by Application/Subscriber/Gate:
+    			Each Application is known by its appId which is any string.
+    			Each Subscriber is known by its subId which is a CPE IP address in either IPv4 or IPv6 format.
+    			Each Gate is known by its gateId which is any string.
+
+    		The subscriber's CPE IP address is used to locate the CCAP device that is currently hosting the
+    		the Cable Modem that is connected to the subscriber's device. Therefore, it is not necessary
+    		for the PCMM applications to know the topology of the CCAP devices and CMs in the network path
+    		to their subscriber devices.
+
+    		Note that each CCAP entry contains a list of connected subscriber IP subnets as well as a list
+    		of all Service Class Names (SCNs) available on the CCAP device.
+    		";
+		uses pcmm-qos-gates;
+    }
+
+    grouping pcmm-qos-gates {
+        list apps {
+            key "appId";
+		    leaf appId {
+		    	type string;
+		    	description "Application Identity";
+		    }
+            list subs {
+                key "subId";
+			    leaf subId {
+		            type string;
+				description "Subscriber Identity -- must be a CM or CPE IP address";
+			    }
+	            list gates {
+	                key "gateId";
+				    leaf gateId {
+				    	type string;
+				    	description "Qos Gate Identity";
+				    }
+				    uses pcmm-qos-gate-attributes;
+	            }
+            }
+    	}
+    }
+
+    grouping pcmm-qos-gate-attributes {
+     	uses pcmm-qos-gate-spec;
+     	uses pcmm-qos-traffic-profile;
+  		uses pcmm-qos-classifier;
+ 		uses pcmm-qos-ext-classifier;
+ 		uses pcmm-qos-ipv6-classifier;
+ 		leaf response {
+            type string;
+            description "HTTP response from the PUT operation provided by the API";
+        }
+    }
+
+    grouping pcmm-qos-gate-spec {
+    	container gate-spec {
+			leaf direction {
+				type service-flow-direction;
+				description "Gate Direction (ignored for traffic profile SCN)";
+			}
+			leaf dscp-tos-overwrite {
+				type tos-byte;
+				description "Optional DSCP/TOS overwrite value";
+			}
+			leaf dscp-tos-mask {
+				type tos-byte;
+				description "Optional DSCP/TOS overwrite AND mask";
+			}
+		}
+    }
+
+    grouping pcmm-qos-traffic-profile {
+    	container traffic-profile {
+		    leaf service-class-name {
+		    	type service-class-name;
+		    	description "The Service Class Name (SCN). This SCN must be pre-provisioned on the target CCAP";
+		    }
+		}
+    }
+
+    grouping tp-port-match-ranges {
+        leaf srcPort-start {
+            type inet:port-number;
+            description "TCP/UDP source port range start.";
+        }
+        leaf srcPort-end {
+            type inet:port-number;
+            description "TCP/UDP source port range end.";
+        }
+        leaf dstPort-start {
+            type inet:port-number;
+            description "TCP/UDP destination port range start.";
+        }
+        leaf dstPort-end {
+            type inet:port-number;
+            description "TCP/UDP destination port range end.";
+        }
+    }
+
+    grouping pcmm-qos-classifier {
+    	container classifier {
+	    	leaf srcIp {
+	    		type inet:ipv4-address;
+	    		description "Source IPv4 address (exact match)";
+			}
+	    	leaf dstIp {
+	    		type inet:ipv4-address;
+	    		description "Destination IPv4 address (exact match)";
+			}
+	 		leaf tos-byte {
+	 			type tos-byte;
+	 			description "TOS/DSCP match";
+	 		}
+	 		leaf tos-mask {
+	 			type tos-byte;
+	 			description "TOS/DSCP mask";
+	 		}
+	     	leaf protocol {
+	    		type tp-protocol;
+	    		description "IPv4 transport protocol";
+			}
+	 		leaf srcPort {
+		        type inet:port-number;
+	    		description "TCP/UDP source port (exact match).";
+	   		}
+	 		leaf dstPort {
+		        type inet:port-number;
+	    		description "TCP/UDP destination port (exact match).";
+	   		}
+   		}
+    }
+
+    grouping pcmm-qos-ext-classifier {
+    	container ext-classifier {
+	    	leaf srcIp {
+	    		type inet:ipv4-address;
+	    		description "Source IPv4 address match";
+			}
+	    	leaf srcIpMask {
+	    		type inet:ipv4-address;
+	    		description "Source IPv4 mask";
+			}
+	    	leaf dstIp {
+	    		type inet:ipv4-address;
+	    		description "Destination IPv4 address match";
+			}
+	    	leaf dstIpMask {
+	    		type inet:ipv4-address;
+	    		description "Destination IPv4 mask";
+			}
+	 		leaf tos-byte {
+	 			type tos-byte;
+	 			description "TOS/DSCP match";
+	 		}
+	 		leaf tos-mask {
+	 			type tos-byte;
+	 			description "TOS/DSCP mask";
+	 		}
+	     	leaf protocol {
+	    		type tp-protocol;
+	    		description "IPv4 transport protocol";
+			}
+			uses tp-port-match-ranges;
+   		}
+    }
+
+    grouping pcmm-qos-ipv6-classifier {
+    	container ipv6-classifier {
+	    	leaf srcIp6 {
+	    		type inet:ipv6-prefix;
+	    		description "Source IPv6 prefix match in  <address/len> notation";
+			}
+	    	leaf dstIp6 {
+	    		type inet:ipv6-prefix;
+	    		description "Destination IPv6 prefix match in <address/len> notation";
+			}
+	 		leaf tc-low {
+	 			type tos-byte;
+	 			description "TC low range match";
+	 		}
+	 		leaf tc-high {
+	 			type tos-byte;
+	 			description "TC high range match";
+	 		}
+	 		leaf tc-mask {
+	 			type tos-byte;
+	 			description "TC mask";
+	 		}
+	     	leaf next-hdr {
+	    		type tp-protocol;
+	    		description "IPv6 Next Header";
+			}
+			leaf flow-label {
+				type uint32 {
+					range "0 .. 1048575";
+				}
+				description "IPv6 Flow Label (20 bits)";
+			}
+	   		uses tp-port-match-ranges;
+   		}
+    }
+
+}
+
