@@ -3,11 +3,10 @@
  */
 package org.pcmm.test;
 
+import org.pcmm.PCMMConstants;
+import org.pcmm.PCMMProperties;
 import org.pcmm.rcd.ICMTS;
-import org.pcmm.rcd.IPCMMPolicyServer;
-import org.pcmm.rcd.IPCMMPolicyServer.IPSCMTSClient;
 import org.pcmm.rcd.impl.CMTS;
-import org.pcmm.rcd.impl.PCMMPolicyServer;
 
 /**
  *
@@ -18,11 +17,11 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		ICMTS icmts = new CMTS();
+		ICMTS icmts = new CMTS(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class));
 		icmts.startServer();
-		IPCMMPolicyServer ps = new PCMMPolicyServer();
-		IPSCMTSClient client = ps.requestCMTSConnection("localhost");
-		client.gateSet();
+//		IPCMMPolicyServer ps = new PCMMPolicyServer();
+//		IPSCMTSClient client = ps.requestCMTSConnection("localhost");
+//		client.gateSet();
 		// IWorkerPool pool = new WorkerPool(2);
 		// IWorker worker = new Worker(new Callable<String>() {
 		// @Override
