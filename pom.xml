@@ -43,6 +43,7 @@
 		<!-- New modules for the new Arris API -->
 		<module>packetcable-policy-model</module>
 		<module>packetcable-policy-server</module>
+		<module>features-packetcable-policy</module>
 		<module>packetcable-policy-config</module>
 	</modules>
 	<scm>
