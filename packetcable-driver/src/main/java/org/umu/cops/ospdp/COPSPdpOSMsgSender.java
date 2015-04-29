@@ -122,7 +122,7 @@ public class COPSPdpOSMsgSender {
 
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(1, flag, getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisions, null);
+                new COPSHandle(getClientHandle().getId()), decisions, null, null);
 
         //** Send decision
         //**
@@ -146,7 +146,7 @@ public class COPSPdpOSMsgSender {
         // Common Header with the same ClientType as the request (default UNSOLICITED)
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null);
+                decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);
@@ -181,7 +181,7 @@ public class COPSPdpOSMsgSender {
         // Common Header with the same ClientType as the request (default UNSOLICITED)
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null);
+                decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);

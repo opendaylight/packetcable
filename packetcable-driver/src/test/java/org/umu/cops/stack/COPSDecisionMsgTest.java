@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.pcmm.rcd.IPCMMClient;
+import org.umu.cops.stack.COPSClientSI.CSIType;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
@@ -54,157 +55,162 @@ public class COPSDecisionMsgTest {
     @Test(expected = IllegalArgumentException.class)
     public void version0WithError() {
         new COPSDecisionMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
-                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null);
+                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void version0WithDecisions() {
         new COPSDecisionMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
-                staticDecisions, null);
+                staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlagWithError() {
         new COPSDecisionMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
-                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null);
+                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlagWithDecisions() {
         new COPSDecisionMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
-                staticDecisions, null);
+                staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandleDeprecatedWithError() {
         new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, null,
-                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null);
+                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandleDeprecatedWithDecisions() {
-        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, null, staticDecisions, null);
+        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, null, staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandleWithError() {
         new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, null,
-                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null);
+                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandleWithDecisions() {
-        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, null, staticDecisions, null);
+        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, null, staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullErrorDeprecated() {
         final COPSError error = null;
-        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), error, null);
+        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), error, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullError() {
         final COPSError error = null;
-        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), error, null);
+        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), error,
+                null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullDecisionsDeprecated() {
         final Map<COPSContext, Set<COPSDecision>> decisions = null;
-        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullDecisions() {
         final Map<COPSContext, Set<COPSDecision>> decisions = null;
-        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions,
+                null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void emptyDecisionsMapDeprecated() {
         final Map<COPSContext, Set<COPSDecision>> decisions = new HashMap<>();
-        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void emptyDecisionsMap() {
         final Map<COPSContext, Set<COPSDecision>> decisions = new HashMap<>();
-        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions,
+                null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullDecisionsSetDeprecated() {
         final Map<COPSContext, Set<COPSDecision>> decisions = new HashMap<>();
         decisions.put(new COPSContext(RType.CONFIG, (short)1), null);
-        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullDecisionsSet() {
         final Map<COPSContext, Set<COPSDecision>> decisions = new HashMap<>();
         decisions.put(new COPSContext(RType.CONFIG, (short)1), null);
-        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions,
+                null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void emptyDecisionsSetDeprecated() {
         final Map<COPSContext, Set<COPSDecision>> decisions = new HashMap<>();
         decisions.put(new COPSContext(RType.CONFIG, (short)1), new HashSet<COPSDecision>());
-        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void emptyDecisionsSet() {
         final Map<COPSContext, Set<COPSDecision>> decisions = new HashMap<>();
         decisions.put(new COPSContext(RType.CONFIG, (short)1), new HashSet<COPSDecision>());
-        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions, null);
+        new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()), decisions,
+                null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHeaderErrorOnly() {
         final COPSHeader hdr = null;
         new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA),
-                null, null);
+                null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHeaderDecisionsOnly() {
         final COPSHeader hdr = null;
-        new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), null, staticDecisions, null);
+        new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), null, staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHdrErrorOnly() {
         final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CC, IPCMMClient.CLIENT_TYPE);
         new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA),
-                null, null);
+                null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHdrDecisionsOnly() {
         final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CC, IPCMMClient.CLIENT_TYPE);
-        new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), null, staticDecisions, null);
+        new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), null, staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void withErrorAndDecisions() {
         final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.DEC, IPCMMClient.CLIENT_TYPE);
         new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA),
-                staticDecisions, null);
+                staticDecisions, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullErrorAndDecisions() {
         final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.DEC, IPCMMClient.CLIENT_TYPE);
-        new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), null, null, null);
+        new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()), null, null, null, null);
     }
 
     @Test
     public void validProtectedError() {
         final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.DEC, IPCMMClient.CLIENT_TYPE);
         final COPSDecisionMsg msg = new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()),
-                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null, null);
+                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA), null, null, null);
         Assert.assertEquals(OPCode.DEC, msg.getHeader().getOpCode());
         Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(hdr, msg.getHeader());
@@ -218,7 +224,7 @@ public class COPSDecisionMsgTest {
     public void validProtectedDecisions() {
         final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.DEC, IPCMMClient.CLIENT_TYPE);
         final COPSDecisionMsg msg = new COPSDecisionMsg(hdr, new COPSHandle(new COPSData()),
-                null, staticDecisions, null);
+                null, staticDecisions, null, null);
         Assert.assertEquals(OPCode.DEC, msg.getHeader().getOpCode());
         Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(hdr, msg.getHeader());
@@ -239,7 +245,7 @@ public class COPSDecisionMsgTest {
     public void testDumpErrorAll() throws Exception {
         final COPSDecisionMsg msg = new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSHandle(new COPSData()), new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.NA),
-                new COPSIntegrity());
+                new COPSIntegrity(), new COPSClientSI(CSIType.NAMED, new COPSData()));
 
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         msg.dump(os);
@@ -247,7 +253,7 @@ public class COPSDecisionMsgTest {
         final String out = new String(os.toByteArray());
         System.out.println(out);
         final String[] lines = out.split("\n");
-        Assert.assertEquals(20, lines.length);
+        Assert.assertEquals(25, lines.length);
 
         // Only checking COPSMsg elements as the COPSObjectMsg elements have already been validated in their own tests
         Assert.assertEquals("**MSG HEADER**", lines[0]);
@@ -265,7 +271,8 @@ public class COPSDecisionMsgTest {
     @Test
     public void testDumpDecisionsAll() throws Exception {
         final COPSDecisionMsg msg = new COPSDecisionMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
-                new COPSHandle(new COPSData()), staticDecisions, new COPSIntegrity());
+                new COPSHandle(new COPSData()), staticDecisions, new COPSIntegrity(),
+                new COPSClientSI(CSIType.NAMED, new COPSData()));
 
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         msg.dump(os);
@@ -273,7 +280,7 @@ public class COPSDecisionMsgTest {
         final String out = new String(os.toByteArray());
         System.out.println(out);
         final String[] lines = out.split("\n");
-        Assert.assertEquals(24, lines.length);
+        Assert.assertEquals(29, lines.length);
 
         // Only checking COPSMsg elements as the COPSObjectMsg elements have already been validated in their own tests
         Assert.assertEquals("**MSG HEADER**", lines[0]);
@@ -292,7 +299,7 @@ public class COPSDecisionMsgTest {
     public void testWriteErrorMin() throws Exception {
         final COPSDecisionMsg msg = new COPSDecisionMsg(2, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSHandle(new COPSData("12345")), new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.COMM_FAILURE),
-                null);
+                null, null);
 
         msg.writeData(outSocket);
 
@@ -315,7 +322,7 @@ public class COPSDecisionMsgTest {
     public void testWriteErrorWithIntegrity() throws Exception {
         final COPSDecisionMsg msg = new COPSDecisionMsg(2, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSHandle(new COPSData("12345")), new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.COMM_FAILURE),
-                new COPSIntegrity(2, 3, new COPSData("123456")));
+                new COPSIntegrity(2, 3, new COPSData("123456")), new COPSClientSI(CSIType.NAMED, new COPSData("123")));
 
         msg.writeData(outSocket);
 
@@ -349,7 +356,8 @@ public class COPSDecisionMsgTest {
         decisions.put(context2, decisions2);
 
         final COPSDecisionMsg msg = new COPSDecisionMsg(2, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
-                new COPSHandle(new COPSData("12345")), decisions, new COPSIntegrity(4, 5, new COPSData("123456")));
+                new COPSHandle(new COPSData("12345")), decisions, new COPSIntegrity(4, 5, new COPSData("123456")),
+                new COPSClientSI(CSIType.NAMED, new COPSData("123")));
 
         msg.writeData(outSocket);
 
