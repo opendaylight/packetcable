@@ -148,7 +148,7 @@ public class COPSPdpMsgSender {
         // Common Header with the same ClientType as the request
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(getClientHandle().getId()),
-                decisionMap, null);
+                decisionMap, null, null);
 
         //** Send the decision
         //**
@@ -242,7 +242,7 @@ public class COPSPdpMsgSender {
         /**/
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(getClientHandle().getId()),
-                decisionMap, null);
+                decisionMap, null, null);
 
         //** Send the decision
         //**
@@ -278,7 +278,7 @@ public class COPSPdpMsgSender {
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null);
+                decisionMap, null, null);
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
@@ -310,7 +310,7 @@ public class COPSPdpMsgSender {
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(_handle.getId()),
-                decisionMap, null);
+                decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);

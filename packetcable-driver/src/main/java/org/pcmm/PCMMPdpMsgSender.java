@@ -152,15 +152,13 @@ public class PCMMPdpMsgSender {
         // Client Handle with the same clientHandle as the request
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR,
-                new COPSData(data, 0, data.length)));
+        decisionSet.add(
+                new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(getClientHandle().getId()),
-                decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null));
+                decisionMap, null, null);
         // ** Send the GateSet Decision
         // **
         try {
@@ -321,17 +319,15 @@ public class PCMMPdpMsgSender {
         final byte[] data = gate.getData();
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR,
-                new COPSData(data, 0, data.length)));
+        decisionSet.add(
+                new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         // Common Header with the same ClientType as the request
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-                //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length))); TODO - what does the value of 4 mean here???
+                new COPSHandle(getClientHandle().getId()), decisionMap, null, null);
 
         // ** Send the GateSet Decision
         // **
@@ -483,16 +479,15 @@ public class PCMMPdpMsgSender {
         byte[] data = gate.getData();
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
+        decisionSet.add(
+                new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         // Common Header with the same ClientType as the request
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(getClientHandle().getId()),
-                decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null)); TODO - what does the value of 4 mean here???
+                decisionMap, null, null);
 
         // ** Send the GateSet Decision
         // **
@@ -608,16 +603,14 @@ public class PCMMPdpMsgSender {
         final byte[] data = gate.getData();
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL,
-                DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
+        decisionSet.add(
+                new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         // Client Handle with the same clientHandle as the request
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null));
+                new COPSHandle(getClientHandle().getId()), decisionMap, null, null);
 
         // ** Send the GateSet Decision
         // **
@@ -648,7 +641,6 @@ public class PCMMPdpMsgSender {
 
         final IAMID amid = new AMID();
         final ISubscriberID subscriberID = new SubscriberID();
-        final IGateSpec gateSpec = new GateSpec();
         final IGateID gateID = new GateID();
 
         // set transaction ID to gate set
@@ -682,9 +674,7 @@ public class PCMMPdpMsgSender {
         decisionMap.put(new COPSContext(RType.CONFIG, (short) 0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null));
+                new COPSHandle(getClientHandle().getId()), decisionMap, null, null);
 
         // ** Send the GateDelete Decision
         // **
@@ -714,7 +704,7 @@ public class PCMMPdpMsgSender {
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null);
+                decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);
