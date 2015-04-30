@@ -65,11 +65,14 @@ public class ValidateInstanceData {
 		executor = Executors.newCachedThreadPool();
 		this.dataBroker = dataBroker;
 		getCcap(thisData);
+
+		// Must be instantiated prior to retreiving the gates below
+		gateIidMap = new ConcurrentHashMap<>();
+
 		// TODO FIXME - this value is always null???
 		if (ccap == null) {
 			getGates(thisData);
 		}
-		gateIidMap = new ConcurrentHashMap<>();
 	}
 	public boolean isResponseEcho() {
 		// see if there is a response object in the updated data
