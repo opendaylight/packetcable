@@ -81,43 +81,36 @@ public class PCMMPdpAgent extends COPSPdpAgent {
      * @throws java.io.IOException
      * @throws COPSException
      */
-    public boolean connect() throws IOException, COPSException, COPSPdpException {
+    public boolean connect() throws IOException, COPSException {
         // Create Socket and send OPN
         final InetAddress addr = InetAddress.getByName(psHost);
-        // caller will catch IOExceptions
         socket = new Socket(addr, psPort);
         logger.debug("{} {}", getClass().getName(), "PDP Socket Opened");
-        //        COPSDebug.err(getClass().getName(), "PDP Socket Opened");
-        // Loop through for Incoming messages
 
-        // server infinite loop
-        // while(true)
-        {
-
-            // We're waiting for an message
-            try {
-                logger.debug("Waiting to receiveMsg");
-                final COPSMsg msg = COPSTransceiver.receiveMsg(socket);
-                logger.debug("Message received of type - " + msg.getHeader().getOpCode());
-                if (msg.getHeader().getOpCode().equals(OPCode.OPN)) {
-                    handleClientOpenMsg(socket, msg);
-                } else {
-                    try {
-                        socket.close();
-                    } catch (Exception ex) {
-                        logger.error("Unexpected error closing socket", ex);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Unexpected error handing client open message", e);
+        // We're waiting for an message
+        try {
+            logger.debug("Waiting to receiveMsg");
+            final COPSMsg msg = COPSTransceiver.receiveMsg(socket);
+            logger.debug("Message received of type - " + msg.getHeader().getOpCode());
+            if (msg.getHeader().getOpCode().equals(OPCode.OPN)) {
+                handleClientOpenMsg(socket, msg);
+            } else {
                 try {
                     socket.close();
                 } catch (Exception ex) {
                     logger.error("Unexpected error closing socket", ex);
                 }
-                return true;
             }
+        } catch (Exception e) {
+            logger.error("Unexpected error handing client open message", e);
+            try {
+                socket.close();
+            } catch (Exception ex) {
+                logger.error("Unexpected error closing socket", ex);
+            }
+            return true;
         }
+
         return false;
     }
 
@@ -135,6 +128,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         if (thread != null) thread.interrupt();
     }
 
+    // TODO - this method should be broken apart into smaller pieces.
     @Override
     protected void handleClientOpenMsg(final Socket conn, final COPSMsg msg) throws COPSException, IOException {
         logger.info("Processing client open message");
@@ -142,9 +136,6 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         _pepId = cMsg.getPepId();
 
         // Validate Client Type
-        // TODO - Need to fix this logic. Currently the client type being set is the CCAP AMID.type mapped to the
-        // enumeration's ordinal value
-/*
         if (msg.getHeader().getClientType() != getClientType()) {
             // Unsupported client type
             final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(getClientType(),
@@ -157,7 +148,6 @@ public class PCMMPdpAgent extends COPSPdpAgent {
 
             throw new COPSException("Unsupported client type");
         }
-*/
 
         // PEPId is mandatory
         if (_pepId == null) {
@@ -233,10 +223,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         }
 
         logger.debug("PDPCOPSConnection");
-        final PCMMPdpConnection pdpConn = new PCMMPdpConnection(_pepId, conn, _process);
-        pdpConn.setKaTimer(getKaTimer());
-        if (getAcctTimer() != 0)
-            pdpConn.setAccTimer(getAcctTimer());
+        final PCMMPdpConnection pdpConn = new PCMMPdpConnection(_pepId, conn, _process, getKaTimer(), getAcctTimer());
 
         // XXX - handleRequestMsg
         // XXX - check handle is valid
@@ -262,25 +249,14 @@ public class PCMMPdpAgent extends COPSPdpAgent {
     public Socket getSocket() {
         return socket;
     }
-    public PCMMPdpDataProcess getProcess() {
-        return _process;
-    }
+
     public COPSHandle getClientHandle() {
         return _handle;
     }
+
     public String getPepIdString() {
         return _pepId.getData().str();
     }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.rcd.IPCMMClient#isConnected()
-     */
-    public boolean isConnected() {
-        return socket != null && socket.isConnected();
-    }
-
 
 }
 
