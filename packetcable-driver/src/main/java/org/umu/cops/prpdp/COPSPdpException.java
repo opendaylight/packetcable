@@ -6,6 +6,8 @@
 
 package org.umu.cops.prpdp;
 
+import org.umu.cops.stack.COPSException;
+
 /**
  * Exception class for PDP errors
  *
@@ -13,10 +15,7 @@ package org.umu.cops.prpdp;
  *
  */
 
-public class COPSPdpException extends Exception {
-
-    private int rc;
-    final static int GENERAL_ERROR = 0x00000001;
+public class COPSPdpException extends COPSException {
 
     /**
     * Creates a <tt>COPSPdpException</tt> with the given message.
@@ -24,7 +23,6 @@ public class COPSPdpException extends Exception {
     */
     public COPSPdpException(String msg) {
         super(msg);
-        rc=0;
     }
 
     /**
@@ -33,8 +31,7 @@ public class COPSPdpException extends Exception {
      * @param retCode   Return code
      */
     public COPSPdpException(String msg, int retCode) {
-        super(msg);
-        rc = retCode;
+        super(msg, retCode);
     }
 
     /**
@@ -44,14 +41,6 @@ public class COPSPdpException extends Exception {
      */
     public COPSPdpException(String msg, Throwable t) {
         super(msg, t);
-    }
-
-    /**
-     * Gets the return code of the exception
-     * @return    Exception's return code
-     */
-    public int returnCode() {
-        return rc;
     }
 
 }
