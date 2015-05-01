@@ -132,7 +132,15 @@ public class COPSHandle extends COPSObjBase {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        List<Byte> allBytes = new ArrayList<>();
+
+        /*
+         Retrieve hash for the bytes contained in both COPSData members as equivalent objects may contain 0 value bytes
+         either trailing in the _data member or contained in the _padding. This generally will occur between an object
+         constructed via a public constructor vs. parsed from a byte[].
+
+         This is important as this object is known to be used as a key to Maps.
+          */
+        final List<Byte> allBytes = new ArrayList<>();
         for (final byte val : _data.getData()) {
             allBytes.add(val);
         }
