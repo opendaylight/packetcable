@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3aa0d159_23140c43",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/impl/PCMMGateReq.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 3576
+      },
+      "writtenOn": "2015-05-01T21:50:22Z",
+      "side": 1,
+      "message": "Remove the commented-out line if you don\u0027t need it.",
+      "revId": "5ce1edbced9e4f16b7e151754fb15b1d4f52b190",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
