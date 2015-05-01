@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3aa0d159_c303e80b",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/stack/COPSHandle.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 3576
+      },
+      "writtenOn": "2015-05-01T21:49:12Z",
+      "side": 1,
+      "message": "It\u0027s not 100% clear to me why you need to get each byte in both objects and then hashCode that resulting array. Are you saying that the result of \"COPSData.hashCode()\" doesn\u0027t depend on the contents of the \"getData()\" list?  What about hashcoding \"COPSData.getData()\" instead?  Does that vary if the contents of \"getData()\" varies?",
+      "revId": "660c47ac4eb327c366123c18f448ae2a62e67c78",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
