@@ -32,11 +32,6 @@ public class COPSDecisionTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void constructor2NullData() {
-        new COPSDecision(CType.DEF, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void constructor3NullCommand() {
         new COPSDecision(null, DecisionFlag.NA);
     }
@@ -88,11 +83,6 @@ public class COPSDecisionTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void constructor5NullData() {
-        new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.NA, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void constructor6NullHeader() {
         final COPSObjHeader hdr = null;
         new COPSDecision(hdr, Command.INSTALL, DecisionFlag.NA, new COPSData());
@@ -116,7 +106,14 @@ public class COPSDecisionTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void constructor6NullData() {
-        new COPSDecision(new COPSObjHeader(CNum.DEC, CType.CSI), Command.INSTALL, DecisionFlag.NA, null);
+        new COPSDecision(new COPSObjHeader(CNum.CSI, CType.CSI), Command.INSTALL, DecisionFlag.NA, null);
+    }
+
+    @Test
+    public void cNumDECAndNullData() {
+        final COPSDecision decision = new COPSDecision(CType.DEF, null);
+        Assert.assertNotNull(decision.getData());
+        Assert.assertEquals(0, decision.getData().getData().length);
     }
 
     @Test

@@ -38,11 +38,6 @@ public class COPSLPDPDecisionTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void constructor1NullData() {
-        new COPSLPDPDecision(CType.CSI, Command.INSTALL, DecisionFlag.NA, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void constructor2NullHeader() {
         final COPSObjHeader hdr = null;
         new COPSLPDPDecision(hdr, Command.INSTALL, DecisionFlag.NA, new COPSData());
@@ -64,9 +59,10 @@ public class COPSLPDPDecisionTest {
         new COPSLPDPDecision(new COPSObjHeader(CNum.LPDP_DEC, CType.CSI), Command.INSTALL, null, new COPSData());
     }
 
-    @Test(expected = IllegalArgumentException.class)
     public void constructor2NullData() {
-        new COPSLPDPDecision(new COPSObjHeader(CNum.LPDP_DEC, CType.CSI), Command.INSTALL, DecisionFlag.NA, null);
+        final COPSLPDPDecision decision = new COPSLPDPDecision(new COPSObjHeader(CNum.LPDP_DEC, CType.CSI),
+                Command.INSTALL, DecisionFlag.NA, null);
+        Assert.assertEquals(0, decision.getData().getData().length);
     }
 
     @Test
