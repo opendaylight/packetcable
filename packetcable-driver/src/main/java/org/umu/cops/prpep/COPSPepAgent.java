@@ -6,6 +6,8 @@
 
 package org.umu.cops.prpep;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -19,6 +21,8 @@ import java.net.UnknownHostException;
  * connection to the PDP and maintaining it
  */
 public class COPSPepAgent {
+
+    private final static Logger logger = LoggerFactory.getLogger(COPSPepAgent.class);
 
     /**
         PEP's Identifier
@@ -117,9 +121,8 @@ public class COPSPepAgent {
      * @throws   COPSException
      * @throws   COPSPepException
      */
-    public boolean connect(String psHost, int psPort) throws IOException, COPSException, COPSPepException {
-
-        // COPSDebug.out(getClass().getName(), "Thread ( " + _pepID + ") - Connecting to PDP");
+    public boolean connect(String psHost, int psPort) throws IOException, COPSException {
+        logger.info("Thread ( " + _pepID + ") - Connecting to PDP");
         _psHost = psHost;
         _psPort = psPort;
 
@@ -173,8 +176,8 @@ public class COPSPepAgent {
      * @throws COPSPepException
      * @throws COPSException
      */
-    public COPSPepReqStateMan addRequestState(final String handle, final COPSPepDataProcess process)
-            throws COPSPepException, COPSException {
+    public COPSPepReqStateMan addRequestState(final COPSHandle handle, final COPSPepDataProcess process)
+            throws COPSException {
         if (_conn != null) {
             return _conn.addRequestState(handle, process);
         }
@@ -188,8 +191,7 @@ public class COPSPepAgent {
      * @throws COPSPepException
      * @throws COPSException
      */
-    public void deleteRequestState(final COPSPepReqStateMan man)
-    throws COPSPepException, COPSException {
+    public void deleteRequestState(final COPSPepReqStateMan man) throws COPSException {
         if (_conn != null)
             _conn.deleteRequestState(man);
     }
@@ -225,8 +227,8 @@ public class COPSPepAgent {
      * @throws   COPSPepException
      *
      */
-    private COPSPepConnection processConnection(String psHost, int psPort)
-            throws IOException, COPSException, COPSPepException {
+    private COPSPepConnection processConnection(final String psHost, final int psPort)
+            throws IOException, COPSException {
         // Build OPN
         final COPSClientOpenMsg msg = new COPSClientOpenMsg(_clientType, new COPSPepId(new COPSData(_pepID)),
                 null, null, null);

@@ -92,6 +92,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
             final AsyncReadWriteTransaction<InstanceIdentifier<?>, ?> tx = dataBroker.newReadWriteTransaction();
             tx.delete(LogicalDatastoreType.CONFIGURATION, ccapIID);
             tx.delete(LogicalDatastoreType.CONFIGURATION, qosIID);
+            // TODO - commit() below has been deprecated
             tx.commit().get();
         }
     }
@@ -287,6 +288,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
             logger.info("onDataChanged().getCcaps(): " + thisData);
             for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
                 if (entry.getValue() instanceof Ccaps) {
+                    // TODO FIXME - Potential ClassCastException thrown here!!!
                     ccapIidMap.put((InstanceIdentifier<Ccaps>)entry.getKey(), (Ccaps)entry.getValue());
                 }
             }
@@ -297,6 +299,8 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
             for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
                 if (entry.getValue() instanceof Gates) {
                     final Gates gate = (Gates)entry.getValue();
+
+                    // TODO FIXME - Potential ClassCastException thrown here!!!
                     final InstanceIdentifier<Gates> gateIID = (InstanceIdentifier<Gates>)entry.getKey();
                     getGatePathMap(gateIID);
                     gateIidMap.put(gateIID, gate);
@@ -356,6 +360,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                         logger.info("onDataChanged(): created CCAP: {}/{} : {}", thisData.gatePath, thisCcap, message);
                         logger.info("onDataChanged(): created CCAP: {} : {}", thisData.gatePath, message);
                     } else {
+                        // TODO - when a connection cannot be made, need to remove CCAP from ODL cache.
                         logger.error("onDataChanged(): create CCAP Failed: {} : {}", thisData.gatePath, message);
                     }
                     // set the response string in the config ccap object using a new thread
@@ -442,7 +447,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                 final Ccaps thisCcap = ccapMap.get(ccapId);
                 final PCMMService service = pcmmServiceMap.get(thisCcap);
                 if (service != null) {
-                    service.sendGateDelete(thisCcap, gatePathStr);
+                    service.sendGateDelete(gatePathStr);
                     logger.info("onDataChanged(): removed QoS gate {} for {}/{}/{}: ", gateId, ccapId, gatePathStr, thisGate);
                     logger.info("onDataChanged(): removed QoS gate {} for {}/{}: ", gateId, ccapId, gatePathStr);
                 } else

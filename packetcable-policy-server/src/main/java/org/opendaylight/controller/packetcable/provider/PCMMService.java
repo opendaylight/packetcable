@@ -35,7 +35,7 @@ public class PCMMService {
 	private final IpAddress ipAddr;
 	private final PortNumber portNum;
 	protected final CcapClient ccapClient;
-	private Map<String, PCMMGateReq> gateRequests = Maps.newConcurrentMap();
+	protected Map<String, PCMMGateReq> gateRequests = Maps.newConcurrentMap();
 
 	private final short clientType;
 
@@ -136,7 +136,7 @@ public class PCMMService {
 		}
 	}
 
-	public Boolean sendGateDelete(final Ccaps ccap, final String gatePathStr) {
+	public Boolean sendGateDelete(final String gatePathStr) {
 		logger.info("sendGateDelete() - " + ccap);
 		// recover the original gate request
 		final PCMMGateReq gateReq = gateRequests.remove(gatePathStr);
@@ -178,20 +178,27 @@ public class PCMMService {
 		}
 	}
 
+	/**
+	 * Used to interface with a CCAP (including CMTSs)
+	 */
 	protected class CcapClient {
 		public final PCMMPdpDataProcess pcmmProcess;
 		public final PCMMPdpAgent pcmmPdp;
 
-		// TODO - Needs to be initialized in connect() method or removed altogether as usage seems to be creating a new
-		// TODO - one each time is is used
-		protected transient PCMMPdpMsgSender pcmmSender;
-
 		private final String ipv4;
 		private final Integer port;
+
+		// Needs to be initialized in connect() method else would be final
+		protected transient PCMMPdpMsgSender pcmmSender;
 
 		private transient Boolean isConnected = false;
 		private transient String errMessage = null;
 
+		/**
+		 * Constructor
+		 * @param ccapIp - the IP of the CCAP to manage
+		 * @param portNum - the port number of the CCAP to manage
+		 */
 		public CcapClient(final IpAddress ccapIp, final PortNumber portNum) {
 			ipv4 = ccapIp.getIpv4Address().getValue();
 			if (portNum != null)  port = portNum.getValue();
@@ -203,13 +210,16 @@ public class PCMMService {
 			pcmmPdp = new PCMMPdpAgent(clientType, ipv4, port, pcmmProcess);
 		}
 
+		/**
+		 * Starts the connection to the CCAP
+		 */
 		public void connect( ) {
 			logger.info("Attempting to connect to host: " + ipv4 + " port: " + port);
 			try  {
 				pcmmPdp.connect();
 
 				// Cannot instantiate until after pcmmPdp.connect() is called as this is where the client handle is created
-				//                pcmmSender = new PCMMPdpMsgSender(PCMMDef.C_PCMM, pcmmPdp.getClientHandle(), pcmmPdp.getSocket());
+				pcmmSender = new PCMMPdpMsgSender(clientType, pcmmPdp.getClientHandle(), pcmmPdp.getSocket());
 
 				isConnected = true;
 			} catch (Exception e) {
@@ -234,8 +244,8 @@ public class PCMMService {
 		public Boolean sendGateSet(final PCMMGateReq gateReq) {
 			logger.info("CcapClient: sendGateSet(): {}:{} => {}", ipv4, port, gateReq);
 			try {
-				pcmmSender = new PCMMPdpMsgSender(clientType, pcmmPdp.getClientHandle(), pcmmPdp.getSocket());
 				pcmmSender.sendGateSet(gateReq);
+
 				// TODO - determine if this is the correct place to perform this operation as this currently is the
 				// TODO - place where the gate ID can be set on the gateReq object
 				//                pcmmSender.handleGateReport(pcmmPdp.getSocket());
@@ -252,7 +262,6 @@ public class PCMMService {
 		public Boolean sendGateDelete(final PCMMGateReq gateReq) {
 			logger.info("CcapClient: sendGateDelete(): {}:{} => {}", ipv4, port, gateReq);
 			try {
-				pcmmSender = new PCMMPdpMsgSender(clientType, pcmmPdp.getClientHandle(), pcmmPdp.getSocket());
 				pcmmSender.sendGateDelete(gateReq);
 			} catch (COPSPdpException e) {
 				logger.error("CcapClient: sendGateDelete(): {}:{} => {} FAILED: {}", ipv4, port, gateReq, e.getMessage());

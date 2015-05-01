@@ -45,7 +45,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 
 		return new AbstractPCMMClientHandler(socket) {
 
-			private String handle;
+			private COPSHandle handle;
 
 			public void run() {
 				try {
@@ -88,11 +88,11 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 						{
 							Properties prop = new Properties();
 							COPSMsg reqMsg = MessageFactory.getInstance().create(OPCode.REQ, prop);
-							handle = ((COPSReqMsg) reqMsg).getClientHandle().getId().str();
+							handle = ((COPSReqMsg) reqMsg).getClientHandle();
 							sendRequest(reqMsg);
 						}
 						// Create the connection manager
-						PCMMCmtsConnection conn = new PCMMCmtsConnection(CLIENT_TYPE, socket);
+						final PCMMCmtsConnection conn = new PCMMCmtsConnection(CLIENT_TYPE, socket);
 						// pcmm specific handler
 						// conn.addReqStateMgr(handle, new
 						// PCMMPSReqStateMan(CLIENT_TYPE, handle));
@@ -137,8 +137,8 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 			super(clientType, sock);
 		}
 
-		public COPSPepReqStateMan addRequestState(String clientHandle, COPSPepDataProcess process)
-				throws COPSException, COPSPepException {
+		public COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
+				throws COPSException {
 			return super.addRequestState(clientHandle, process);
 		}
 
@@ -151,22 +151,17 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 	@SuppressWarnings("rawtypes")
 	class PCMMPSReqStateMan extends COPSPepReqStateMan {
 
-		public PCMMPSReqStateMan(final short clientType, final String clientHandle) {
+		public PCMMPSReqStateMan(final short clientType, final COPSHandle clientHandle) {
 			super(clientType, clientHandle);
 			_process = new CmtsDataProcessor();
 
 		}
 
 		@Override
-		protected void processDecision(COPSDecisionMsg dMsg)
-				throws COPSPepException {
-
-			// COPSHandle handle = dMsg.getClientHandle();
-			Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
-
-            Map<String, String> removeDecs = new HashMap<>();
-            Map<String, String> installDecs = new HashMap<>();
-            Map<String, String> errorDecs = new HashMap<>();
+		protected void processDecision(final COPSDecisionMsg dMsg, final Socket socket) throws COPSPepException {
+            final Map<String, String> removeDecs = new HashMap<>();
+			final Map<String, String> installDecs = new HashMap<>();
+			final Map<String, String> errorDecs = new HashMap<>();
 
 			for (final Set<COPSDecision> copsDecisions : dMsg.getDecisions().values()) {
 				final COPSDecision cmddecision = copsDecisions.iterator().next();
@@ -176,7 +171,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
                 switch (cmddecision.getCommand()) {
                     case INSTALL:
                         for (final COPSDecision decision : copsDecisions) {
-                            COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+							final COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
                             switch (obj.getSNum()) {
                                 // TODO when there is install request only the PR_PRID
                                 // is git but the ClientSI object containing the PR_EPD
@@ -194,7 +189,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
                         }
                     case REMOVE:
                         for (final COPSDecision decision : copsDecisions) {
-                            COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+							final COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
                             switch (obj.getSNum()) {
                                 // TODO when there is install request only the PR_PRID
                                 // is git but the ClientSI object containing the PR_EPD
@@ -254,16 +249,16 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		}
 
 		@Override
-		public boolean isFailReport(COPSPepReqStateMan man) {
+		public boolean isFailReport(final COPSPepReqStateMan man) {
 			return (errorDecs != null && errorDecs.size() > 0);
 		}
 
 		@Override
-		public Map<String, String> getReportData(COPSPepReqStateMan man) {
+		public Map<String, String> getReportData(final COPSPepReqStateMan man) {
 			if (isFailReport(man)) {
 				return errorDecs;
 			} else {
-				Map<String, String> siDataHashTable = new HashMap<>();
+				final Map<String, String> siDataHashTable = new HashMap<>();
 				if (installDecs.size() > 0) {
 					String data = "";
 					for (String k : installDecs.keySet()) {
@@ -271,7 +266,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 						break;
 					}
 					final ITransactionID transactionID = new PCMMGateReq(new COPSData(data).getData()).getTransactionID();
-					IPCMMGate responseGate = new PCMMGateReq();
+					final IPCMMGate responseGate = new PCMMGateReq();
 					responseGate.setTransactionID(transactionID);
 
                     // TODO FIXME - Why is the key always null??? What value should be used here???
@@ -283,15 +278,15 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		}
 
 		@Override
-		public Hashtable getClientData(COPSPepReqStateMan man) {
+		public Map<String, String> getClientData(COPSPepReqStateMan man) {
 			// TODO Auto-generated method stub
-			return new Hashtable<String, String>();
+			return new HashMap<>();
 		}
 
 		@Override
-		public Hashtable getAcctData(COPSPepReqStateMan man) {
+		public Map<String, String> getAcctData(COPSPepReqStateMan man) {
 			// TODO Auto-generated method stub
-			return new Hashtable<String, String>();
+			return new HashMap<>();
 		}
 
 		@Override
