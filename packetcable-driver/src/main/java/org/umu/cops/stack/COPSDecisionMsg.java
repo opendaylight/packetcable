@@ -8,6 +8,7 @@ package org.umu.cops.stack;
 
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -73,7 +74,7 @@ public class COPSDecisionMsg extends COPSMsg {
     private final COPSError _error;
     private final Map<COPSContext, Set<COPSDecision>> _decisions;
     private final COPSIntegrity _integrity;
-    private COPSClientSI _decSI;
+    private final COPSClientSI _decSI;
 
     /**
      * Constructor for Decision messages containing a COPS Error.
@@ -180,6 +181,9 @@ public class COPSDecisionMsg extends COPSMsg {
     }
     public COPSIntegrity getIntegrity() {
         return _integrity;
+    }
+    public COPSClientSI getDecSI() {
+        return _decSI;
     }
 
     @Override
@@ -324,22 +328,37 @@ public class COPSDecisionMsg extends COPSMsg {
                     error = COPSError.parse(objHdrData, buf);
                     break;
                 case DEC:
-                    if (decisionMap.get(context) != null)
-                        decisionMap.get(context).add(COPSDecision.parse(objHdrData, buf));
-                    else {
-                        final Set<COPSDecision> decisions = new HashSet<>();
-                        decisions.add(COPSDecision.parse(objHdrData, buf));
-                        decisionMap.put(context, decisions);
+                    COPSDecision dec;
+                    if (objHdrData.header.getCType().equals(CType.CSI)) {
+                        // TODO - Revisit, this is pretty darn clunky
+                        try {
+                            dec = COPSDecision.parse(objHdrData, buf);
+                        } catch (IllegalArgumentException e) {
+                            descSi = COPSClientSI.parse(objHdrData, buf);
+                            dec = null;
+                        }
+                    } else {
+                        dec = COPSDecision.parse(objHdrData, buf);
                     }
-                    break;
-                case MSG_INTEGRITY:
-                    integrity = COPSIntegrity.parse(objHdrData, buf);
+                    if (dec != null) {
+                        if (decisionMap.get(context) != null)
+                            decisionMap.get(context).add(dec);
+                        else {
+                            final Set<COPSDecision> decisions = new HashSet<>();
+                            decisions.add(dec);
+                            decisionMap.put(context, decisions);
+                        }
+                    }
                     break;
                 case CSI:
                     descSi = COPSClientSI.parse(objHdrData, buf);
                     break;
+                case MSG_INTEGRITY:
+                    integrity = COPSIntegrity.parse(objHdrData, buf);
+                    break;
                 default:
-                    throw new COPSException("Bad Message format, unknown object type");
+                    throw new COPSException("Bad Message format, unknown object type with CNum - "
+                            + objHdrData.header.getCNum());
             }
             dataStart += objHdrData.msgByteCount;
         }
