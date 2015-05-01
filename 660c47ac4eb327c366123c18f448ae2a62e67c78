@@ -16,6 +16,24 @@
       "revId": "660c47ac4eb327c366123c18f448ae2a62e67c78",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_4364b8e4",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/stack/COPSHandle.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 3576
+      },
+      "writtenOn": "2015-05-01T22:08:33Z",
+      "side": 1,
+      "message": "(No idea why I don\u0027t see your reply to my original comment here.  I see it in the \"History\".)\n\nOk, so if you\u0027re deliberately manipulating the hashcode so that objects with technically different values will have the same hashcode, you should definitely write a comment describing that.",
+      "parentUuid": "3aa0d159_c303e80b",
+      "revId": "660c47ac4eb327c366123c18f448ae2a62e67c78",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
     }
   ]
 }
