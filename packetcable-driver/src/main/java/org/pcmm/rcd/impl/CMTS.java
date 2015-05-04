@@ -8,6 +8,7 @@ import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.pcmm.messages.impl.MessageFactory;
 import org.pcmm.rcd.ICMTS;
+import org.umu.cops.COPSStateMan;
 import org.umu.cops.prpep.COPSPepConnection;
 import org.umu.cops.prpep.COPSPepDataProcess;
 import org.umu.cops.prpep.COPSPepException;
@@ -131,7 +132,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		};
 	}
 
-	/* public */class PCMMCmtsConnection extends COPSPepConnection {
+	class PCMMCmtsConnection extends COPSPepConnection {
 
 		public PCMMCmtsConnection(final short clientType, final Socket sock) {
 			super(clientType, sock);
@@ -141,11 +142,6 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 				throws COPSException {
 			return super.addRequestState(clientHandle, process);
 		}
-
-		// public void addReqStateMgr(String hanlde, COPSPepReqStateMan r) {
-		// // map < String(COPSHandle), COPSPepReqStateMan>;
-		// getReqStateMans().put(hanlde, r);
-		// }
 	}
 
 	class PCMMPSReqStateMan extends COPSPepReqStateMan {
@@ -221,7 +217,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		}
 	}
 
-	class CmtsDataProcessor extends COPSPepDataProcess {
+	class CmtsDataProcessor implements COPSPepDataProcess {
 
 		private Map<String, String> removeDecs;
 		private Map<String, String> installDecs;
@@ -285,26 +281,23 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		}
 
 		@Override
-		public void notifyClosedConnection(COPSPepReqStateMan man, COPSError error) {
-
+		public void notifyClosedConnection(final COPSStateMan man, final COPSError error) {
+			// TODO Auto-generated method stub
 		}
 
 		@Override
-		public void notifyNoKAliveReceived(COPSPepReqStateMan man) {
+		public void notifyNoKAliveReceived(final COPSStateMan man) {
 			// TODO Auto-generated method stub
-
 		}
 
 		@Override
-		public void closeRequestState(COPSPepReqStateMan man) {
+		public void closeRequestState(final COPSStateMan man) {
 			// TODO Auto-generated method stub
-
 		}
 
 		@Override
-		public void newRequestState(COPSPepReqStateMan man) {
+		public void newRequestState(final COPSPepReqStateMan man) {
 			// TODO Auto-generated method stub
-
 		}
 
 		public Map<String, String> getRemoveDecs() {
@@ -338,5 +331,6 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		public void setStateManager(COPSPepReqStateMan stateManager) {
 			this.stateManager = stateManager;
 		}
+
 	}
 }

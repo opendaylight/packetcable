@@ -6,7 +6,7 @@
 
 package org.umu.cops.prpep;
 
-import org.umu.cops.stack.COPSError;
+import org.umu.cops.COPSDataProcess;
 
 import java.util.Map;
 
@@ -16,7 +16,7 @@ import java.util.Map;
  * @version COPSPepDataProcess.java, v 2.00 2004
  *
  */
-public abstract class COPSPepDataProcess {
+public interface COPSPepDataProcess extends COPSDataProcess {
 
     /**
      * Establish PDP decisions
@@ -27,59 +27,38 @@ public abstract class COPSPepDataProcess {
      * @param errorDecs - the error decisions
      */
 
-	public abstract void setDecisions(COPSPepReqStateMan man, Map<String, String> removeDecs,
+	void setDecisions(COPSPepReqStateMan man, Map<String, String> removeDecs,
                                       Map<String, String> installDecs, Map<String, String> errorDecs);
 
     /**
      *  If the report is fail, return true
-     *
      * @return - t/f
      */
-    public abstract boolean isFailReport(COPSPepReqStateMan man);
+    boolean isFailReport(COPSPepReqStateMan man);
 
     /**
      * Return Report Data
-     *
      * @return - the report data
      */
-    public abstract Map<String, String> getReportData(COPSPepReqStateMan man);
+    Map<String, String> getReportData(COPSPepReqStateMan man);
 
     /**
      * Return Client Data
-     *
      * @return - the client data
      */
-    public abstract Map<String, String> getClientData(COPSPepReqStateMan man);
+    Map<String, String> getClientData(COPSPepReqStateMan man);
 
     /**
      * Return Accounting Data
-     *
      * @return - the accounting data
      */
-    public abstract Map<String, String> getAcctData(COPSPepReqStateMan man);
-
-    /**
-     * Notify the connection closed
-     */
-    public abstract void notifyClosedConnection(COPSPepReqStateMan man, COPSError error);
-
-    /**
-     * Notify the KAlive timeout
-     */
-    public abstract void notifyNoKAliveReceived(COPSPepReqStateMan man);
-
-    /**
-     * Process a PDP request to close a Request State
-     *
-     * @param man       Request State Manager
-     */
-    public abstract void closeRequestState(COPSPepReqStateMan man);
+    Map<String, String> getAcctData(COPSPepReqStateMan man);
 
     /**
      * Process a PDP request to open a new Request State
      *
      * @param man       Request State Manager
      */
-    public abstract void newRequestState(COPSPepReqStateMan man);
+    void newRequestState(COPSPepReqStateMan man);
 }
 
