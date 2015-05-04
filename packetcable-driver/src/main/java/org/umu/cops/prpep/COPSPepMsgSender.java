@@ -6,6 +6,7 @@
 
 package org.umu.cops.prpep;
 
+import org.umu.cops.COPSMsgSender;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSClientSI.CSIType;
 import org.umu.cops.stack.COPSContext.RType;
@@ -24,23 +25,7 @@ import java.util.Set;
  * @version COPSPepMsgSender.java, v 2.00 2004
  *
  */
-public class COPSPepMsgSender {
-
-    /**
-     * Socket connection to PDP
-     */
-    protected Socket _sock;
-
-    /**
-     * The client-type identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     * The client handle is used to uniquely identify a particular
-     * PEP's request for a client-type
-     */
-    protected COPSHandle _handle;
+public class COPSPepMsgSender extends COPSMsgSender {
 
     /**
      * Create a COPSPepMsgSender
@@ -49,32 +34,8 @@ public class COPSPepMsgSender {
      * @param clientHandle      client handle
      * @param sock              socket of PDP connection
      */
-    public COPSPepMsgSender (short clientType, COPSHandle clientHandle, Socket sock) {
-        // COPS Handle
-        _handle = clientHandle;
-        _clientType = clientType;
-
-        _sock = sock;
-    }
-
-    /**
-     * Return client handle
-     *
-     * @return   a COPSHandle
-     *
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Return client-type
-     *
-     * @return   a short
-     *
-     */
-    public int getClientType() {
-        return _clientType;
+    public COPSPepMsgSender(short clientType, COPSHandle clientHandle, Socket sock) {
+        super(clientType, clientHandle, sock);
     }
 
     /**

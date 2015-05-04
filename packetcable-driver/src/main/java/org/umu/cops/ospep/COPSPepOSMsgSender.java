@@ -1,5 +1,6 @@
 package org.umu.cops.ospep;
 
+import org.umu.cops.COPSMsgSender;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSReason.ReasonCode;
@@ -13,22 +14,7 @@ import java.util.Set;
 /**
  * COPS message transceiver class for outsourcing connections at the PEP side.
  */
-public class COPSPepOSMsgSender {
-    /**
-     * Socket connection to PDP
-     */
-    protected Socket _sock;
-
-    /**
-     * COPS client-type that identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     * COPS client handle used to uniquely identify a particular
-     * PEP's request for a client-type
-     */
-    protected COPSHandle _handle;
+public class COPSPepOSMsgSender extends COPSMsgSender {
 
     /**
      * Creates a COPSPepMsgSender
@@ -37,28 +23,8 @@ public class COPSPepOSMsgSender {
      * @param clientHandle      Client handle
      * @param sock              Socket connected to the PDP
      */
-    public COPSPepOSMsgSender (final short clientType, final COPSHandle clientHandle, final Socket sock) {
-        // COPS Handle
-        _handle = clientHandle;
-        _clientType = clientType;
-
-        _sock = sock;
-    }
-
-    /**
-     * Gets the client handle
-     * @return  Client's <tt>COPSHandle</tt>
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Gets the client-type
-     * @return  Client-type value
-     */
-    public int getClientType() {
-        return _clientType;
+    public COPSPepOSMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock) {
+        super(clientType, clientHandle, sock);
     }
 
     /**

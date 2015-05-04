@@ -1,5 +1,6 @@
 package org.umu.cops.ospdp;
 
+import org.umu.cops.COPSMsgSender;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
@@ -15,22 +16,7 @@ import java.util.*;
  *
  * TODO - change all references of Vector to List<>
  */
-public class COPSPdpOSMsgSender {
-    /**
-     * Socket connected to PEP
-     */
-    protected final Socket _sock;
-
-    /**
-     * COPS client-type that identifies the policy client
-     */
-    protected final short _clientType;
-
-    /**
-     * COPS client handle used to uniquely identify a particular
-     * PEP's request for a client-type
-     */
-    protected final COPSHandle _handle;
+public class COPSPdpOSMsgSender extends COPSMsgSender {
 
     /**
      * Creates a COPSPepMsgSender
@@ -39,28 +25,8 @@ public class COPSPdpOSMsgSender {
      * @param clientHandle      Client handle
      * @param sock              Socket to the PEP
      */
-    public COPSPdpOSMsgSender (final short clientType, final COPSHandle clientHandle, final Socket sock) {
-        // COPS Handle
-        _handle = clientHandle;
-        _clientType = clientType;
-
-        _sock = sock;
-    }
-
-    /**
-     * Gets the client handle
-     * @return   Client's <tt>COPSHandle</tt>
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Gets the client-type
-     * @return   Client-type value
-     */
-    public short getClientType() {
-        return _clientType;
+    public COPSPdpOSMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock) {
+        super(clientType, clientHandle, sock);
     }
 
     /**
@@ -121,8 +87,8 @@ public class COPSPdpOSMsgSender {
         }
 
         // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(1, flag, getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisions, null, null);
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(1, flag, getClientType(), _handle, decisions,
+                null, null);
 
         //** Send decision
         //**
@@ -145,8 +111,7 @@ public class COPSPdpOSMsgSender {
 
         // Common Header with the same ClientType as the request (default UNSOLICITED)
         // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null, null);
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);
@@ -161,18 +126,7 @@ public class COPSPdpOSMsgSender {
      * @throws   COPSPdpException
      *
      */
-    //FIXME: Unused?
     public void sendOpenNewRequestState() throws COPSPdpException {
-        /* <Decision Message> ::= <Common Header: Flag UNSOLICITED>
-         *                          <Client Handle>
-         *                          *(<Decision>)
-         *                          [<Integrity>]
-         * <Decision> ::= <Context>
-         *                  <Decision: Flags>
-         * <Decision: Flags> ::= Install Request-State
-         *
-        */
-
         final Set<COPSDecision> decisionSet = new HashSet<>();
         decisionSet.add(new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
@@ -180,8 +134,7 @@ public class COPSPdpOSMsgSender {
 
         // Common Header with the same ClientType as the request (default UNSOLICITED)
         // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null, null);
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);
@@ -195,14 +148,8 @@ public class COPSPdpOSMsgSender {
      * @throws COPSPdpException
      */
     public void sendSyncRequestState() throws COPSPdpException {
-        /* <Synchronize State Request>  ::= <Common Header>
-         *                                  [<Client Handle>]
-         *                                  [<Integrity>]
-         */
-
-        // Common Header with the same ClientType as the request
         // Client Handle with the same clientHandle as the request
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, new COPSHandle(_handle.getId()), null);
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, _handle, null);
         try {
             msg.writeData(_sock);
         } catch (IOException e) {
