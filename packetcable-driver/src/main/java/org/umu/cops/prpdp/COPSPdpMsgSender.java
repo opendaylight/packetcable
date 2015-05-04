@@ -176,13 +176,12 @@ public class COPSPdpMsgSender extends COPSMsgSender {
 
     /**
      * Sends a message asking that the request state be deleted
-     * @throws   COPSPdpException
+     * @throws COPSException
      */
-    public void sendDeleteRequestState() throws COPSPdpException {
-        final COPSDecision dec = new COPSDecision(Command.REMOVE, DecisionFlag.REQSTATE);
+    public void sendDeleteRequestState() throws COPSException {
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(dec);
+        decisionSet.add(new COPSDecision(Command.REMOVE, DecisionFlag.REQSTATE));
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, null);
@@ -195,13 +194,12 @@ public class COPSPdpMsgSender extends COPSMsgSender {
 
     /**
      * Sends a request asking that a new request state be created
-     * @throws   COPSPdpException
+     * @throws COPSException
      */
-    public void sendOpenNewRequestState() throws COPSPdpException {
-        final COPSDecision dec = new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE);
+    public void sendOpenNewRequestState() throws COPSException {
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(dec);
+        decisionSet.add(new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE));
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, _handle, decisionMap, null, null);
@@ -215,9 +213,9 @@ public class COPSPdpMsgSender extends COPSMsgSender {
 
     /**
      * Sends a message asking for a COPS sync operation
-     * @throws COPSPdpException
+     * @throws COPSException
      */
-    public void sendSyncRequestState() throws COPSPdpException {
+    public void sendSyncRequestState() throws COPSException {
         final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, _handle, null);
         try {
             msg.writeData(_sock);

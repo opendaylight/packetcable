@@ -210,7 +210,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * Deletes the request state
      * @throws COPSPdpException
      */
-    protected void finalizeRequestState() throws COPSPdpException {
+    protected void finalizeRequestState() throws COPSException {
         _sender.sendDeleteRequestState();
         _status = Status.ST_FINAL;
     }
@@ -219,7 +219,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * Asks for a COPS sync
      * @throws COPSPdpException
      */
-    protected void syncRequestState() throws COPSPdpException {
+    protected void syncRequestState() throws COPSException {
         _sender.sendSyncRequestState();
         _status = Status.ST_SYNC;
     }
@@ -228,7 +228,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * Opens a new request state
      * @throws COPSPdpException
      */
-    protected void openNewRequestState() throws COPSPdpException {
+    protected void openNewRequestState() throws COPSException {
         _sender.sendOpenNewRequestState();
         _status = Status.ST_NEW;
     }

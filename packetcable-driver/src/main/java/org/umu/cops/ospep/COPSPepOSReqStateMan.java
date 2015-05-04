@@ -72,7 +72,7 @@ public class COPSPepOSReqStateMan extends COPSStateMan {
      * Deletes the request state
      * @throws COPSPepException
      */
-    protected void finalizeRequestState() throws COPSPepException {
+    protected void finalizeRequestState() throws COPSException {
         _sender.sendDeleteRequest();
         _status = Status.ST_FINAL;
     }
@@ -82,18 +82,15 @@ public class COPSPepOSReqStateMan extends COPSStateMan {
      * @param    dMsg Decision message from the PDP
      * @throws   COPSPepException
      */
-    protected void processDecision(final COPSDecisionMsg dMsg) throws COPSPepException {
-        //Hashtable decisionsPerContext = dMsg.getDecisions();
-
+    protected void processDecision(final COPSDecisionMsg dMsg) throws COPSException {
         //** Applies decisions to the configuration
         //_process.setDecisions(this, removeDecs, installDecs, errorDecs);
         // second param changed to dMsg so that the data processor
         // can check the 'solicited' flag
-        final boolean isFailReport = _process.setDecisions(this, dMsg /*decisionsPerContext*/);
+        final boolean isFailReport = _process.setDecisions(this, dMsg);
         _status = Status.ST_DECS;
 
         if (isFailReport) {
-
             logger.info("Sending FAIL Report");
             _sender.sendFailReport(_process.getReportData(this));
         } else {

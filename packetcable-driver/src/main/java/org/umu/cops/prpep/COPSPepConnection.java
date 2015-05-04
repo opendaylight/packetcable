@@ -307,7 +307,7 @@ public class COPSPepConnection implements Runnable {
      * Method handleDecisionMsg
      * @param    dMsg                 a  COPSDecisionMsg
      */
-    private void handleDecisionMsg(final COPSDecisionMsg dMsg) throws COPSPepException {
+    private void handleDecisionMsg(final COPSDecisionMsg dMsg) throws COPSException {
         final COPSHandle handle = dMsg.getClientHandle();
         final Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
 

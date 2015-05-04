@@ -106,7 +106,7 @@ public class COPSPepReqStateMan extends COPSStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void finalizeRequestState() throws COPSPepException {
+    protected void finalizeRequestState() throws COPSException {
         _sender.sendDeleteRequest();
         _status = Status.ST_FINAL;
     }
@@ -119,7 +119,7 @@ public class COPSPepReqStateMan extends COPSStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void processDecision(final COPSDecisionMsg dMsg, final Socket socket) throws COPSPepException {
+    protected void processDecision(final COPSDecisionMsg dMsg, final Socket socket) throws COPSException {
         logger.info("Processing decision message - " + dMsg);
         final Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
 
@@ -178,6 +178,7 @@ public class COPSPepReqStateMan extends COPSStateMan {
                                 final COPSClientSI si = new COPSClientSI(CNum.CSI, CType.DEF, new COPSData(csiArr, 0, csiArr.length));
 
                                 final COPSReportMsg reportMsg;
+                                // TODO FIXME - success is always true
                                 if (success) {
                                     reportMsg = new COPSReportMsg(_clientType, getClientHandle(),
                                             new COPSReportType(ReportType.SUCCESS), si, null);
