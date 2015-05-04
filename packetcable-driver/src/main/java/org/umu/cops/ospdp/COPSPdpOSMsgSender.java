@@ -1,10 +1,9 @@
 package org.umu.cops.ospdp;
 
-import org.umu.cops.COPSMsgSender;
+import org.umu.cops.prpdp.COPSPdpMsgSender;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
-import org.umu.cops.stack.COPSDecision.DecisionFlag;
 import org.umu.cops.stack.COPSHeader.Flag;
 
 import java.io.IOException;
@@ -16,7 +15,7 @@ import java.util.*;
  *
  * TODO - change all references of Vector to List<>
  */
-public class COPSPdpOSMsgSender extends COPSMsgSender {
+public class COPSPdpOSMsgSender extends COPSPdpMsgSender {
 
     /**
      * Creates a COPSPepMsgSender
@@ -96,64 +95,6 @@ public class COPSPdpOSMsgSender extends COPSMsgSender {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
             throw new COPSPdpException("Failed to send the decision, reason: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Sends a message asking that the request state be deleted
-     * @throws   COPSPdpException
-     */
-    public void sendDeleteRequestState() throws COPSPdpException {
-        final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(Command.REMOVE, DecisionFlag.REQSTATE));
-        final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
-        decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
-
-        // Common Header with the same ClientType as the request (default UNSOLICITED)
-        // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, null);
-
-        try {
-            decisionMsg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPdpException("Failed to send the open new request state, reason: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Method sendOpenNewRequestState
-     *
-     * @throws   COPSPdpException
-     *
-     */
-    public void sendOpenNewRequestState() throws COPSPdpException {
-        final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE));
-        final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
-        decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
-
-        // Common Header with the same ClientType as the request (default UNSOLICITED)
-        // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, null);
-
-        try {
-            decisionMsg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPdpException("Failed to send the open new request state, reason: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Sends a message asking for a COPS sync operation
-     * @throws COPSPdpException
-     */
-    public void sendSyncRequestState() throws COPSPdpException {
-        // Client Handle with the same clientHandle as the request
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, _handle, null);
-        try {
-            msg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPdpException("Failed to send the sync state request, reason: " + e.getMessage());
         }
     }
 

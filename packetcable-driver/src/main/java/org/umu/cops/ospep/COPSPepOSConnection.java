@@ -327,10 +327,10 @@ public class COPSPepOSConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleDecisionMsg(/*OJO Socket conn, */COPSMsg msg) throws COPSPepException {
-        COPSDecisionMsg dMsg = (COPSDecisionMsg) msg;
-        COPSHandle handle = dMsg.getClientHandle();
-        COPSPepOSReqStateMan manager = _managerMap.get(handle.getId().str());
+    private void handleDecisionMsg(final COPSMsg msg) throws COPSException {
+        final COPSDecisionMsg dMsg = (COPSDecisionMsg) msg;
+        final COPSHandle handle = dMsg.getClientHandle();
+        final COPSPepOSReqStateMan manager = _managerMap.get(handle.getId().str());
         manager.processDecision(dMsg);
     }
 
@@ -386,7 +386,7 @@ public class COPSPepOSConnection implements Runnable {
      * @param manager   Request state manager
      * @throws COPSPepException
      */
-    protected void deleteRequestState(COPSPepOSReqStateMan manager) throws COPSPepException {
+    protected void deleteRequestState(COPSPepOSReqStateMan manager) throws COPSException {
         manager.finalizeRequestState();
     }
 

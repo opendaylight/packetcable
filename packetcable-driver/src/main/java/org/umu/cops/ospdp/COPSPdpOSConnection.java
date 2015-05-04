@@ -448,7 +448,7 @@ public class COPSPdpOSConnection implements Runnable {
      * Requests a COPS sync from the PEP
      * @throws COPSPdpException
      */
-    protected void syncAllRequestState() throws COPSPdpException {
+    protected void syncAllRequestState() throws COPSException {
         for (final COPSPdpOSReqStateMan man : _managerMap.values()) {
             man.syncRequestState();
         }

@@ -137,11 +137,9 @@ public class COPSPepMsgSender extends COPSMsgSender {
      *   The Synchronize State Complete is sent by the PEP to the PDP after
      *   the PDP sends a synchronize state request to the PEP and the PEP has
      *   finished synchronization.
-     *
      * @throws   COPSPepException
-     *
      */
-    public void sendSyncComplete() throws COPSPepException {
+    public void sendSyncComplete() throws COPSException {
         final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, _handle, null);
         try {
             msg.writeData(_sock);
@@ -155,11 +153,9 @@ public class COPSPepMsgSender extends COPSMsgSender {
      * When sent from the PEP this message indicates to the remote PDP that
      * the state identified by the client handle is no longer
      * available/relevant.
-     *
      * @throws   COPSPepException
-     *
      */
-    public void sendDeleteRequest() throws COPSPepException {
+    public void sendDeleteRequest() throws COPSException {
         // *** TODO: send a real reason
         final COPSReason reason = new COPSReason(ReasonCode.UNSPECIFIED, ReasonCode.NA);
         final COPSDeleteMsg msg = new COPSDeleteMsg(_clientType, _handle, reason, null);
