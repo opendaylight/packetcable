@@ -6,45 +6,26 @@
 
 package org.umu.cops.ospep;
 
+import org.umu.cops.stack.COPSException;
+
 /**
  * COPS PEP Exception
  *
  * @version COPSPepException.java, v 2.00 2004
  *
  */
-public class COPSPepException extends Exception {
+public class COPSPepException extends COPSException {
 
-    private int rc;
-    final static int GENERAL_ERROR = 0x00000001;
-
-    /**
-     * Creates a <tt>COPSPdpException</tt> with the given message.
-     * @param msg    Exception message
-     */
-
-    public COPSPepException(String msg) {
-        super(msg);
-        rc=0;
+    public COPSPepException(String s) {
+        super(s);
     }
 
-    /**
-      * Creates a <tt>COPSPdpException</tt> with the given message and return code.
-      * @param msg      Exception message
-      * @param retCode     Return code
-      */
     public COPSPepException(String msg, int retCode) {
-        super(msg);
-        rc = retCode;
+        super(msg, retCode);
     }
 
-    /**
-     * Returns the return code of the exception
-     *
-     * @return   Exception's return code
-     *
-     */
-    public int returnCode() {
-        return rc;
+    public COPSPepException(String msg, Throwable t) {
+        super(msg, t);
     }
 
 }
