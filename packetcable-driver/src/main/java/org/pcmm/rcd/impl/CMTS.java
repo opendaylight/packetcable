@@ -148,13 +148,10 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 		// }
 	}
 
-	@SuppressWarnings("rawtypes")
 	class PCMMPSReqStateMan extends COPSPepReqStateMan {
 
 		public PCMMPSReqStateMan(final short clientType, final COPSHandle clientHandle) {
-			super(clientType, clientHandle);
-			_process = new CmtsDataProcessor();
-
+			super(clientType, clientHandle, new CmtsDataProcessor());
 		}
 
 		@Override
@@ -211,7 +208,7 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 			if (_process != null) {
 				// ** Apply decisions to the configuration
 				_process.setDecisions(this, removeDecs, installDecs, errorDecs);
-				_status = ST_DECS;
+				_status = Status.ST_DECS;
 				if (_process.isFailReport(this)) {
 					// COPSDebug.out(getClass().getName(),"Sending FAIL Report\n");
 					_sender.sendFailReport(_process.getReportData(this));
@@ -219,12 +216,11 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 					// COPSDebug.out(getClass().getName(),"Sending SUCCESS Report\n");
 					_sender.sendSuccessReport(_process.getReportData(this));
 				}
-				_status = ST_REPORT;
+				_status = Status.ST_REPORT;
 			}
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	class CmtsDataProcessor extends COPSPepDataProcess {
 
 		private Map<String, String> removeDecs;
@@ -238,7 +234,6 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 			setErrorDecs(new HashMap<String, String>());
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void setDecisions(final COPSPepReqStateMan man, final Map<String, String> removeDecs,
                                  final Map<String, String> installDecs, final Map<String, String> errorDecs) {

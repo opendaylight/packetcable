@@ -375,11 +375,10 @@ public class COPSPepConnection implements Runnable {
      */
     protected COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
             throws COPSException {
-        final COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle);
+        final COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle, process);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);
 
-        manager.setDataProcess(process);
         _managerMap.put(clientHandle, manager);
         logger.info("Added state manager with key - " + clientHandle);
         manager.initRequestState(_sock);
