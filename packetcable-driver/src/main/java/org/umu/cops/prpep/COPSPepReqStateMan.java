@@ -10,6 +10,7 @@ import org.pcmm.gates.impl.GateID;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.umu.cops.COPSStateMan;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
 import org.umu.cops.stack.COPSObjHeader.CNum;
@@ -42,90 +43,24 @@ import java.util.*;
  * @version COPSPepReqStateMan.java, v 2.00 2004
  *
  */
-public class COPSPepReqStateMan {
-
-    // TODO - place these values into an enumeration
-    /**
-     * Request State created
-     */
-    public final static short ST_CREATE = 1;
-    /**
-     * Request sent
-     */
-    public final static short ST_INIT = 2;
-    /**
-     * Decisions received
-     */
-    public final static short ST_DECS = 3;
-    /**
-     * Report sent
-     */
-    public final static short ST_REPORT = 4;
-    /**
-     * Request State finalized
-     */
-    public final static short ST_FINAL = 5;
-    /**
-     * New Request State solicited
-     */
-    public final static short ST_NEW = 6;
-    /**
-     * Delete Request State solicited
-     */
-    public final static short ST_DEL = 7;
-    /**
-     * SYNC Request received
-     */
-    public final static short ST_SYNC = 8;
-    /**
-     * SYNC Completed
-     */
-    public final static short ST_SYNCALL = 9;
-    /**
-     * Close Connection received
-     */
-    public final static short ST_CCONN = 10;
-    /**
-     * KAlive Time out
-     */
-    public final static short ST_NOKA = 11;
-    /**
-     * ACCT Time out
-     */
-    public final static short ST_ACCT = 12;
+public class COPSPepReqStateMan extends COPSStateMan {
 
     private final static Logger logger = LoggerFactory.getLogger(COPSPepReqStateMan.class);
 
     /**
-     * The client-type identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     *  The client handle is used to uniquely identify a particular
-     *  PEP's request for a client-type
-     */
-    protected COPSHandle _handle;
-
-    /**
         The PolicyDataProcess is used to process policy data in the PEP
      */
-    protected COPSPepDataProcess _process;
-
-    /**
-     *  State Request State
-     */
-    protected short _status;
+    protected final COPSPepDataProcess _process;
 
     /**
         The Msg Sender is used to send COPS messages
      */
-    protected COPSPepMsgSender _sender;
+    protected transient COPSPepMsgSender _sender;
 
     /**
      * Sync State
      */
-    protected boolean _syncState;
+    protected transient boolean _syncState;
 
     /**
      * Create a State Request Manager
@@ -133,60 +68,10 @@ public class COPSPepReqStateMan {
      * @param    clientHandle                a Client Handle
      *
      */
-    public COPSPepReqStateMan(final short clientType, final COPSHandle clientHandle) {
-        _handle = clientHandle;
-        _clientType = clientType;
+    public COPSPepReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPepDataProcess process) {
+        super(clientType, clientHandle);
+        this._process = process;
         _syncState = true;
-        _status = ST_CREATE;
-    }
-
-    /**
-     * Return client handle
-     *
-     * @return   a COPSHandle
-     *
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Return client-type
-     *
-     * @return   a short
-     *
-     */
-    public int getClientType() {
-        return _clientType;
-    }
-
-    /**
-     * Return Request State status
-     *
-     * @return      s short
-     */
-    public short getStatus() {
-        return _status;
-    }
-
-    /**
-     * Return the Policy Data Process
-     *
-     * @return   a PolicyConfigure
-     *
-     */
-    public COPSPepDataProcess getDataProcess() {
-        return _process;
-    }
-
-    /**
-     * Establish the Policy Data Process
-     *
-     * @param    process              a  PolicyConfigure
-     *
-     */
-    public void setDataProcess(final COPSPepDataProcess process) {
-        _process = process;
     }
 
     /**
@@ -195,7 +80,7 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void initRequestState(final Socket sock) throws COPSPepException {
+    protected void initRequestState(final Socket sock) throws COPSException {
         // Inits an object for sending COPS messages to the PDP
         _sender = new COPSPepMsgSender(_clientType, _handle, sock);
 
@@ -212,7 +97,7 @@ public class COPSPepReqStateMan {
         _sender.sendRequest(clientSIs);
 
         // Initial state
-        _status = ST_INIT;
+        _status = Status.ST_INIT;
     }
 
     /**
@@ -223,7 +108,7 @@ public class COPSPepReqStateMan {
      */
     protected void finalizeRequestState() throws COPSPepException {
         _sender.sendDeleteRequest();
-        _status = ST_FINAL;
+        _status = Status.ST_FINAL;
     }
 
     /**
@@ -333,7 +218,7 @@ public class COPSPepReqStateMan {
         // TODO - why is this collection never getting populated???
         final Map<String, String> errorDecs = new HashMap<>();
         _process.setDecisions(this, removeDecs, installDecs, errorDecs);
-        _status = ST_DECS;
+        _status = Status.ST_DECS;
 
 
         if (_process.isFailReport(this)) {
@@ -343,12 +228,12 @@ public class COPSPepReqStateMan {
             // COPSDebug.out(getClass().getName(),"Sending SUCCESS Report\n");
             _sender.sendSuccessReport(_process.getReportData(this));
         }
-        _status = ST_REPORT;
+        _status = Status.ST_REPORT;
 
         if (!_syncState) {
             _sender.sendSyncComplete();
             _syncState = true;
-            _status = ST_SYNCALL;
+            _status = Status.ST_SYNCALL;
         }
     }
 
@@ -363,7 +248,7 @@ public class COPSPepReqStateMan {
         if (_process != null)
             _process.newRequestState(this);
 
-        _status = ST_NEW;
+        _status = Status.ST_NEW;
     }
 
     /**
@@ -378,7 +263,7 @@ public class COPSPepReqStateMan {
         if (_process != null)
             _process.closeRequestState(this);
 
-        _status = ST_DEL;
+        _status = Status.ST_DEL;
     }
 
     /**
@@ -406,21 +291,21 @@ public class COPSPepReqStateMan {
         // TODO - do we really want to send the request when the map is empty???
         _sender.sendRequest(clientSIs);
 
-        _status = ST_SYNC;
+        _status = Status.ST_SYNC;
     }
 
     protected void processClosedConnection(final COPSError error) throws COPSPepException {
         if (_process != null)
             _process.notifyClosedConnection(this, error);
 
-        _status = ST_CCONN;
+        _status = Status.ST_CCONN;
     }
 
     protected void processNoKAConnection() throws COPSPepException {
         if (_process != null)
             _process.notifyNoKAliveReceived(this);
 
-        _status = ST_NOKA;
+        _status = Status.ST_NOKA;
     }
 
     protected void processAcctReport() throws COPSPepException {
@@ -431,7 +316,7 @@ public class COPSPepReqStateMan {
         // TODO - do we really want to send when the map is empty???
         _sender.sendAcctReport(report);
 
-        _status = ST_ACCT;
+        _status = Status.ST_ACCT;
     }
 
 }

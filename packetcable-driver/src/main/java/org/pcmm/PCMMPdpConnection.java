@@ -277,7 +277,7 @@ public class PCMMPdpConnection implements Runnable {
      * @param    conn                a  Socket
      * @param    reqMsg              a  COPSReqMsg
      */
-    private void handleRequestMsg(final Socket conn, final COPSReqMsg reqMsg) throws COPSPdpException {
+    private void handleRequestMsg(final Socket conn, final COPSReqMsg reqMsg) throws COPSException {
         final COPSHeader header = reqMsg.getHeader();
         final short cType = header.getClientType();
 
@@ -289,9 +289,8 @@ public class PCMMPdpConnection implements Runnable {
         final PCMMPdpReqStateMan man;
         if (_managerMap.get(reqMsg.getClientHandle().getId().str()) == null) {
 
-            man = new PCMMPdpReqStateMan(cType, reqMsg.getClientHandle().getId().str());
+            man = new PCMMPdpReqStateMan(cType, reqMsg.getClientHandle(), _process);
             _managerMap.put(reqMsg.getClientHandle().getId().str(), man);
-            man.setDataProcess(_process);
             man.initRequestState(_sock);
             logger.info("Created state manager for ID - " + reqMsg.getClientHandle().getId().str());
         } else {
@@ -325,7 +324,7 @@ public class PCMMPdpConnection implements Runnable {
      * @param    conn                a  Socket
      * @param    cMsg                a  COPSSyncStateMsg
      */
-    private void handleSyncComplete(final Socket conn, final COPSSyncStateMsg cMsg) throws COPSPdpException {
+    private void handleSyncComplete(final Socket conn, final COPSSyncStateMsg cMsg) throws COPSException {
         // Support
         if (cMsg.getIntegrity() != null) {
             logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
