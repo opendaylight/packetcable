@@ -41,7 +41,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
     }
 
     @Override
-    protected void initRequestState(final Socket sock) throws COPSPdpException {
+    protected void initRequestState(final Socket sock) throws COPSException {
         // Inits an object for sending COPS messages to the PEP
         _sender = new COPSPdpMsgSender(_clientType, _handle, sock);
 
@@ -54,7 +54,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param msg   COPS request received from the PEP
      * @throws COPSPdpException
      */
-    protected void processRequest(final COPSReqMsg msg) throws COPSPdpException {
+    protected void processRequest(final COPSReqMsg msg) throws COPSException {
 
         // TODO - Implement me
 //        COPSHeader hdrmsg = msg.getHeader();
@@ -123,7 +123,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param msg   Report message from the PEP
      * @throws COPSPdpException
      */
-    protected void processReport(final COPSReportMsg msg) throws COPSPdpException {
+    protected void processReport(final COPSReportMsg msg) throws COPSException {
 
         //** Analyze the report
         //**
@@ -188,7 +188,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param error Reason
      * @throws COPSPdpException
      */
-    protected void processClosedConnection(final COPSError error) throws COPSPdpException {
+    protected void processClosedConnection(final COPSError error) throws COPSException {
         if (_process != null)
             _process.notifyClosedConnection(this, error);
 
@@ -199,7 +199,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * Called when no keep-alive is received
      * @throws COPSPdpException
      */
-    protected void processNoKAConnection() throws COPSPdpException {
+    protected void processNoKAConnection() throws COPSException {
         if (_process != null)
             _process.notifyNoKAliveReceived(this);
 
@@ -238,7 +238,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param dMsg  <tt>COPSDeleteMsg</tt> received from the PEP
      * @throws COPSPdpException
      */
-    protected void processDeleteRequestState(final COPSDeleteMsg dMsg) throws COPSPdpException {
+    protected void processDeleteRequestState(final COPSDeleteMsg dMsg) throws COPSException {
         if (_process != null)
             _process.closeRequestState(this);
 
