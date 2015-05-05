@@ -6,9 +6,10 @@ import org.umu.cops.stack.COPSDecisionMsg;
 import java.util.List;
 
 /**
- * Abstract class for implementing policy data processing classes for outsourcing PEPs.
+ * Interface for implementing policy data processing classes for outsourcing PEPs.
  */
 public interface COPSPepOSDataProcess extends COPSPepDataProcess {
+
     /**
      * Applies the decisions from the PDP
      * @param man   The request state manager
