@@ -33,8 +33,9 @@ public class COPSPdpOSMsgSender extends COPSPdpMsgSender {
      * @param removeDecs    Decisions to be removed
      * @param installDecs   Decisions to be installed
      * @throws COPSPdpException
+     * TODO - Add type to List once we know what it should be.
      */
-    public void sendSolicitedDecision(Vector removeDecs, Vector installDecs) throws COPSPdpException {
+    public void sendSolicitedDecision(final List removeDecs, final List installDecs) throws COPSPdpException {
         sendDecision(removeDecs, installDecs, true);
     }
 
@@ -43,8 +44,9 @@ public class COPSPdpOSMsgSender extends COPSPdpMsgSender {
      * @param removeDecs    Decisions to be removed
      * @param installDecs   Decisions to be installed
      * @throws COPSPdpException
+     * TODO - Add type to List once we know what it should be.
      */
-    public void sendUnsolicitedDecision(Vector removeDecs, Vector installDecs) throws COPSPdpException {
+    public void sendUnsolicitedDecision(final List removeDecs, final List installDecs) throws COPSPdpException {
         sendDecision(removeDecs, installDecs, false);
     }
 
@@ -54,8 +56,9 @@ public class COPSPdpOSMsgSender extends COPSPdpMsgSender {
      * @param installDecs   Decisions to be installed
      * @param solicited     <tt>true</tt> if the PEP requested this decision, <tt>false</tt> otherwise
      * @throws COPSPdpException
+     * TODO - Add type to List once we know what it should be.
      */
-    public void sendDecision(Vector removeDecs, Vector installDecs, boolean solicited) throws COPSPdpException {
+    public void sendDecision(final List removeDecs, final List installDecs, boolean solicited) throws COPSPdpException {
         // Common Header holding the same ClientType as the request
         final Flag flag;
         if (solicited)
