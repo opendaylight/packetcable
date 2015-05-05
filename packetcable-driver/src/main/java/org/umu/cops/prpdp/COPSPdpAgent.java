@@ -137,7 +137,7 @@ public class COPSPdpAgent extends Thread {
      * @throws COPSException
      * @throws COPSPdpException
      */
-    public void sync(final String pepID) throws COPSException, COPSPdpException {
+    public void sync(final String pepID) throws COPSException {
         COPSPdpConnection pdpConn = (COPSPdpConnection) _connectionMap.get(pepID);
         pdpConn.syncAllRequestState();
     }
@@ -262,7 +262,7 @@ public class COPSPdpAgent extends Thread {
 
         final COPSPdpConnection pdpConn = new COPSPdpConnection(_pepId, conn,  _process);
         pdpConn.setKaTimer(_kaTimer);
-        if (_acctTimer != 0) pdpConn.setAccTimer(_acctTimer);
+        if (_acctTimer != 0) pdpConn.setAcctTimer(_acctTimer);
         new Thread(pdpConn).start();
         _connectionMap.put(_pepId.getData().str(), pdpConn);
     }

@@ -8,10 +8,12 @@ package org.umu.cops.prpep;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.umu.cops.COPSConnection;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
@@ -23,12 +25,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * COPSPepConnection represents a PEP-PDP Connection Manager.
  * Responsible for processing messages received from PDP.
  */
-public class COPSPepConnection implements Runnable {
+@ThreadSafe
+public class COPSPepConnection extends COPSConnection {
 
     private final static Logger logger = LoggerFactory.getLogger(COPSPepConnection.class);
-
-    /** Socket connected to PDP */
-    protected final Socket _sock;
 
     /** Time to wait responses (milliseconds), default is 10 seconds */
     protected transient int _responseTime;
@@ -37,29 +37,9 @@ public class COPSPepConnection implements Runnable {
     protected final short _clientType;
 
     /**
-        Accounting timer value (secs)
-     */
-    protected transient short _acctTimer;
-
-    /**
-        Keep-alive timer value (secs)
-     */
-    protected transient short _kaTimer;
-
-    /**
-     *  Time of the latest keep-alive received
-     */
-    protected Date _lastRecKa;
-
-    /**
-        Maps a COPS Client Handle to a Request State Manager
+     Maps a COPS Client Handle to a Request State Manager
      */
     protected final Map<COPSHandle, COPSPepReqStateMan> _managerMap;
-
-    /**
-        COPS error returned by PDP
-     */
-    protected transient COPSError _error;
 
     /**
      * Creates a new PEP connection
@@ -67,83 +47,30 @@ public class COPSPepConnection implements Runnable {
      * @param sock          Socket connected to PDP
      */
     public COPSPepConnection(final short clientType, final Socket sock) {
+        super(sock, (short)0, (short)0);
         _clientType = clientType;
-        _sock = sock;
-
-        // Timers
-        _acctTimer = 0;
-        _kaTimer = 0;
         _responseTime = 10000;
         _managerMap = new ConcurrentHashMap<>();
-    }
-
-    /**
-     * Gets the socket connected to the PDP
-     * @return  Socket connected to PDP
-     */
-    public Socket getSocket() {
-        return _sock;
-    }
-
-    /**
-     * Checks whether the socket to the PDP is closed or not
-     * @return  <tt>true</tt> if the socket is closed, <tt>false</tt> otherwise
-     */
-    public boolean isClosed() {
-        return _sock.isClosed();
-    }
-
-    /**
-     * Closes the socket
-     *
-     * @throws java.io.IOException
-     */
-    public void close() throws IOException {
-        if (! _sock.isClosed()) _sock.close();
-    }
-
-    /**
-     * Sets keep-alive timer
-     * @param kaTimer   Keep-alive timer value (secs)
-     */
-    public void setKaTimer (short kaTimer) {
-        _kaTimer = kaTimer;
-    }
-
-    /**
-     * Sets accounting timer
-     * @param acctTimer Accounting timer value (secs)
-     */
-    public void setAcctTimer (short acctTimer) {
-        _acctTimer = acctTimer;
-    }
-
-    /**
-     * Method getError
-     * @return   a COPSError
-     */
-    protected COPSError getError()  {
-        return _error;
     }
 
     /**
      * Message-processing loop
      */
     public void run () {
-        Date _lastSendKa = new Date();
-        Date _lastSendAcc = new Date();
-        _lastRecKa = new Date();
+        Date lastSendKa = new Date();
+        Date lastSendAcc = new Date();
+        Date lastRecKa = new Date();
         try {
             while (!_sock.isClosed()) {
                 if (_sock.getInputStream().available() != 0) {
                     processMessage(_sock);
-                    _lastRecKa = new Date();
+                    lastRecKa = new Date();
                 }
 
                 // Keep Alive
                 if (_kaTimer > 0) {
                     // Timeout at PDP
-                    int _startTime = (int) (_lastRecKa.getTime());
+                    int _startTime = (int) (lastRecKa.getTime());
                     int cTime = (int) (new Date().getTime());
 
                     if ((cTime - _startTime) > _kaTimer*1000) {
@@ -153,25 +80,25 @@ public class COPSPepConnection implements Runnable {
                     }
 
                     // Send to PEP
-                    _startTime = (int) (_lastSendKa.getTime());
+                    _startTime = (int) (lastSendKa.getTime());
                     cTime = (int) (new Date().getTime());
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
                         final COPSKAMsg msg = new COPSKAMsg(null);
                         COPSTransceiver.sendMsg(msg, _sock);
-                        _lastSendKa = new Date();
+                        lastSendKa = new Date();
                     }
                 }
 
                 // Accounting
                 if (_acctTimer > 0) {
-                    int _startTime = (int) (_lastSendAcc.getTime());
+                    int _startTime = (int) (lastSendAcc.getTime());
                     int cTime = (int) (new Date().getTime());
 
                     if ((cTime - _startTime) > ((_acctTimer*3/4)*1000)) {
                         // Notify all Request State Managers
                         notifyAcctAllReqStateMan();
-                        _lastSendAcc = new Date();
+                        lastSendAcc = new Date();
                     }
                 }
 
@@ -225,26 +152,6 @@ public class COPSPepConnection implements Runnable {
                 break;
             default:
                 throw new COPSPepException("Message not expected (" + msg.getHeader().getOpCode() + ").");
-        }
-    }
-
-    /**
-     * Handle Client Close Message, close the passed connection
-     * @param    conn                a  Socket
-     * @param    cMsg                a  COPSClientCloseMsg
-     */
-    private void handleClientCloseMsg(final Socket conn, final COPSClientCloseMsg cMsg) {
-        _error = cMsg.getError();
-        logger.info("Got close request, closing connection "
-                + conn.getInetAddress() + ":" + conn.getPort() + ":[Error " + _error.getDescription() + "]");
-        try {
-            // Support
-            if (cMsg.getIntegrity() != null) {
-                logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
-            }
-            conn.close();
-        } catch (Exception unae) {
-            logger.error("Unexpected exception closing connection", unae);
         }
     }
 
