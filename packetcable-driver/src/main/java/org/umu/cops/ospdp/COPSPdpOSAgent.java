@@ -277,7 +277,7 @@ public class COPSPdpOSAgent extends Thread {
 
         final COPSPdpOSConnection pdpConn = new COPSPdpOSConnection(pepId, conn, _process);
         pdpConn.setKaTimer(_kaTimer);
-        if (_acctTimer != 0) pdpConn.setAccTimer(_acctTimer);
+        if (_acctTimer != 0) pdpConn.setAcctTimer(_acctTimer);
         new Thread(pdpConn).start();
         _connectionMap.put(pepId.getData().str(),pdpConn);
     }
