@@ -25,7 +25,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
     /**
      * Object for performing policy data processing
      */
-    protected final COPSPdpDataProcess _process;
+    private final COPSPdpDataProcess _process;
 
     /** COPS message transceiver used to send COPS messages */
     protected transient COPSPdpMsgSender _sender;
@@ -52,97 +52,18 @@ public class COPSPdpReqStateMan extends COPSStateMan {
     /**
      * Processes a COPS request
      * @param msg   COPS request received from the PEP
-     * @throws COPSPdpException
+     * @throws COPSException
      */
     protected void processRequest(final COPSReqMsg msg) throws COPSException {
-
-        // TODO - Implement me
-//        COPSHeader hdrmsg = msg.getHeader();
-//        COPSHandle handlemsg = msg.getClientHandle();
-//        COPSContext contextmsg = msg.getContext();
-
-        //** Analyze the request
-        //**
-
-        /* <Request> ::= <Common Header>
-        *                   <Client Handle>
-        *                   <Context>
-        *                   *(<Named ClientSI>)
-        *                   [<Integrity>]
-        * <Named ClientSI> ::= <*(<PRID> <EPD>)>
-        *
-        * Very important, this is actually being treated like this:
-        * <Named ClientSI> ::= <PRID> | <EPD>
-        *
-
-        // Named ClientSI
-        Vector clientSIs = msg.getClientSI();
-        Hashtable reqSIs = new Hashtable(40);
-        String strobjprid = new String();
-        for (Enumeration e = clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-
-            COPSPrObjBase obj = new COPSPrObjBase(clientSI.getData().getData());
-            switch (obj.getSNum())
-            {
-                case COPSPrObjBase.PR_PRID:
-                    strobjprid = obj.getData().str();
-                    break;
-                case COPSPrObjBase.PR_EPD:
-                    reqSIs.put(strobjprid, obj.getData().str());
-                    // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
-                    // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        //** Here we must retrieve a decision depending on
-        //** the supplied ClientSIs
-        // reqSIs is a hashtable with the prid and epds
-
-        // ................
-        //
-        Hashtable removeDecs = new Hashtable();
-        Hashtable installDecs = new Hashtable();
-        _process.setClientData(this, reqSIs);
-
-        removeDecs = _process.getRemovePolicy(this);
-        installDecs = _process.getInstallPolicy(this);
-
-        //** We create the SOLICITED decision
-        //**
-        _sender.sendDecision(removeDecs, installDecs);
-        _status = ST_DECS;
-        */
+        // TODO - Implement me - see commented out code from history prior to May 4, 2015...
     }
 
     /**
      * Processes a report
      * @param msg   Report message from the PEP
-     * @throws COPSPdpException
+     * @throws COPSException
      */
     protected void processReport(final COPSReportMsg msg) throws COPSException {
-
-        //** Analyze the report
-        //**
-
-        /*
-         * <Report State> ::= <Common Header>
-         *                      <Client Handle>
-         *                      <Report Type>
-         *                      *(<Named ClientSI>)
-         *                      [<Integrity>]
-         * <Named ClientSI: Report> ::= <[<GPERR>] *(<report>)>
-         * <report> ::= <ErrorPRID> <CPERR> *(<PRID><EPD>)
-         *
-         * Important, <Named ClientSI> is not parsed
-        */
-
-        // COPSHeader hdrmsg = msg.getHeader();
-        // COPSHandle handlemsg = msg.getClientHandle();
-
         if (msg.getClientSI() != null) {
             // Report Type
             final COPSReportType rtypemsg = msg.getReport();
@@ -154,6 +75,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
                     strobjprid = obj.getData().str();
                     break;
                 case COPSPrObjBase.PR_EPD:
+                    // TODO FIXME - strobjprid is always empty here???
                     repSIs.put(strobjprid, obj.getData().str());
                     logger.info("PRID: " + strobjprid);
                     logger.info("EPD: " + obj.getData().str());
@@ -179,8 +101,6 @@ public class COPSPdpReqStateMan extends COPSStateMan {
                     break;
             }
         }
-
-
     }
 
     /**
@@ -188,7 +108,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param error Reason
      * @throws COPSPdpException
      */
-    protected void processClosedConnection(final COPSError error) throws COPSException {
+    public void processClosedConnection(final COPSError error) throws COPSException {
         if (_process != null)
             _process.notifyClosedConnection(this, error);
 
@@ -199,7 +119,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * Called when no keep-alive is received
      * @throws COPSPdpException
      */
-    protected void processNoKAConnection() throws COPSException {
+    public void processNoKAConnection() throws COPSException {
         if (_process != null)
             _process.notifyNoKAliveReceived(this);
 
@@ -219,7 +139,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * Asks for a COPS sync
      * @throws COPSPdpException
      */
-    protected void syncRequestState() throws COPSException {
+    public void syncRequestState() throws COPSException {
         _sender.sendSyncRequestState();
         _status = Status.ST_SYNC;
     }
@@ -238,7 +158,7 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param dMsg  <tt>COPSDeleteMsg</tt> received from the PEP
      * @throws COPSPdpException
      */
-    protected void processDeleteRequestState(final COPSDeleteMsg dMsg) throws COPSException {
+    public void processDeleteRequestState(final COPSDeleteMsg dMsg) throws COPSException {
         if (_process != null)
             _process.closeRequestState(this);
 

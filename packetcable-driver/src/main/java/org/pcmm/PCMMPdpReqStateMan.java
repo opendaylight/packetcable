@@ -30,7 +30,7 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
     /**
      * Object for performing policy data processing
      */
-    protected final PCMMPdpDataProcess _process;
+    protected final PCMMPdpDataProcess _thisProcess;
 
     /** COPS message transceiver used to send COPS messages */
     protected transient PCMMPdpMsgSender _sender;
@@ -43,7 +43,7 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
     // TODO - consider sending in the COPSHandle object instead
     public PCMMPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final PCMMPdpDataProcess process) {
         super(clientType, clientHandle, process);
-        this._process = process;
+        this._thisProcess = process;
     }
 
     @Override
@@ -55,75 +55,13 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
         _status = Status.ST_INIT;
     }
 
-
-
     /**
      * Processes a COPS request
      * @param msg   COPS request received from the PEP
      * @throws COPSPdpException
      */
     public void processRequest(final COPSReqMsg msg) throws COPSPdpException {
-
-        // TODO - Implement me
-//        COPSHeader hdrmsg = msg.getHeader();
-//        COPSHandle handlemsg = msg.getClientHandle();
-//        COPSContext contextmsg = msg.getContext();
-
-        //** Analyze the request
-        //**
-
-        /* <Request> ::= <Common Header>
-        *                   <Client Handle>
-        *                   <Context>
-        *                   *(<Named ClientSI>)
-        *                   [<Integrity>]
-        * <Named ClientSI> ::= <*(<PRID> <EPD>)>
-        *
-        * Very important, this is actually being treated like this:
-        * <Named ClientSI> ::= <PRID> | <EPD>
-        *
-
-        // Named ClientSI
-        Vector clientSIs = msg.getClientSI();
-        Hashtable reqSIs = new Hashtable(40);
-        String strobjprid = new String();
-        for (Enumeration e = clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-
-            COPSPrObjBase obj = new COPSPrObjBase(clientSI.getData().getData());
-            switch (obj.getSNum())
-            {
-                case COPSPrObjBase.PR_PRID:
-                    strobjprid = obj.getData().str();
-                    break;
-                case COPSPrObjBase.PR_EPD:
-                    reqSIs.put(strobjprid, obj.getData().str());
-                    // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
-                    // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        //** Here we must retrieve a decision depending on
-        //** the supplied ClientSIs
-        // reqSIs is a hashtable with the prid and epds
-
-        // ................
-        //
-        Hashtable removeDecs = new Hashtable();
-        Hashtable installDecs = new Hashtable();
-        _process.setClientData(this, reqSIs);
-
-        removeDecs = _process.getRemovePolicy(this);
-        installDecs = _process.getInstallPolicy(this);
-
-        //** We create the SOLICITED decision
-        //**
-        _sender.sendDecision(removeDecs, installDecs);
-        _status = ST_DECS;
-        */
+        // TODO - Implement me - see commented out code from history prior to May 4, 2015...
     }
 
     /**
@@ -152,10 +90,12 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
             switch (obj.getSNum()) {
                 case COPSPrObjBase.PR_PRID:
                     logger.info("COPSPrObjBase.PR_PRID");
+                    // TODO FIXME - this value is never used
                     strobjprid = obj.getData().str();
                     break;
                 case COPSPrObjBase.PR_EPD:
                     logger.info("COPSPrObjBase.PR_EPD");
+                    // TODO FIXME - strobjprid is always empty
                     repSIs.put(strobjprid, obj.getData().str());
                     logger.info("PRID: " + strobjprid);
                     logger.info("EPD: " + obj.getData().str());
@@ -193,8 +133,8 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                 final IGateID gateID = gateMsg.getGateID();
                 logger.info("Setting gate ID on gate object - " + gateID);
                 gate.setGateID(gateID);
-                if (_process != null)
-                    _process.successReport(this, gateMsg);
+                if (_thisProcess != null)
+                    _thisProcess.successReport(this, gateMsg);
             } else {
                 final String cmdType;
                 if ( trID.getGateCommandType() == ITransactionID.GateDeleteAck ) {
@@ -213,15 +153,15 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
             if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
                 logger.info("rtypemsg failure");
                 _status = Status.ST_REPORT;
-                if (_process != null)
-                    _process.failReport(this, gateMsg);
+                if (_thisProcess != null)
+                    _thisProcess.failReport(this, gateMsg);
                 else
                     logger.info("Gate message error - " + gateMsg.getError().toString());
             } else if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
                     logger.info("rtypemsg account");
                     _status = Status.ST_ACCT;
-                    if (_process != null)
-                        _process.acctReport(this, gateMsg);
+                    if (_thisProcess != null)
+                        _thisProcess.acctReport(this, gateMsg);
             }
 
             // let the waiting gateSet/gateDelete sender proceed
@@ -233,68 +173,6 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
             }
             logger.info("Out processReport");
         }
-    }
-
-    /**
-    * Called when connection is closed
-    * @param error  Reason
-    * @throws COPSPdpException
-    */
-    protected void processClosedConnection(final COPSError error) throws COPSPdpException {
-        if (_process != null)
-            _process.notifyClosedConnection(this, error);
-
-        _status = Status.ST_CCONN;
-    }
-
-    /**
-     * Called when no keep-alive is received
-     * @throws COPSPdpException
-     */
-    protected void processNoKAConnection() throws COPSPdpException {
-        if (_process != null)
-            _process.notifyNoKAliveReceived(this);
-
-        _status = Status.ST_NOKA;
-    }
-
-    /**
-    * Deletes the request state
-    * @throws COPSPdpException
-    */
-    protected void finalizeRequestState() throws COPSPdpException {
-        _sender.sendDeleteRequestState();
-        _status = Status.ST_FINAL;
-    }
-
-    /**
-    * Asks for a COPS sync
-    * @throws COPSPdpException
-    */
-    protected void syncRequestState() throws COPSPdpException {
-        _sender.sendSyncRequestState();
-        _status = Status.ST_SYNC;
-    }
-
-    /**
-     * Opens a new request state
-     * @throws COPSPdpException
-     */
-    protected void openNewRequestState() throws COPSPdpException {
-        _sender.sendOpenNewRequestState();
-        _status = Status.ST_NEW;
-    }
-
-    /**
-     * Processes a COPS delete message
-     * @param dMsg  <tt>COPSDeleteMsg</tt> received from the PEP
-     * @throws COPSPdpException
-     */
-    protected void processDeleteRequestState(COPSDeleteMsg dMsg) throws COPSPdpException {
-        if (_process != null)
-            _process.closeRequestState(this);
-
-        _status = Status.ST_DEL;
     }
 
 }
