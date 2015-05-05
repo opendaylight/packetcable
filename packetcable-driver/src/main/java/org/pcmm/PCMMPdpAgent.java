@@ -228,7 +228,7 @@ public class PCMMPdpAgent extends COPSPdpAgent {
         // XXX - handleRequestMsg
         // XXX - check handle is valid
         final PCMMPdpReqStateMan man = new PCMMPdpReqStateMan(getClientType(), _handle, _process);
-        pdpConn.addStateMan(_handle.getId().str(), man);
+        pdpConn.addStateMan(_handle, man);
         try {
             man.initRequestState(conn);
         } catch (COPSPdpException unae) {
