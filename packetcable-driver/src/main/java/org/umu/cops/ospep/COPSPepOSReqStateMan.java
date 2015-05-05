@@ -2,7 +2,7 @@ package org.umu.cops.ospep;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.umu.cops.COPSStateMan;
+import org.umu.cops.prpep.COPSPepReqStateMan;
 import org.umu.cops.stack.*;
 
 import java.net.Socket;
@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * State manager class for outsourcing requests, at the PEP side.
  */
-public class COPSPepOSReqStateMan extends COPSStateMan {
+public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
 
     private final static Logger logger = LoggerFactory.getLogger(COPSPepOSReqStateMan.class);
 
@@ -42,7 +42,7 @@ public class COPSPepOSReqStateMan extends COPSStateMan {
      */
     public COPSPepOSReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPepOSDataProcess process,
                                 final Collection<COPSClientSI> clientSIs) {
-        super(clientType, clientHandle);
+        super(clientType, clientHandle, process);
         this._process = process;
         this._clientSIs = new HashSet<>(clientSIs);
         _syncState = true;
