@@ -23,17 +23,12 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
     /**
         Object for performing policy data processing
      */
-    protected final COPSPepOSDataProcess _process;
+    protected final COPSPepOSDataProcess _thisProcess;
 
     /**
         COPS message transceiver used to send COPS messages
      */
-    protected transient COPSPepOSMsgSender _sender;
-
-    /**
-     * Sync state
-     */
-    protected transient boolean _syncState;
+    protected transient COPSPepOSMsgSender _thisSender;
 
     /**
      * Creates a state request manager
@@ -43,38 +38,21 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
     public COPSPepOSReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPepOSDataProcess process,
                                 final Collection<COPSClientSI> clientSIs) {
         super(clientType, clientHandle, process);
-        this._process = process;
+        this._thisProcess = process;
         this._clientSIs = new HashSet<>(clientSIs);
-        _syncState = true;
     }
 
     @Override
     protected void initRequestState(final Socket sock) throws COPSException {
         // Inits an object for sending COPS messages to the PDP
-        _sender = new COPSPepOSMsgSender(_clientType, _handle, sock);
+        _thisSender = new COPSPepOSMsgSender(_clientType, _handle, sock);
+        _sender = _thisSender;
 
-        // If an object exists for retrieving the PEP features,
-        // use it for retrieving them.
-        /*      Hashtable clientSIs;
-                if (_process != null)
-                    clientSIs = _process.getClientData(this);
-                else
-                    clientSIs = null;*/
-
-        // Semd the request
-        _sender.sendRequest(_clientSIs);
+        // Send the request
+        _thisSender.sendRequest(_clientSIs);
 
         // Initial state
         _status = Status.ST_INIT;
-    }
-
-    /**
-     * Deletes the request state
-     * @throws COPSPepException
-     */
-    protected void finalizeRequestState() throws COPSException {
-        _sender.sendDeleteRequest();
-        _status = Status.ST_FINAL;
     }
 
     /**
@@ -84,18 +62,18 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
      */
     protected void processDecision(final COPSDecisionMsg dMsg) throws COPSException {
         //** Applies decisions to the configuration
-        //_process.setDecisions(this, removeDecs, installDecs, errorDecs);
+        //_thisProcess.setDecisions(this, removeDecs, installDecs, errorDecs);
         // second param changed to dMsg so that the data processor
         // can check the 'solicited' flag
-        final boolean isFailReport = _process.setDecisions(this, dMsg);
+        final boolean isFailReport = _thisProcess.setDecisions(this, dMsg);
         _status = Status.ST_DECS;
 
         if (isFailReport) {
             logger.info("Sending FAIL Report");
-            _sender.sendFailReport(_process.getReportData(this));
+            _thisSender.sendFailReport(_thisProcess.getReportData(this));
         } else {
             logger.info("Sending SUCCESS Report");
-            _sender.sendSuccessReport(_process.getReportData(this));
+            _thisSender.sendSuccessReport(_thisProcess.getReportData(this));
         }
         _status = Status.ST_REPORT;
 
@@ -106,74 +84,25 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
         }
     }
 
-
-    /**
-     * Processes a COPS delete message
-     * @param dMsg  <tt>COPSDeleteMsg</tt> received from the PDP
-     * @throws COPSPepException
-     */
-    protected void processDeleteRequestState(final COPSDecisionMsg dMsg) throws COPSPepException {
-        if (_process != null)
-            _process.closeRequestState(this);
-
-        _status = Status.ST_DEL;
-    }
-
-    /**
-     * Processes the message SycnStateRequest.
-     * The message SycnStateRequest indicates that the remote PDP
-     * wishes the client (which appears in the common header)
-     * to re-send its state.
-     *
-     * @param    ssMsg               The sync request from the PDP
-     *
-     * @throws   COPSPepException
-     *
-     */
+    @Override
     protected void processSyncStateRequest(final COPSSyncStateMsg ssMsg) throws COPSException {
         _syncState = false;
         // If an object exists for retrieving the PEP features,
         // use it for retrieving them.
 
         // Send the request
-        _sender.sendRequest(_clientSIs);
+        _thisSender.sendRequest(_clientSIs);
 
         _status = Status.ST_SYNC;
     }
 
-    /**
-     * Called when connection is closed
-     * @param error Reason
-     * @throws COPSPepException
-     */
-    protected void processClosedConnection(final COPSError error) throws COPSPepException {
-        if (_process != null)
-            _process.notifyClosedConnection(this, error);
-
-        _status = Status.ST_CCONN;
-    }
-
-    /**
-     * Called when no keep-alive is received
-     * @throws COPSPepException
-     */
-    protected void processNoKAConnection() throws COPSPepException {
-        if (_process != null)
-            _process.notifyNoKAliveReceived(this);
-
-        _status = Status.ST_NOKA;
-    }
-
-    /**
-     * Processes the accounting report
-     * @throws COPSPepException
-     */
-    protected void processAcctReport() throws COPSPepException {
+    @Override
+    public void processAcctReport() throws COPSPepException {
         final List<COPSClientSI> report;
-        if (_process != null) report = new ArrayList<>(_process.getAcctData(this));
+        if (_thisProcess != null) report = new ArrayList<>(_thisProcess.getAcctData(this));
         else report = new ArrayList<>();
 
-        _sender.sendAcctReport(report);
+        _thisSender.sendAcctReport(report);
 
         _status = Status.ST_ACCT;
     }
