@@ -8,102 +8,67 @@ import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.umu.cops.COPSStateMan;
+import org.umu.cops.prpdp.COPSPdpDataProcess;
+import org.umu.cops.prpdp.COPSPdpReqStateMan;
 import org.umu.cops.stack.COPSError;
 
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 
-public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
+public class PCMMPdpDataProcess implements COPSPdpDataProcess {
 
     public final static Logger logger = LoggerFactory.getLogger(PCMMPdpDataProcess.class);
 
-    private Hashtable installPolicy;
-    private Hashtable removePolicy;
-
-    public PCMMPdpDataProcess() {
+    @Override
+    public Map getRemovePolicy(final COPSPdpReqStateMan man) {
+        logger.info("Retrieving the remove policy");
+        // TODO - Implement me
+        return new HashMap();
     }
 
-    /**
-     * PDPAgent gets the policies to delete from PEP
-     *
-     * @param man
-     * @return
-     */
-    public Hashtable getRemovePolicy(PCMMPdpReqStateMan man) {
-        return removePolicy;
+    @Override
+    public Map getInstallPolicy(final COPSPdpReqStateMan man) {
+        logger.info("Retrieving the remove policy");
+        // TODO - Implement me
+        return new HashMap();
     }
 
-    /**
-     * PDPAgent gets the policies to be installed in PEP
-     *
-     * @param man
-     * @return
-     */
-    public Hashtable getInstallPolicy(PCMMPdpReqStateMan man) {
-        return installPolicy;
-    }
-
-    /**
-     * PEP configuration items for sending inside the request
-     *
-     * @param man
-     * @param reqSIs
-     */
-    public void setClientData(PCMMPdpReqStateMan man, Hashtable reqSIs) {
-
-        logger.info("Request Info");
-        /*
-                for (Enumeration e = reqSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) reqSIs.get(strprid);
-
-                    // Check PRID-EPD
-                    // ....
-                    System.out.println(getClass().getName() + ": " + "PRID: " + strprid);
-                    System.out.println(getClass().getName() + ": " + "EPD: " + strepd);
-                }
-
-                // Create policies to be deleted
-                // ....
-
-                // Create policies to be installed
-                String prid = new String("<XPath>");
-                String epd = new String("<?xml this is an XML policy>");
-                installPolicy.put(prid, epd);
-        */
+    @Override
+    public void setClientData(final COPSPdpReqStateMan man, final Map<String, String> reqSIs) {
+        logger.info("Setting the client data");
+        // TODO - Implement me
     }
 
     /**
      * Fail report received
-     *
-     * @param man
-     * @param gateMsg
+     * @param man - the state manager
+     * @param gateMsg - the gate request message
      */
-    public void failReport(PCMMPdpReqStateMan man, PCMMGateReq gateMsg) {
-
+    public void failReport(final COPSPdpReqStateMan man, final PCMMGateReq gateMsg) {
         logger.info("Fail Report notified with error - " + gateMsg.getError().toString());
-        /*
+        // TODO - Implement me
+    }
 
-                System.out.println(getClass().getName() + ": " + "Report Info");
-                for (Enumeration e = reportSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) reportSIs.get(strprid);
+    @Override
+    public void failReport(final COPSPdpReqStateMan man, final Map<String, String> reportSIs) {
+        logger.info("Fail report notified");
+        // TODO - Implement me
+    }
 
-                    // Check PRID-EPD
-                    // ....
-                    System.out.println(getClass().getName()+ ": " + "PRID: " + strprid);
-                    System.out.println(getClass().getName()+ ": " + "EPD: " + strepd);
-                }
-        */
+    @Override
+    public void successReport(final COPSPdpReqStateMan man, final Map<String, String> reportSIs) {
+        logger.info("Success report notified");
+        // TODO - Implement me
     }
 
     /**
      * Positive report received
-     *
-     * @param man
-     * @param gateMsg
+     * @param man - the state manager
+     * @param gateMsg - the gate request message
      */
-    public void successReport(PCMMPdpReqStateMan man, PCMMGateReq gateMsg) {
+    public void successReport(final COPSPdpReqStateMan man, final PCMMGateReq gateMsg) {
         logger.info("Success Report notified.");
 
         if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck ) {
@@ -121,88 +86,51 @@ public class PCMMPdpDataProcess { // extends COPSPdpDataProcess
             if (0 == PCMMGlobalConfig.getGateID2())
                 PCMMGlobalConfig.setGateID2(gateMsg.getGateID().getGateID());
         }
-
-        /*
-                System.out.println(getClass().getName()+ ": " + "Report Info");
-                for (Enumeration e = reportSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) reportSIs.get(strprid);
-
-                    // Check PRID-EPD
-                    // ....
-                    System.out.println(getClass().getName()+ ": " + "PRID: " + strprid);
-                    System.out.println(getClass().getName()+ ": " + "EPD: " + strepd);
-                }
-        */
-
     }
 
     /**
      * Accounting report received
-     *
-     * @param man
-     * @param gateMsg
+     * @param man - the state manager
+     * @param gateMsg - the gate request message
      */
-    public void acctReport(PCMMPdpReqStateMan man, PCMMGateReq gateMsg) {
+    public void acctReport(final PCMMPdpReqStateMan man, final PCMMGateReq gateMsg) {
         logger.info("Acct Report notified.");
-
-        /*
-                System.out.println(getClass().getName()+ ": " + "Report Info");
-                for (Enumeration e = reportSIs.keys() ; e.hasMoreElements() ;) {
-                    String strprid = (String) e.nextElement();
-                    String strepd = (String) reportSIs.get(strprid);
-
-                    // Check PRID-EPD
-                    // ....
-                    System.out.println(getClass().getName()+ ": " + "PRID: " + strprid);
-                    System.out.println(getClass().getName()+ ": " + "EPD: " + strepd);
-                }
-        */
+        // TODO - Impelement me
     }
 
-    /**
-     * Notifies that an Accounting report is missing
-     *
-     * @param man
-     */
-    public void notifyNoAcctReport(PCMMPdpReqStateMan man) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    @Override
+    public void acctReport (final COPSPdpReqStateMan man, final Map reportSIs) {
+        logger.info("Acct Report notified.");
+        // TODO - had to implement but do not know what to do here
     }
 
-    /**
-     * Notifies that a KeepAlive message is missing
-     *
-     * @param man
-     */
-    public void notifyNoKAliveReceived(PCMMPdpReqStateMan man) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    @Override
+    public void notifyNoAcctReport(final COPSPdpReqStateMan man) {
+        logger.info("No Acct Report notified.");
+        // TODO - Impelement me
     }
 
-    /**
-     * PEP closed the connection
-     *
-     * @param man
-     * @param error
-     */
-    public void notifyClosedConnection(PCMMPdpReqStateMan man, COPSError error) {
+    @Override
+    public void notifyNoKAliveReceived(final COPSStateMan man) {
+        logger.info("Notify No K alive received.");
+        // TODO - Impelement me
+    }
+
+    @Override
+    public void notifyClosedConnection(final COPSStateMan man, final COPSError error) {
         logger.info("Connection was closed by PEP");
+        // TODO - Implement me
     }
 
-    /**
-     * Delete request state received
-     *
-     * @param man
-     */
-    public void notifyDeleteRequestState(PCMMPdpReqStateMan man) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    @Override
+    public void notifyDeleteRequestState(final COPSPdpReqStateMan man) {
+        logger.info("Delete request state notified");
+        // TODO - Impelement me
     }
 
-    /**
-     * Closes request state
-     *
-     * @param man
-     */
-    public void closeRequestState(PCMMPdpReqStateMan man) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    @Override
+    public void closeRequestState(final COPSStateMan man) {
+        logger.info("Close request state notified");
+        // TODO - Impelement me
     }
 }

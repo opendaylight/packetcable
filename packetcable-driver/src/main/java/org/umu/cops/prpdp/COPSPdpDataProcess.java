@@ -8,7 +8,6 @@ package org.umu.cops.prpdp;
 
 import org.umu.cops.COPSDataProcess;
 
-import java.util.Hashtable;
 import java.util.Map;
 
 /**
@@ -21,14 +20,14 @@ public interface COPSPdpDataProcess extends COPSDataProcess {
      * @param man   The associated request state manager
      * @return A <tt>Vector</tt> holding the policies to be uninstalled
      */
-    Hashtable getRemovePolicy(COPSPdpReqStateMan man);
+    Map getRemovePolicy(COPSPdpReqStateMan man);
 
     /**
      * Gets the policies to be installed
      * @param man   The associated request state manager
      * @return A <tt>Vector</tt> holding the policies to be uninstalled
      */
-    Hashtable getInstallPolicy(COPSPdpReqStateMan man);
+    Map getInstallPolicy(COPSPdpReqStateMan man);
 
     /**
      * Makes a decision from the supplied request data
