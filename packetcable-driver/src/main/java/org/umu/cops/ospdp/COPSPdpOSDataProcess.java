@@ -1,14 +1,15 @@
 package org.umu.cops.ospdp;
 
-import org.umu.cops.COPSDataProcess;
+import org.umu.cops.prpdp.COPSPdpDataProcess;
 import org.umu.cops.stack.COPSClientSI;
 
 import java.util.Vector;
 
 /**
  * Abstract class for implementing policy data processing classes for outsourcing PDPs.
+ * TODO - Determine why the overloaded methods signatures here vs. the super are so different!!!
  */
-public interface COPSPdpOSDataProcess extends COPSDataProcess {
+public interface COPSPdpOSDataProcess extends COPSPdpDataProcess {
 
     /**
      * Gets the policies to be uninstalled

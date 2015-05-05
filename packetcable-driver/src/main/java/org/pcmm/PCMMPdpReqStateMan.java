@@ -10,8 +10,8 @@ import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.umu.cops.COPSStateMan;
 import org.umu.cops.prpdp.COPSPdpException;
+import org.umu.cops.prpdp.COPSPdpReqStateMan;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * State manager class for provisioning requests, at the PDP side.
  */
-public class PCMMPdpReqStateMan extends COPSStateMan {
+public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
 
     private final static Logger logger = LoggerFactory.getLogger(PCMMPdpReqStateMan.class);
 
@@ -42,12 +42,12 @@ public class PCMMPdpReqStateMan extends COPSStateMan {
      */
     // TODO - consider sending in the COPSHandle object instead
     public PCMMPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final PCMMPdpDataProcess process) {
-        super(clientType, clientHandle);
+        super(clientType, clientHandle, process);
         this._process = process;
     }
 
     @Override
-    protected void initRequestState(final Socket sock) throws COPSException {
+    protected void initRequestState(final Socket sock) throws COPSPdpException {
         // Inits an object for sending COPS messages to the PEP
         _sender = new PCMMPdpMsgSender(_clientType, _handle, sock);
 
