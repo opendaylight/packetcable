@@ -2,7 +2,6 @@ package org.opendaylight.controller.packetcable.provider;
 
 import com.google.common.collect.Maps;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceClassName;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceFlowDirection;
@@ -169,15 +168,6 @@ public class PCMMService {
 		}
 	}
 
-	private String getIpAddressStr(final IpAddress ipAddress) {
-		final Ipv4Address ipv4 = ipAddress.getIpv4Address();
-		if (ipv4 != null) {
-			return ipv4.getValue();
-		} else {
-			return ipAddress.getIpv6Address().getValue();
-		}
-	}
-
 	/**
 	 * Used to interface with a CCAP (including CMTSs)
 	 */
@@ -207,7 +197,7 @@ public class PCMMService {
 			// TODO see - PCMMPdpReqStateMan#processReport() where the report type is success and the process is null
 			//            pcmmProcess = new PCMMPdpDataProcess();
 			pcmmProcess = null;
-			pcmmPdp = new PCMMPdpAgent(clientType, ipv4, port, pcmmProcess);
+			pcmmPdp = new PCMMPdpAgent(ipv4, port, clientType, pcmmProcess);
 		}
 
 		/**
@@ -232,7 +222,7 @@ public class PCMMService {
 		public void disconnect() {
 			logger.info("CcapClient: disconnect(): {}:{}", ipv4, port);
 			try {
-				pcmmPdp.disconnect(pcmmPdp.getPepIdString(), new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
+				pcmmPdp.disconnect(new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
 				isConnected = false;
 			} catch (COPSException | IOException e) {
 				logger.error("CcapClient: disconnect(): {}:{} FAILED: {}", ipv4, port, e.getMessage());
