@@ -6,6 +6,7 @@
 
 package org.umu.cops.prpdp;
 
+import org.pcmm.objects.MMVersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
@@ -13,258 +14,324 @@ import org.umu.cops.stack.COPSError.ErrorTypes;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Core PDP agent for provisioning
+ * Core PDP agent for managing the connection to one PDP.
  */
-public class COPSPdpAgent extends Thread {
+public class COPSPdpAgent {
 
     private static final Logger logger = LoggerFactory.getLogger(COPSPdpAgent.class);
 
     /** Well-known port for COPS */
-    //    public static final int WELL_KNOWN_PDP_PORT = 3288;
+    public static final int WELL_KNOWN_PDP_PORT = 3288;
     /** Default keep-alive timer value (secs) */
     public static final short KA_TIMER_VALUE = 30;
     /** Default accounting timer value (secs) */
     public static final short ACCT_TIMER_VALUE = 0;
 
     /**
+     * PDP host address
+     */
+    protected final String _host;
+
+    /**
      * PDP host port
      */
-    private int _serverPort;
+    protected final int _serverPort;
 
     /**
      * Client-type of connecting PEP
      */
-    private short _clientType;
+    protected final short _clientType;
 
     /**
      * Accounting timer (secs)
      */
-    private short _acctTimer;
+    protected final short _acctTimer;
 
     /**
      * Keep-alive timer (secs)
      */
-    private short _kaTimer;
-
-    /**
-     * The PEP ID
-     */
-    protected transient COPSPepId _pepId;
-
-    /**
-     *   Maps a PEP-ID to a connection
-     *   TODO - Refactor COPSPdpConnection to extend PCMMPdpConnection. Until then, the value must remain an Object
-     */
-    protected Map<String, Object> _connectionMap;
-    // map < String(PEPID), COPSPdpConnection > ConnectionMap;
+    protected final short _kaTimer;
 
     /**
      *  Policy data processing object
      */
-    private COPSPdpDataProcess _process;
+    protected final COPSPdpDataProcess _process;
+
+    // Next two attributes are initialized when connected
+    /**
+     * The Socket connection to the PEP
+     */
+    protected transient Socket _socket;
 
     /**
-     * Holds all of the threads to manage by PEP ID
+     * The PEP handle
      */
-    protected final Map<String, Thread> threadMap;
+    protected transient COPSHandle _handle;
+
+    // Next three attributes are initialized after the client accepts
+    /**
+     * Holds the last PEP ID processed
+     */
+    protected transient COPSPepId _pepId;
+
+    /**
+     * the PDP connection connection
+     */
+    protected transient COPSPdpConnection _pdpConn;
+
+    /**
+     * The handle to the tread accepting messages from the PDP
+     */
+    protected transient Thread _thread;
 
     /**
      * Creates a PDP Agent
      *
+     * @param host  PDP agent host name
      * @param port  Port to listen to
      * @param clientType    COPS Client-type
      * @param process   Object to perform policy data processing
      */
-    public COPSPdpAgent(final int port, final short clientType, final COPSPdpDataProcess process) {
-        _serverPort = port;
+    public COPSPdpAgent(final String host, final int port, final short clientType, final COPSPdpDataProcess process) {
+        this._host = host;
+        this._serverPort = port;
 
-        _kaTimer = KA_TIMER_VALUE;
-        _acctTimer = ACCT_TIMER_VALUE;
+        this._kaTimer = KA_TIMER_VALUE;
+        this._acctTimer = ACCT_TIMER_VALUE;
 
-        _clientType = clientType;
-        _connectionMap = new ConcurrentHashMap<>();
-        _process = process;
-        this.threadMap = new ConcurrentHashMap<>();
+        this._clientType = clientType;
+        this._process = process;
     }
 
     /**
-     * Gets the value of the keep-alive timer
-     * @return   Keep-alive timer value (secs)
+     * Returns handle after connect() has successfully been executed
+     * @return - the handle
      */
-    public short getKaTimer () {
-        return _kaTimer;
+    public COPSHandle getClientHandle() {
+        return _handle;
     }
 
     /**
-     * Gets the accounting timer value
-     * @return   Accounting timer value (secs)
+     * Returns handle after connect() has successfully been executed
+     * @return - the handle
      */
-    public short getAcctTimer () {
-        return _acctTimer;
+    public Socket getSocket() {
+        return _socket;
     }
 
     /**
-     * Gets the client-type
-     * @return   The client-type
-     */
-    public short getClientType() {
-        return _clientType;
-    }
-
-    /**
-     * Disconnects a PEP
-     * @param pepID PEP-ID of the PEP to be disconnected
-     * @param error COPS Error to be reported as a reason
+     * Connects to a PDP
+     * @throws java.net.UnknownHostException
+     * @throws java.io.IOException
      * @throws COPSException
-     * @throws IOException
      */
-    public void disconnect(final String pepID, final COPSError error) throws COPSException, IOException {
-        final COPSPdpConnection pdpConn = (COPSPdpConnection)_connectionMap.get(pepID);
-        final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType, error, null, null);
-        closeMsg.writeData(pdpConn.getSocket());
-        pdpConn.close();
-    }
-
-    /**
-     * Requests a COPS sync for a PEP
-     * @param pepID PEP-ID of the PEP to be synced
-     * @throws COPSException
-     * @throws COPSPdpException
-     */
-    public void sync(final String pepID) throws COPSException {
-        COPSPdpConnection pdpConn = (COPSPdpConnection) _connectionMap.get(pepID);
-        pdpConn.syncAllRequestState();
-    }
-
-    /**
-     * Removes a PEP from the connection map
-     * @param pepID PEP-ID of the PEP to be removed
-     */
-    public void delete(final String pepID) {
-        _connectionMap.remove(pepID);
-    }
-
-
-    /**
-     * Runs the PDP process
-     */
-    public void run() {
-        try {
-            final ServerSocket serverSocket = new ServerSocket (_serverPort);
-
-            //Loop through for Incoming messages
-            // server infinite loop
-            while (true) {
-                // Wait for an incoming connection from a PEP
-                final Socket socket = serverSocket.accept();
-
-                // COPSDebug.out(getClass().getName(),"New connection accepted " +
-                //           socket.getInetAddress() +
-                //           ":" + socket.getPort());
-
-                // We're waiting for an OPN message
-                try {
-                    final COPSMsg msg = COPSTransceiver.receiveMsg(socket);
-                    logger.info("Message received - " + msg);
-                    if (msg.getHeader().getOpCode().equals(OPCode.OPN)) {
-                        handleClientOpenMsg(socket, msg);
-                    } else {
-                        logger.error("Not an open message, closing socket");
-                        try {
-                            socket.close();
-                        } catch (Exception ex) {
-                            logger.error("Unexpected exception closing socket", ex);
-                        }
-                    }
-                } catch (Exception e) { // COPSException, IOException
-                    // COPSDebug.err(getClass().getName(), COPSDebug.ERROR_EXCEPTION,
-                    //    "(" + socket.getInetAddress() + ":" + socket.getPort() + ")", e);
-                    try {
-                        socket.close();
-                    } catch (Exception ex) {
-                        logger.error("Unexpected exception closing socket", ex);
-                    }
-                }
+    public void connect() throws IOException, COPSException {
+        // Create Socket and send OPN
+        final InetAddress addr = InetAddress.getByName(_host);
+        _socket = new Socket(addr, _serverPort);
+        logger.info("PDP Socket Opened. Waiting to receive client-open message");
+        final COPSMsg msg = COPSTransceiver.receiveMsg(_socket);
+        logger.debug("Message received of type - " + msg.getHeader().getOpCode());
+        if (msg.getHeader().getOpCode().equals(OPCode.OPN)) {
+            handleClientOpenMsg(_socket, msg);
+        } else {
+            try {
+                _socket.close();
+            } catch (Exception ex) {
+                logger.error("Unexpected error closing socket", ex);
             }
-        } catch (IOException e) {
-            logger.error("Error caught while processing socket messages", e);
         }
     }
 
     /**
-     * Handles a COPS client-open message
+     * Disconnects a PEP and stops the listener thread
+     * @param error COPS Error to be reported as a reason
+     * @throws COPSException
+     * @throws IOException
+     */
+    public void disconnect(final COPSError error) throws COPSException, IOException {
+        if (_pdpConn != null) {
+            sendCloseMessage(_socket, error.getErrCode(), error.getErrSubCode(), "Disconnecting from PDP requested");
+            _pdpConn.close();
+        } else {
+            logger.warn("Unable to locate PDP connection. Cannot close");
+        }
+        if (_thread != null) _thread.interrupt();
+        else logger.warn("Unable to locate PDP connection thread. Cannot stop it.");
+
+        if (_socket.isConnected()) _socket.close();
+
+        _pepId = null;
+        _pdpConn = null;
+        _thread = null;
+    }
+
+    /**
+     * Requests a COPS sync for a PEP
+     * @throws COPSException
+     * @throws COPSPdpException
+     */
+    public void sync() throws COPSException {
+        if (_pdpConn != null) _pdpConn.syncAllRequestState();
+        else logger.warn("Unable to sync, not connected to a PEP");
+    }
+
+    /**
+     * Handles a COPS client-open message and sets the _pepId, _handle, _pdpConn, & _thread objects in the process
+     * as well as starts the PDP connection thread for receiving other COPS messages from the PDP
      * @param    conn Socket to the PEP
      * @param    msg <tt>COPSMsg</tt> holding the client-open message
      * @throws COPSException
      * @throws IOException
-     * TODO - Refactor PCMMPdpAgent#handleClientOpenMsg() as it contains much of this same logic
      */
     protected void handleClientOpenMsg(final Socket conn, final COPSMsg msg) throws COPSException, IOException {
+        logger.info("Processing client open message");
+
+        if (_pepId != null) {
+            throw new COPSException("Connection already opened");
+        }
+
         final COPSClientOpenMsg cMsg = (COPSClientOpenMsg) msg;
         _pepId = cMsg.getPepId();
 
         // Validate Client Type
         if (msg.getHeader().getClientType() != _clientType) {
-            // Unsupported client type
-            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
-                    new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA), null, null);
-            try {
-                closeMsg.writeData(conn);
-            } catch (IOException unae) {
-                logger.error("Unexpected exception writing data", unae);
-            }
-
-            throw new COPSException("Unsupported client type");
+            sendCloseMessage(conn, ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA,
+                    "Unsupported client type");
         }
 
         // PEPId is mandatory
         if (_pepId == null) {
-            // Mandatory COPS object missing
-            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
-                    new COPSError(ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA), null, null);
-            try {
-                closeMsg.writeData(conn);
-            } catch (IOException unae) {
-                logger.error("Unexpected exception writing data", unae);
-            }
-
-            throw new COPSException("Mandatory COPS object missing (PEPId)");
+            sendCloseMessage(conn, ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA,
+                    "Mandatory COPS object missing (PEPId)");
         }
 
+        // TODO - Determine if I should be checking for the PDPAddress and Integrity objects on the message too???
         // Support
+/*
         if ( (cMsg.getClientSI() != null) || (cMsg.getPdpAddress() != null) || (cMsg.getIntegrity() != null)) {
-            // Unsupported objects
-            final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
-                    new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA), null, null);
-            try {
-                closeMsg.writeData(conn);
-            } catch (IOException unae) {
-                logger.error("Exception writing data", unae);
-            }
-
-            throw new COPSException("Unsupported objects (ClientSI, PdpAddress, Integrity)");
+            sendCloseMessage(conn, ErrorTypes.UNSUPPORTED_CLIENT_TYPE,
+                    "Unsupported objects (ClientSI, PdpAddress, Integrity)");
+        }
+*/
+        // Support
+        if ((cMsg.getClientSI() == null) ) {
+            sendCloseMessage(conn, ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA,
+                    "Unsupported objects (PdpAddress, Integrity)");
+        } else {
+            final MMVersionInfo _mminfo = new MMVersionInfo(cMsg.getClientSI().getData().getData());
+            logger.debug("CMTS sent MMVersion info : major:" + _mminfo.getMajorVersionNB() + "  minor:" +
+                    _mminfo.getMinorVersionNB());
         }
 
-        // Connection accepted
+        acceptConnection(conn);
+
+        _handle = handleAcceptResponse(conn);
+        if (_handle != null) {
+            // Connection accepted
+            _pdpConn = setputPdpConnection(conn, _handle);
+            _thread = new Thread(_pdpConn, "PDP Agent for PEP ID " + _pepId.getData().str());
+            _thread.start();
+        } else {
+            throw new COPSException("Unable to connect to PDP");
+        }
+    }
+
+    /**
+     * Creates and sends a client close message
+     * @param conn - the socket connection
+     * @param errorType - the error type to send
+     * @param msg - the error message to log
+     * @throws COPSException
+     */
+    private void sendCloseMessage(final Socket conn, final ErrorTypes errorType, final ErrorTypes errorSubType,
+                                  final String msg)
+            throws COPSException {
+        final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
+                new COPSError(errorType, errorSubType), null, null);
+        try {
+            closeMsg.writeData(conn);
+        } catch (IOException unae) {
+            logger.error("Exception writing data", unae);
+        }
+
+        throw new COPSException(msg);
+    }
+
+    /**
+     * Sends a client-accept message back to the PDP
+     * @param conn - the socket connection to the PDP
+     * @throws IOException
+     */
+    private void acceptConnection(final Socket conn) throws IOException {
         final COPSClientAcceptMsg acceptMsg;
         if (_acctTimer != 0)
             acceptMsg = new COPSClientAcceptMsg(_clientType, new COPSKATimer(_kaTimer),
-                new COPSAcctTimer(_acctTimer), null);
+                    new COPSAcctTimer(_acctTimer), null);
         else
-            acceptMsg = new COPSClientAcceptMsg(_clientType, new COPSKATimer(_kaTimer),null, null);
+            acceptMsg = new COPSClientAcceptMsg(_clientType, new COPSKATimer(_kaTimer) ,null, null);
         acceptMsg.writeData(conn);
+    }
 
-        final COPSPdpConnection pdpConn = new COPSPdpConnection(_pepId, conn,  _process);
-        pdpConn.setKaTimer(_kaTimer);
-        if (_acctTimer != 0) pdpConn.setAcctTimer(_acctTimer);
-        new Thread(pdpConn).start();
-        _connectionMap.put(_pepId.getData().str(), pdpConn);
+    /**
+     * Waits for the response back from the PDP and handles it appropriately. When successful, the handle to the
+     * client is returned.
+     * @param conn - the socket connection to the PDP
+     * @return - the handle or null if not successful
+     */
+    private COPSHandle handleAcceptResponse(final Socket conn) {
+        try {
+            logger.debug("handleClientOpenMsg() - Waiting to receive message");
+            final COPSMsg rmsg = COPSTransceiver.receiveMsg(conn);
+            logger.debug("Received message of type - " + rmsg.getHeader().getOpCode());
+            // Client-Close
+            if (rmsg.getHeader().getOpCode().equals(OPCode.CC)) {
+                logger.info("Received client-close message");
+                sendCloseMessage(conn, ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA, "Received client-close message");
+                return null;
+            } else {
+                // Request
+                if (rmsg.getHeader().getOpCode().equals(OPCode.REQ)) {
+                    final COPSReqMsg rMsg = (COPSReqMsg) rmsg;
+                    return rMsg.getClientHandle();
+                } else {
+                    sendCloseMessage(conn, ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA, "Received unknown object");
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error COPSTransceiver.receiveMsg", e);
+            return null;
+        }
+    }
+
+    /**
+     * Creates the PDP connection object
+     * @param conn - the socket connection to the PDP
+     * @param handle - the client's handle
+     * @return - the PDP connection object
+     */
+    protected COPSPdpConnection setputPdpConnection(final Socket conn, final COPSHandle handle) {
+        logger.debug("PDPCOPSConnection");
+        final COPSPdpConnection pdpConn = new COPSPdpConnection(_pepId, conn, _process, _kaTimer, _acctTimer);
+
+        // XXX - handleRequestMsg
+        // XXX - check handle is valid
+        final COPSPdpReqStateMan man = new COPSPdpReqStateMan(_clientType, handle, _process);
+        pdpConn.addStateMan(handle, man);
+        try {
+            man.initRequestState(conn);
+        } catch (COPSException unae) {
+            logger.error("Unexpected error initializing state", unae);
+        }
+        // XXX - End handleRequestMsg
+
+        logger.info("Starting PDP connection thread to - " + _host);
+        return pdpConn;
     }
 
 }
