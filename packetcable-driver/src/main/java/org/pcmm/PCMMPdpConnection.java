@@ -6,7 +6,6 @@ package org.pcmm;
 
 import org.umu.cops.prpdp.COPSPdpConnection;
 import org.umu.cops.prpdp.COPSPdpReqStateMan;
-import org.umu.cops.stack.COPSHandle;
 import org.umu.cops.stack.COPSPepId;
 import org.umu.cops.stack.COPSReqMsg;
 
@@ -35,10 +34,6 @@ public class PCMMPdpConnection extends COPSPdpConnection {
                              final short kaTimer, final short acctTimer) {
         super(pepId, sock, process, kaTimer, acctTimer);
         _thisProcess = process;
-    }
-
-    public void addStateMan(final COPSHandle handle, final PCMMPdpReqStateMan man) {
-        _managerMap.put(handle, man);
     }
 
     /**

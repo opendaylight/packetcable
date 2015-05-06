@@ -76,14 +76,18 @@ public class COPSPdpConnection extends COPSConnection {
         _managerMap = new ConcurrentHashMap<>();
     }
 
+    public void addStateMan(final COPSHandle handle, final COPSPdpReqStateMan man) {
+        _managerMap.put(handle, man);
+    }
+
     /**
      * Main loop
      */
     public void run () {
         Date lastSendKa = new Date();
         Date lastRecKa = new Date();
-        try {
-            while (!_sock.isClosed()) {
+        while (!_sock.isClosed()) {
+            try {
                 if (_sock.getInputStream().available() != 0) {
                     processMessage(_sock);
                     lastRecKa = new Date();
@@ -115,17 +119,18 @@ public class COPSPdpConnection extends COPSConnection {
 
                 try {
                     Thread.sleep(500);
-                } catch (Exception e) {
-                    logger.error("Exception thrown while sleeping", e);
+                } catch (InterruptedException e) {
+                    logger.warn("Thread interrupted, shutting down", e);
+                    break;
                 }
-
+            } catch (Exception e) {
+                logger.error("Error while processing socket messages, continue processing", e);
             }
-        } catch (Exception e) {
-            logger.error("Error while processing socket messages", e);
         }
 
         // connection closed by server
         try {
+            logger.info("Closing socket");
             _sock.close();
         } catch (IOException e) {
             logger.error("Error closing socket", e);
@@ -133,6 +138,7 @@ public class COPSPdpConnection extends COPSConnection {
 
         // Notify all Request State Managers
         try {
+            logger.info("Notifying state managers that PDP connection is closing");
             notifyCloseAllReqStateMan();
         } catch (COPSException e) {
             logger.error("Error closing state managers");
