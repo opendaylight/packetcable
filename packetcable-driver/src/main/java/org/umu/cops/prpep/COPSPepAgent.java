@@ -9,12 +9,12 @@ package org.umu.cops.prpep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSError.ErrorTypes;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 /**
  * This is a provisioning COPS PEP. Responsible for making
@@ -22,140 +22,72 @@ import java.net.UnknownHostException;
  */
 public class COPSPepAgent {
 
+    /** Well-known port for COPS */
+    public static final int WELL_KNOWN_CMTS_PORT = 3918;
+
     private final static Logger logger = LoggerFactory.getLogger(COPSPepAgent.class);
 
     /**
-        PEP's Identifier
+     PEP's client-type
      */
-    private String _pepID;
+    protected final short _clientType;
 
     /**
-        PEP's client-type
+     * PEP's Identifier
      */
-    private short _clientType;
+    protected final COPSPepId _pepID;
 
     /**
-        PDP host name
+     * PDP port
      */
-    private String _psHost;
+    private final int _psPort;
+
+    // The next two attributes are instantiated after the connect() method has successfully completed.
+    /**
+     * PEP-PDP connection manager
+     */
+    protected transient COPSPepConnection _conn;
 
     /**
-        PDP port
+     * The thread object to manage the connection thread.
      */
-    private int _psPort;
-
-    /**
-        PEP-PDP connection manager
-     */
-    private COPSPepConnection _conn;
-
-    /**
-        COPS error returned by PDP
-     */
-    private COPSError _error;
+    private transient Thread thread;
 
     /**
      * Creates a PEP agent
+     * @param    clientType         Client-type
      * @param    pepID              PEP-ID
-     * @param    clientType         Client-type
+     * @param    port               the server socket port to open on this host
      */
-    public COPSPepAgent(final String pepID, final short clientType) {
+    public COPSPepAgent(final short clientType, final COPSPepId pepID, final int port) {
+        _clientType = clientType;
         _pepID = pepID;
-        _clientType = clientType;
+        this._psPort = port;
     }
 
     /**
-     * Creates a PEP agent with a PEP-ID equal to "noname"
-     * @param    clientType         Client-type
-     */
-    public COPSPepAgent(final short clientType) {
-
-        // PEPId
-        try {
-            _pepID = InetAddress.getLocalHost().getHostName();
-        } catch (Exception e) {
-            _pepID = "noname";
-        }
-
-        _clientType = clientType;
-    }
-
-    /**
-     * Gets the identifier of the PEP
-     * @return  PEP-ID
-     */
-    public String getPepID() {
-        return _pepID;
-    }
-
-    /**
-     * Gets the COPS client-type
-     * @return  PEP's client-type
-     */
-    public short getClientType() {
-        return _clientType;
-    }
-
-    /**
-     * Gets PDP host name
-     * @return  PDP host name
-     */
-    public String getPDPName() {
-        return _psHost;
-    }
-
-    /**
-     * Gets the port of the PDP
-     * @return  PDP port
-     */
-    public int getPDPPort() {
-        return _psPort;
-    }
-
-    /**
-     * Connects to a PDP
-     * @param    psHost              PDP host name
-     * @param    psPort              PDP port
-     * @return   <tt>true</tt> if PDP accepts the connection; <tt>false</tt> otherwise
+     * Connects to a PDP and is responsible for setting up the connection
      * @throws   java.io.IOException
      * @throws   COPSException
      * @throws   COPSPepException
      */
-    public boolean connect(String psHost, int psPort) throws IOException, COPSException {
+    public void connect() throws IOException, COPSException {
         logger.info("Thread ( " + _pepID + ") - Connecting to PDP");
-        _psHost = psHost;
-        _psPort = psPort;
 
         // Check whether it already exists
         if (_conn == null)
-            _conn = processConnection(psHost,psPort);
+            _conn = processConnection();
         else {
             // Check if it's closed
             if (_conn.isClosed()) {
-                _conn = processConnection(psHost,psPort);
+                _conn = processConnection();
             } else {
-                disconnect(null);
-                _conn = processConnection(psHost,psPort);
+                disconnect(new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
+                _conn = processConnection();
             }
         }
 
-        return (_conn != null);
-    }
-
-    /**
-     * Gets the connection manager
-     * @return  PEP-PDP connection manager object
-     */
-    public COPSPepConnection getConnection () {
-        return (_conn);
-    }
-
-    /**
-     * Gets the COPS error returned by the PDP
-     * @return   <tt>COPSError</tt> returned by PDP
-     */
-    public COPSError getConnectionError()   {
-        return _error;
+        if (_conn == null) throw new COPSException("Unable to process PEP connection");
     }
 
     /**
@@ -166,8 +98,11 @@ public class COPSPepAgent {
      */
     public void disconnect(final COPSError error) throws COPSException, IOException {
         final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType, error, null, null);
+        thread.interrupt();
+        thread = null;
         closeMsg.writeData(_conn.getSocket());
         _conn.close();
+        _conn = null;
     }
 
     /**
@@ -198,44 +133,23 @@ public class COPSPepAgent {
 
     /**
      * Establish connection to PDP's IP address
-     *
-     * <Client-Open> ::= <Common Header>
-     *                  <PEPID>
-     *                  [<ClientSI>]
-     *                  [<LastPDPAddr>]
-     *                  [<Integrity>]
-     *
-     * Not support [<ClientSI>], [<LastPDPAddr>], [<Integrity>]
-     *
-     * <Client-Accept> ::= <Common Header>
-     *                      <KA Timer>
-     *                      [<ACCT Timer>]
-     *                      [<Integrity>]
-     *
-     * Not send [<Integrity>]
-     *
-     * <Client-Close> ::= <Common Header>
-     *                      <Error>
-     *                      [<PDPRedirAddr>]
-     *                      [<Integrity>]
-     *
-     * Not send [<PDPRedirAddr>], [<Integrity>]
-     *
-     * @throws   UnknownHostException
-     * @throws   IOException
      * @throws   COPSException
      * @throws   COPSPepException
-     *
      */
-    private COPSPepConnection processConnection(final String psHost, final int psPort)
-            throws IOException, COPSException {
-        // Build OPN
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(_clientType, new COPSPepId(new COPSData(_pepID)),
-                null, null, null);
-
+    private COPSPepConnection processConnection() throws IOException, COPSException {
         // Create Socket and send OPN
-        final InetAddress addr = InetAddress.getByName(psHost);
-        final Socket socket = new Socket(addr,psPort);
+        final InetAddress addr = InetAddress.getLocalHost();
+        return processConnection(new Socket(addr, _psPort));
+    }
+
+    /**
+     * Establish connection to PDP's IP address
+     * @throws   COPSException
+     * @throws   COPSPepException
+     */
+    private COPSPepConnection processConnection(final Socket socket) throws IOException, COPSException {
+        // Create Socket and send OPN
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(_clientType, _pepID, null, null, null);
         msg.writeData(socket);
 
         // Receive the response
@@ -262,21 +176,33 @@ public class COPSPepAgent {
                 _acctTimer = at.getTimerVal();
 
             // Create the connection manager
-            final COPSPepConnection conn = new COPSPepConnection(_clientType, socket);
+            final COPSPepConnection conn = createPepConnection(socket);
             conn.setKaTimer(_kaTimeVal);
             conn.setAcctTimer(_acctTimer);
-            new Thread(conn).start();
+            thread = new Thread(conn);
+            thread.start();
 
             return conn;
         } else if (recvmsg.getHeader().getOpCode().equals(OPCode.CC)) {
             final COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
-            _error = cMsg.getError();
+            logger.error("Received client-close message with error description [" + cMsg.getError().getDescription()
+                    + "]. Closing socket.");
             socket.close();
             return null;
         } else { // messages of other types are not expected
             throw new COPSPepException("Message not expected. Closing connection for " + socket.toString());
         }
     }
+
+    /**
+     * Creates a COPSPepConnection object
+     * @param socket - the socket on which to create the connection
+     * @return - the connection object
+     */
+    protected COPSPepConnection createPepConnection(final Socket socket) {
+        return new COPSPepConnection(_clientType, socket);
+    }
+
 }
 
 

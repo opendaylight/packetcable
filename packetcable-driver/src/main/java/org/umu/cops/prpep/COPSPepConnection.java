@@ -244,7 +244,7 @@ public class COPSPepConnection extends COPSConnection {
      * @throws   COPSException
      * @throws   COPSPepException
      */
-    protected COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
+    public COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
             throws COPSException {
         final COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle, process);
         if (_managerMap.get(clientHandle) != null)
