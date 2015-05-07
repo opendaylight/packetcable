@@ -80,10 +80,14 @@ public abstract class COPSConnection implements Runnable {
 
     /**
      * Closes the socket to the PEP
-     * @throws IOException
      */
-    public void close() throws IOException {
-        if (!_sock.isClosed()) _sock.close();
+    public void close() {
+        if (!_sock.isClosed())
+            try {
+                _sock.close();
+            } catch (IOException e) {
+                logger.error("Error closing socket", e);
+            }
     }
 
     /**

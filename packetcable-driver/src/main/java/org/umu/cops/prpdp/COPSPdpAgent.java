@@ -150,10 +150,8 @@ public class COPSPdpAgent {
     /**
      * Disconnects a PEP and stops the listener thread
      * @param error COPS Error to be reported as a reason
-     * @throws COPSException
-     * @throws IOException
      */
-    public void disconnect(final COPSError error) throws COPSException, IOException {
+    public void disconnect(final COPSError error) {
         if (_pdpConn != null) {
             sendCloseMessage(_socket, error.getErrCode(), error.getErrSubCode(), "Disconnecting from PDP requested");
             _pdpConn.close();
@@ -163,8 +161,14 @@ public class COPSPdpAgent {
         if (_thread != null) _thread.interrupt();
         else logger.warn("Unable to locate PDP connection thread. Cannot stop it.");
 
-        if (_socket.isConnected()) _socket.close();
+        if (_socket.isConnected())
+            try {
+                _socket.close();
+            } catch (IOException e) {
+                logger.error("Error closing socket", e);
+            }
 
+        _socket = null;
         _pepId = null;
         _pdpConn = null;
         _thread = null;
@@ -249,17 +253,15 @@ public class COPSPdpAgent {
      * @throws COPSException
      */
     private void sendCloseMessage(final Socket conn, final ErrorTypes errorType, final ErrorTypes errorSubType,
-                                  final String msg)
-            throws COPSException {
+                                  final String msg) {
         final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType,
                 new COPSError(errorType, errorSubType), null, null);
         try {
+            logger.info("Sending client-close message. Reason: " + msg);
             closeMsg.writeData(conn);
         } catch (IOException unae) {
             logger.error("Exception writing data", unae);
         }
-
-        throw new COPSException(msg);
     }
 
     /**
