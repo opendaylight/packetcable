@@ -16,10 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.COPSError;
 import org.umu.cops.stack.COPSError.ErrorTypes;
-import org.umu.cops.stack.COPSException;
 
 import javax.annotation.concurrent.ThreadSafe;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 
@@ -221,12 +219,8 @@ public class PCMMService {
 
 		public void disconnect() {
 			logger.info("CcapClient: disconnect(): {}:{}", ipv4, port);
-			try {
-				pcmmPdp.disconnect(new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
-				isConnected = false;
-			} catch (COPSException | IOException e) {
-				logger.error("CcapClient: disconnect(): {}:{} FAILED: {}", ipv4, port, e.getMessage());
-			}
+			pcmmPdp.disconnect(new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
+			isConnected = false;
 		}
 
 		// TODO - consider returning a new PCMMGateReq object or a future here instead of setting the ID on the old
