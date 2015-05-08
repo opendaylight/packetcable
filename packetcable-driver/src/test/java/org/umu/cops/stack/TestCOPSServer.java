@@ -19,7 +19,11 @@ public class TestCOPSServer extends Thread {
     private final ServerSocket serverSocket;
     final List<COPSMsg> copsMsgs = new ArrayList<>();
 
-    public TestCOPSServer(final int port) throws IOException {
+    public TestCOPSServer() throws IOException {
+        this(0);
+    }
+
+    private TestCOPSServer(final int port) throws IOException {
         serverSocket = new ServerSocket(port);
         Assert.assertTrue(serverSocket.isBound());
     }
@@ -27,6 +31,10 @@ public class TestCOPSServer extends Thread {
     public void close() throws IOException {
         this.interrupt();
         serverSocket.close();
+    }
+
+    public int getPort() {
+        return serverSocket.getLocalPort();
     }
 
     public void run() {
