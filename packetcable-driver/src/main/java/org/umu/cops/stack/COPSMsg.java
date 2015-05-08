@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -14,6 +17,8 @@ import java.net.Socket;
  * Represents messages coming from and going to a COPS device such as a CMTS
  */
 abstract public class COPSMsg {
+
+    private static final Logger logger = LoggerFactory.getLogger(COPSMsg.class);
 
     /**
      * The COPS header that is associated with all COPS messages
@@ -42,7 +47,7 @@ abstract public class COPSMsg {
      * @throws   IOException
      */
     public final void writeData(final Socket socket) throws IOException {
-        // checkSanity();
+        logger.info("Writing data for OPCode - " + _hdr.getOpCode());
         _hdr.writeData(socket, _hdr.getHdrLength() + getDataLength());
         writeBody(socket);
     }
