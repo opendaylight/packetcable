@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -62,7 +61,7 @@ public class COPSSyncStateMsg extends COPSMsg {
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSSyncStateMsg(final ClientType clientType, final COPSHandle handle, final COPSIntegrity integrity) {
+    public COPSSyncStateMsg(final short clientType, final COPSHandle handle, final COPSIntegrity integrity) {
         this(new COPSHeader(OPCode.SSQ, clientType), handle, integrity);
     }
 
@@ -75,7 +74,7 @@ public class COPSSyncStateMsg extends COPSMsg {
      * @param integrity - the integrity (optional)
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSSyncStateMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle handle,
+    public COPSSyncStateMsg(final int version, final Flag flag, final short clientType, final COPSHandle handle,
                             final COPSIntegrity integrity) {
         this(new COPSHeader(version, flag, OPCode.SSQ, clientType), handle, integrity);
     }

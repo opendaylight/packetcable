@@ -4,11 +4,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSClientSI.CSIType;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSObjHeader.CType;
@@ -47,31 +47,25 @@ public class COPSReqMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSReqMsg(0, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        new COPSReqMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSContext(RType.CONFIG, (short)0), null, null, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSReqMsg(1, null, ClientType.TYPE_1, new COPSHandle(new COPSData()),
-                new COPSContext(RType.CONFIG, (short)0), null, null, null, null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSReqMsg(1, Flag.SOLICITED, null, new COPSHandle(new COPSData()),
+        new COPSReqMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSContext(RType.CONFIG, (short)0), null, null, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandle() {
-        new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null,
+        new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null,
                 new COPSContext(RType.CONFIG, (short)0), null, null, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullContext() {
-        new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 null, null, null, null, null, null);
     }
 
@@ -84,19 +78,19 @@ public class COPSReqMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, IPCMMClient.CLIENT_TYPE);
         new COPSReqMsg(hdr, new COPSHandle(new COPSData()), new COPSContext(RType.CONFIG, (short)0),
                 null, null, null, null, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSContext(RType.CONFIG, (short)0), null, null, null, null, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSContext(RType.CONFIG, (short) 0), msg.getContext());
         Assert.assertNull(msg.getIntegrity());
@@ -108,7 +102,7 @@ public class COPSReqMsgTest {
 
     @Test
     public void validAllNonCollections() throws Exception {
-        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSContext(RType.CONFIG, (short)0), new COPSIntegrity(),
                 new COPSIpv4InInterface(new COPSIpv4Address("localhost"), 0),
                 new COPSIpv4OutInterface(new COPSIpv4Address("localhost"), 0),
@@ -116,7 +110,7 @@ public class COPSReqMsgTest {
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSContext(RType.CONFIG, (short)0), msg.getContext());
         Assert.assertEquals(new COPSIntegrity(), msg.getIntegrity());
@@ -144,12 +138,12 @@ public class COPSReqMsgTest {
         decisions2.add(new COPSLPDPDecision(CType.STATELESS, Command.REMOVE, DecisionFlag.REQERROR, new COPSData("1234567")));
         decisions.put(context2, decisions2);
 
-        final COPSReqMsg msg = new COPSReqMsg(1, Flag.UNSOLICITED, ClientType.TYPE_2, new COPSHandle(new COPSData("123")),
+        final COPSReqMsg msg = new COPSReqMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData("123")),
                 new COPSContext(RType.IN_ADMIN, (short)2), null, null, null, clientSIs, decisions);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.UNSOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_2, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData("123")), msg.getClientHandle());
         Assert.assertEquals(new COPSContext(RType.IN_ADMIN, (short) 2), msg.getContext());
         Assert.assertNull(msg.getIntegrity());
@@ -184,7 +178,7 @@ public class COPSReqMsgTest {
         decisions2.add(new COPSLPDPDecision(CType.STATELESS, Command.REMOVE, DecisionFlag.REQERROR, new COPSData("1234567")));
         decisions.put(context2, decisions2);
 
-        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSContext(RType.CONFIG, (short)0), new COPSIntegrity(),
                 new COPSIpv4InInterface(new COPSIpv4Address("localhost"), 0),
                 new COPSIpv4OutInterface(new COPSIpv4Address("localhost"), 0),
@@ -203,7 +197,7 @@ public class COPSReqMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: REQ", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -213,7 +207,7 @@ public class COPSReqMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData("12345")),
+        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData("12345")),
                 new COPSContext(RType.CONFIG, (short)5), null,
                 null, null, null, null);
 
@@ -252,7 +246,7 @@ public class COPSReqMsgTest {
         decisions2.add(new COPSLPDPDecision(CType.STATELESS, Command.REMOVE, DecisionFlag.REQERROR, new COPSData("1234567")));
         decisions.put(context2, decisions2);
 
-        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData("12345")),
+        final COPSReqMsg msg = new COPSReqMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData("12345")),
                 new COPSContext(RType.CONFIG, (short)5), new COPSIntegrity(3, 4, new COPSData("12345")),
                 new COPSIpv4InInterface(new COPSIpv4Address("localhost"), 5),
                 new COPSIpv4OutInterface(new COPSIpv4Address("localhost"), 6),

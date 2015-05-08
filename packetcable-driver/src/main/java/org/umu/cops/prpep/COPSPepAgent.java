@@ -7,7 +7,6 @@
 package org.umu.cops.prpep;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ public class COPSPepAgent {
     /**
         PEP's client-type
      */
-    private ClientType _clientType;
+    private short _clientType;
 
     /**
         PDP host name
@@ -56,7 +55,7 @@ public class COPSPepAgent {
      * @param    pepID              PEP-ID
      * @param    clientType         Client-type
      */
-    public COPSPepAgent(final String pepID, final ClientType clientType) {
+    public COPSPepAgent(final String pepID, final short clientType) {
         _pepID = pepID;
         _clientType = clientType;
     }
@@ -65,7 +64,7 @@ public class COPSPepAgent {
      * Creates a PEP agent with a PEP-ID equal to "noname"
      * @param    clientType         Client-type
      */
-    public COPSPepAgent(final ClientType clientType) {
+    public COPSPepAgent(final short clientType) {
 
         // PEPId
         try {
@@ -89,7 +88,7 @@ public class COPSPepAgent {
      * Gets the COPS client-type
      * @return  PEP's client-type
      */
-    public ClientType getClientType() {
+    public short getClientType() {
         return _clientType;
     }
 

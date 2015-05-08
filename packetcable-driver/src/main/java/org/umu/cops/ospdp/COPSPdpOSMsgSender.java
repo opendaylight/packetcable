@@ -4,7 +4,6 @@ import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 
 import java.io.IOException;
@@ -25,7 +24,7 @@ public class COPSPdpOSMsgSender {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected final ClientType _clientType;
+    protected final short _clientType;
 
     /**
      * COPS client handle used to uniquely identify a particular
@@ -40,7 +39,7 @@ public class COPSPdpOSMsgSender {
      * @param clientHandle      Client handle
      * @param sock              Socket to the PEP
      */
-    public COPSPdpOSMsgSender (final ClientType clientType, final COPSHandle clientHandle, final Socket sock) {
+    public COPSPdpOSMsgSender (final short clientType, final COPSHandle clientHandle, final Socket sock) {
         // COPS Handle
         _handle = clientHandle;
         _clientType = clientType;
@@ -60,7 +59,7 @@ public class COPSPdpOSMsgSender {
      * Gets the client-type
      * @return   Client-type value
      */
-    public ClientType getClientType() {
+    public short getClientType() {
         return _clientType;
     }
 

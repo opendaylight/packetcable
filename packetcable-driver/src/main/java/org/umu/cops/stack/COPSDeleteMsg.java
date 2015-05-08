@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -53,7 +52,7 @@ public class COPSDeleteMsg extends COPSMsg {
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSDeleteMsg(final ClientType clientType, final COPSHandle handle, final COPSReason reason,
+    public COPSDeleteMsg(final short clientType, final COPSHandle handle, final COPSReason reason,
                          final COPSIntegrity integrity) {
         this(new COPSHeader(OPCode.DRQ, clientType), handle, reason, integrity);
     }
@@ -68,7 +67,7 @@ public class COPSDeleteMsg extends COPSMsg {
      * @param integrity - the integrity (optional)
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSDeleteMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle handle,
+    public COPSDeleteMsg(final int version, final Flag flag, final short clientType, final COPSHandle handle,
                          final COPSReason reason, final COPSIntegrity integrity) {
         this(new COPSHeader(version, flag, OPCode.DRQ, clientType), handle, reason, integrity);
     }

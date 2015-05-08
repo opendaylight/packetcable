@@ -15,7 +15,6 @@ import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSObjHeader.CType;
 
@@ -57,7 +56,7 @@ public class PCMMPdpMsgSender {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      * COPS client handle used to uniquely identify a particular PEP's request
@@ -83,7 +82,7 @@ public class PCMMPdpMsgSender {
      * @param sock
      *            Socket to the PEP
      */
-    public PCMMPdpMsgSender(final ClientType clientType, final COPSHandle clientHandle, final Socket sock) {
+    public PCMMPdpMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock) {
         // COPS Handle
         _handle = clientHandle;
         _clientType = clientType;
@@ -93,7 +92,7 @@ public class PCMMPdpMsgSender {
         _sock = sock;
     }
 
-    public PCMMPdpMsgSender(final ClientType clientType, final short tID, final COPSHandle clientHandle,
+    public PCMMPdpMsgSender(final short clientType, final short tID, final COPSHandle clientHandle,
                             final Socket sock) {
         // COPS Handle
         _handle = clientHandle;
@@ -117,7 +116,7 @@ public class PCMMPdpMsgSender {
      *
      * @return Client-type value
      */
-    public ClientType getClientType() {
+    public short getClientType() {
         return _clientType;
     }
 
@@ -680,7 +679,7 @@ public class PCMMPdpMsgSender {
         decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR,
                 new COPSData(data, 0, data.length)));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
-        decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
+        decisionMap.put(new COPSContext(RType.CONFIG, (short) 0), decisionSet);
 
         final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
                 new COPSHandle(getClientHandle().getId()), decisionMap, null);

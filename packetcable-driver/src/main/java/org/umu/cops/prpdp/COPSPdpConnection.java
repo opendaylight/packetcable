@@ -9,7 +9,6 @@ package org.umu.cops.prpdp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -191,7 +190,7 @@ public class COPSPdpConnection implements Runnable {
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
                         // TODO - what should the real clientType be here???
-                        final COPSKAMsg msg = new COPSKAMsg(ClientType.NA, null);
+                        final COPSKAMsg msg = new COPSKAMsg(null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }
@@ -375,7 +374,7 @@ public class COPSPdpConnection implements Runnable {
 //        final COPSContext cntxt = reqMsg.getContext();
         final COPSHeader header = reqMsg.getHeader();
         //short reqType = cntxt.getRequestType();
-        final ClientType cType = header.getClientType();
+        final short cType = header.getClientType();
 
         // Support
         if (reqMsg.getIntegrity() != null) {

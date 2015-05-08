@@ -53,16 +53,39 @@ public class COPSMsgParser {
         if (COPSHeader.VAL_TO_OP.get((int)data[1]) == null) opCode = OPCode.NA;
         else opCode = COPSHeader.VAL_TO_OP.get((int)data[1]);
 
-        int cType = 0;
-        cType |= ((short) data[2]) << 8;
-        cType |= ((short) data[3]) & 0xFF;
+        short cType = bytesToShort(data[2], data[3]);
 
         int msgLength = ((short) data[4]) << 24;
         msgLength |= ((short) data[5]) << 16;
         msgLength |= ((short) data[6]) << 8;
         msgLength |= ((short) data[7]) & 0xFF;
 
-        return new COPSHeaderData(new COPSHeader(version, flag, opCode, COPSHeader.VAL_TO_CT.get(cType)), msgLength);
+        return new COPSHeaderData(new COPSHeader(version, flag, opCode, cType), msgLength);
+    }
+
+    /**
+     * Takes a short value and splits it into 2 bytes
+     * @param val - the value to split
+     * @return - a 2 byte array
+     */
+    public static byte[] shortToBytes(final short val) {
+        final byte[] out = new byte[2];
+        out[0] = (byte) (val >> 8);
+        out[1] = (byte) val;
+        return out;
+    }
+
+    /**
+     * Takes two bytes and concatenates the two into a short value
+     * @param byte1 - the first byte
+     * @param byte2 - the training byte
+     * @return - the short value
+     */
+    public static short bytesToShort(final byte byte1, final byte byte2) {
+        short out = 0;
+        out |= ((short) byte1) << 8;
+        out |= ((short) byte2) & 0xFF;
+        return out;
     }
 
     private static COPSMsg readBody(final Socket socket, final COPSHeaderData hdrData) throws IOException, COPSException {

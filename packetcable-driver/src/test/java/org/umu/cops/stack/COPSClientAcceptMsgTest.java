@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.umu.cops.stack.COPSHeader.ClientType;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -38,22 +38,17 @@ public class COPSClientAcceptMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSClientAcceptMsg(0, Flag.SOLICITED, ClientType.TYPE_1, new COPSKATimer((short)1), null, null);
+        new COPSClientAcceptMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSKATimer((short)1), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSClientAcceptMsg(1, null, ClientType.TYPE_1, new COPSKATimer((short)1), null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSClientAcceptMsg(1, Flag.SOLICITED, null, new COPSKATimer((short)1), null, null);
+        new COPSClientAcceptMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSKATimer((short)1), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullTimer() {
-        new COPSClientAcceptMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null, null, null);
+        new COPSClientAcceptMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -64,18 +59,18 @@ public class COPSClientAcceptMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CC, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CC, IPCMMClient.CLIENT_TYPE);
         new COPSClientAcceptMsg(hdr, new COPSKATimer((short)1), null, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSKATimer((short)1), null, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSKATimer((short)1), msg.getKATimer());
         Assert.assertNull(msg.getAcctTimer());
         Assert.assertNull(msg.getIntegrity());
@@ -83,12 +78,12 @@ public class COPSClientAcceptMsgTest {
 
     @Test
     public void validAll() {
-        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSKATimer((short)1), new COPSAcctTimer((short)1), new COPSIntegrity());
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSKATimer((short)1), msg.getKATimer());
         Assert.assertEquals(new COPSAcctTimer((short)1), msg.getAcctTimer());
         Assert.assertEquals(new COPSIntegrity(), msg.getIntegrity());
@@ -101,7 +96,7 @@ public class COPSClientAcceptMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSKATimer((short)1), new COPSAcctTimer((short)1), new COPSIntegrity());
 
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -117,7 +112,7 @@ public class COPSClientAcceptMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: CAT", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -127,7 +122,7 @@ public class COPSClientAcceptMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSKATimer((short)5), null, null);
 
         msg.writeData(outSocket);
@@ -149,7 +144,7 @@ public class COPSClientAcceptMsgTest {
      */
     @Test
     public void testWriteAll() throws Exception {
-        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientAcceptMsg msg = new COPSClientAcceptMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSKATimer((short)5), new COPSAcctTimer((short)6),
                 new COPSIntegrity(8, 9, new COPSData("12345")));
 

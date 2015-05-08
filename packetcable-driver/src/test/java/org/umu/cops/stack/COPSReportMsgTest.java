@@ -4,8 +4,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSClientSI.CSIType;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSReportType.ReportType;
@@ -40,31 +40,25 @@ public class COPSReportMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSReportMsg(0, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        new COPSReportMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSReportMsg(1, null, ClientType.TYPE_1, new COPSHandle(new COPSData()),
-                new COPSReportType(ReportType.ACCOUNTING), null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSReportMsg(1, Flag.SOLICITED, null, new COPSHandle(new COPSData()),
+        new COPSReportMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullHandle() {
-        new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null,
+        new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null,
                 new COPSReportType(ReportType.ACCOUNTING), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullReportType() {
-        new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 null, null, null);
     }
 
@@ -76,18 +70,18 @@ public class COPSReportMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, IPCMMClient.CLIENT_TYPE);
         new COPSReportMsg(hdr, new COPSHandle(new COPSData()), new COPSReportType(ReportType.ACCOUNTING), null, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), null, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSReportType(ReportType.ACCOUNTING), msg.getReport());
         Assert.assertNull(msg.getClientSI());
@@ -96,13 +90,13 @@ public class COPSReportMsgTest {
 
     @Test
     public void validAll() {
-        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), new COPSClientSI(CSIType.NAMED, new COPSData("1")),
                 new COPSIntegrity(4, 5, new COPSData("123456")));
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSHandle(new COPSData()), msg.getClientHandle());
         Assert.assertEquals(new COPSReportType(ReportType.ACCOUNTING), msg.getReport());
         Assert.assertEquals(new COPSClientSI(CSIType.NAMED, new COPSData("1")), msg.getClientSI());
@@ -116,7 +110,7 @@ public class COPSReportMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), new COPSClientSI(CSIType.NAMED, new COPSData("1")),
                 new COPSIntegrity(4, 5, new COPSData("123456")));
 
@@ -133,7 +127,7 @@ public class COPSReportMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: RPT", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -143,7 +137,7 @@ public class COPSReportMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), null, null);
 
         msg.writeData(outSocket);
@@ -165,7 +159,7 @@ public class COPSReportMsgTest {
      */
     @Test
     public void testWriteAll() throws Exception {
-        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, ClientType.TYPE_1, new COPSHandle(new COPSData()),
+        final COPSReportMsg msg = new COPSReportMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSHandle(new COPSData()),
                 new COPSReportType(ReportType.ACCOUNTING), new COPSClientSI(CSIType.NAMED, new COPSData("1")),
                 new COPSIntegrity(4, 5, new COPSData("123456")));
 

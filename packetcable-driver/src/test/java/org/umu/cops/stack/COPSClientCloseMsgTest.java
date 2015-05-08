@@ -4,8 +4,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSError.ErrorTypes;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -39,25 +39,19 @@ public class COPSClientCloseMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSClientCloseMsg(0, Flag.SOLICITED, ClientType.TYPE_1,
+        new COPSClientCloseMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSClientCloseMsg(1, null, ClientType.TYPE_1,
-                new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSClientCloseMsg(1, Flag.SOLICITED, null,
+        new COPSClientCloseMsg(1, null, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullError() {
-        new COPSClientCloseMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null, null, null);
+        new COPSClientCloseMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -68,18 +62,18 @@ public class COPSClientCloseMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.NA, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.NA, IPCMMClient.CLIENT_TYPE);
         new COPSClientCloseMsg(hdr, new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), null, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), null, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), msg.getError());
         Assert.assertNull(msg.getRedirAddr());
         Assert.assertNull(msg.getIntegrity());
@@ -87,14 +81,14 @@ public class COPSClientCloseMsgTest {
 
     @Test
     public void validAll() throws Exception {
-        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED),
                 new COPSIpv4PdpRedirectAddress("localhost", 7777, (short)0),
                 new COPSIntegrity());
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), msg.getError());
         Assert.assertEquals(new COPSIpv4PdpRedirectAddress("localhost", 7777, (short) 0), msg.getRedirAddr());
         Assert.assertEquals(new COPSIntegrity(), msg.getIntegrity());
@@ -107,7 +101,7 @@ public class COPSClientCloseMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED),
                 new COPSIpv4PdpRedirectAddress("localhost", 7777, (short)0),
                 new COPSIntegrity());
@@ -125,7 +119,7 @@ public class COPSClientCloseMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: SOLICITED", lines[2]);
         Assert.assertEquals("OpCode: CC", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -135,7 +129,7 @@ public class COPSClientCloseMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.AUTH_FAILURE, ErrorTypes.AUTH_REQUIRED), null, null);
 
         msg.writeData(outSocket);
@@ -157,7 +151,7 @@ public class COPSClientCloseMsgTest {
      */
     @Test
     public void testWriteAll() throws Exception {
-        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, ClientType.TYPE_1,
+        final COPSClientCloseMsg msg = new COPSClientCloseMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSError(ErrorTypes.BAD_HANDLE_REF, ErrorTypes.MA),
                 new COPSIpv4PdpRedirectAddress("localhost", 7777, (short)0),
                 new COPSIntegrity(8, 9, new COPSData("12345")));

@@ -1,7 +1,6 @@
 package org.umu.cops.ospdp;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
 import java.util.Vector;
@@ -62,7 +61,7 @@ public class COPSPdpOSReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -88,7 +87,7 @@ public class COPSPdpOSReqStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public COPSPdpOSReqStateMan(final ClientType clientType, final String clientHandle) {
+    public COPSPdpOSReqStateMan(final short clientType, final String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _status = ST_CREATE;
@@ -106,7 +105,7 @@ public class COPSPdpOSReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

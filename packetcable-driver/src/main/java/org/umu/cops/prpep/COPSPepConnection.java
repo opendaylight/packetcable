@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class COPSPepConnection implements Runnable {
     protected int _responseTime;
 
     /** COPS Client-type */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
         Accounting timer value (secs)
@@ -68,7 +67,7 @@ public class COPSPepConnection implements Runnable {
      * @param clientType    PEP's client-type
      * @param sock          Socket connected to PDP
      */
-    public COPSPepConnection(final ClientType clientType, final Socket sock) {
+    public COPSPepConnection(final short clientType, final Socket sock) {
 
         _clientType = clientType;
         _sock = sock;
@@ -185,7 +184,7 @@ public class COPSPepConnection implements Runnable {
                     cTime = (int) (new Date().getTime());
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
-                        final COPSKAMsg msg = new COPSKAMsg(_clientType, null);
+                        final COPSKAMsg msg = new COPSKAMsg(null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }
@@ -442,7 +441,7 @@ public class COPSPepConnection implements Runnable {
      */
     protected COPSPepReqStateMan addRequestState(String clientHandle, COPSPepDataProcess process) throws COPSException,
             COPSPepException {
-        COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType,clientHandle);
+        COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);
 

@@ -7,10 +7,10 @@
 package org.umu.cops.prpdp;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * State manager class for provisioning requests, at the PDP side.
@@ -69,7 +69,7 @@ public class COPSPdpReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -95,7 +95,7 @@ public class COPSPdpReqStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public COPSPdpReqStateMan(ClientType clientType, String clientHandle) {
+    public COPSPdpReqStateMan(short clientType, String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _status = ST_CREATE;
@@ -113,7 +113,7 @@ public class COPSPdpReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

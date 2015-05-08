@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -84,7 +83,7 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param integrity - the integrity (optional)
      */
     @Deprecated
-    public COPSDecisionMsg(final ClientType clientType, final COPSHandle clientHandle,
+    public COPSDecisionMsg(final short clientType, final COPSHandle clientHandle,
                            final COPSError error, final COPSIntegrity integrity) {
         this(new COPSHeader(OPCode.DEC, clientType), clientHandle, error, null, integrity);
     }
@@ -96,7 +95,7 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param error - the error (required)
      * @param integrity - the integrity (optional)
      */
-    public COPSDecisionMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle clientHandle,
+    public COPSDecisionMsg(final int version, final Flag flag, final short clientType, final COPSHandle clientHandle,
                            final COPSError error, final COPSIntegrity integrity) {
         this(new COPSHeader(version, flag, OPCode.DEC, clientType), clientHandle, error, null, integrity);
     }
@@ -110,7 +109,7 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param integrity - the integrity (optional)
      */
     @Deprecated
-    public COPSDecisionMsg(final ClientType clientType, final COPSHandle clientHandle,
+    public COPSDecisionMsg(final short clientType, final COPSHandle clientHandle,
                            final Map<COPSContext, Set<COPSDecision>> decisions, final COPSIntegrity integrity) {
         this(new COPSHeader(OPCode.DEC, clientType), clientHandle, null, decisions, integrity);
     }
@@ -122,7 +121,7 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param decisions - the decisions (required)
      * @param integrity - the integrity (optional)
      */
-    public COPSDecisionMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle clientHandle,
+    public COPSDecisionMsg(final int version, final Flag flag, final short clientType, final COPSHandle clientHandle,
                            final Map<COPSContext, Set<COPSDecision>> decisions, final COPSIntegrity integrity) {
         this(new COPSHeader(version, flag, OPCode.DEC, clientType), clientHandle, null, decisions, integrity);
     }

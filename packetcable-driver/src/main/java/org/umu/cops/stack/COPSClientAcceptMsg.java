@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -71,7 +70,7 @@ public class COPSClientAcceptMsg extends COPSMsg {
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSClientAcceptMsg(final ClientType clientType, final COPSKATimer kaTimer, final COPSAcctTimer acctTimer,
+    public COPSClientAcceptMsg(final short clientType, final COPSKATimer kaTimer, final COPSAcctTimer acctTimer,
                                final COPSIntegrity integrity) {
         this(new COPSHeader(OPCode.CAT, clientType), kaTimer, acctTimer, integrity);
     }
@@ -86,7 +85,7 @@ public class COPSClientAcceptMsg extends COPSMsg {
      * @param integrity - the integrity (optional)
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSClientAcceptMsg(final int version, final Flag flag, final ClientType clientType,
+    public COPSClientAcceptMsg(final int version, final Flag flag, final short clientType,
                                final COPSKATimer kaTimer, final COPSAcctTimer acctTimer, final COPSIntegrity integrity) {
         this(new COPSHeader(version, flag, OPCode.CAT, clientType), kaTimer, acctTimer, integrity);
     }

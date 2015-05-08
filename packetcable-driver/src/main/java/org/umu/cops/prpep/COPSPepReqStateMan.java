@@ -7,7 +7,6 @@
 package org.umu.cops.prpep;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
 import java.util.HashMap;
@@ -90,7 +89,7 @@ public class COPSPepReqStateMan {
     /**
      * The client-type identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      *  The client handle is used to uniquely identify a particular
@@ -124,7 +123,7 @@ public class COPSPepReqStateMan {
      * @param    clientHandle                a Client Handle
      *
      */
-    public COPSPepReqStateMan(final ClientType clientType, final String clientHandle) {
+    public COPSPepReqStateMan(final short clientType, final String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _syncState = true;
@@ -147,7 +146,7 @@ public class COPSPepReqStateMan {
      * @return   a short
      *
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

@@ -4,8 +4,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.pcmm.rcd.IPCMMClient;
 import org.umu.cops.stack.COPSClientSI.CSIType;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
@@ -39,23 +39,18 @@ public class COPSClientOpenMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void version0() {
-        new COPSClientOpenMsg(0, Flag.SOLICITED, ClientType.TYPE_1, new COPSPepId(new COPSData()),
+        new COPSClientOpenMsg(0, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, new COPSPepId(new COPSData()),
                 null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullFlag() {
-        new COPSClientOpenMsg(1, null, ClientType.TYPE_1, new COPSPepId(new COPSData()), null, null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void nullClientType() {
-        new COPSClientOpenMsg(1, Flag.SOLICITED, null, new COPSPepId(new COPSData()), null, null, null);
+        new COPSClientOpenMsg(1, null, IPCMMClient.CLIENT_TYPE, new COPSPepId(new COPSData()), null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullPepId() {
-        new COPSClientOpenMsg(1, Flag.SOLICITED, ClientType.TYPE_1, null, null, null, null);
+        new COPSClientOpenMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE, null, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -66,18 +61,18 @@ public class COPSClientOpenMsgTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidHeader() {
-        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, ClientType.TYPE_1);
+        final COPSHeader hdr = new COPSHeader(1, Flag.UNSOLICITED, OPCode.CAT, IPCMMClient.CLIENT_TYPE);
         new COPSClientOpenMsg(hdr, new COPSPepId(new COPSData()), null, null, null);
     }
 
     @Test
     public void validMinimal() {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.SOLICITED, ClientType.TYPE_2,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")), null, null, null);
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.SOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_2, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSPepId(new COPSData("12345")), msg.getPepId());
         Assert.assertNull(msg.getClientSI());
         Assert.assertNull(msg.getPdpAddress());
@@ -86,7 +81,7 @@ public class COPSClientOpenMsgTest {
 
     @Test
     public void validAllIpv4() throws Exception {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, ClientType.TYPE_1,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")),
                 new COPSClientSI(CSIType.NAMED, new COPSData("123456")),
                 new COPSIpv4LastPdpAddr("localhost", 7777, (short)0),
@@ -94,7 +89,7 @@ public class COPSClientOpenMsgTest {
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.UNSOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSPepId(new COPSData("12345")), msg.getPepId());
         Assert.assertEquals(new COPSClientSI(CSIType.NAMED, new COPSData("123456")), msg.getClientSI());
         Assert.assertEquals(new COPSIpv4LastPdpAddr("localhost", 7777, (short) 0), msg.getPdpAddress());
@@ -103,7 +98,7 @@ public class COPSClientOpenMsgTest {
 
     @Test
     public void validAllIpv6() throws Exception {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, ClientType.TYPE_1,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")),
                 new COPSClientSI(CSIType.NAMED, new COPSData("123456")),
                 new COPSIpv6LastPdpAddr("localhost", 7777, (short)0),
@@ -111,7 +106,7 @@ public class COPSClientOpenMsgTest {
 
         Assert.assertEquals(1, msg.getHeader().getPcmmVersion());
         Assert.assertEquals(Flag.UNSOLICITED, msg.getHeader().getFlag());
-        Assert.assertEquals(ClientType.TYPE_1, msg.getHeader().getClientType());
+        Assert.assertEquals(IPCMMClient.CLIENT_TYPE, msg.getHeader().getClientType());
         Assert.assertEquals(new COPSPepId(new COPSData("12345")), msg.getPepId());
         Assert.assertEquals(new COPSClientSI(CSIType.NAMED, new COPSData("123456")), msg.getClientSI());
         Assert.assertEquals(new COPSIpv6LastPdpAddr("localhost", 7777, (short)0), msg.getPdpAddress());
@@ -125,7 +120,7 @@ public class COPSClientOpenMsgTest {
      */
     @Test
     public void testDumpAll() throws Exception {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, ClientType.TYPE_1,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")),
                 new COPSClientSI(CSIType.NAMED, new COPSData("123456")),
                 new COPSIpv4LastPdpAddr("localhost", 7777, (short)0),
@@ -144,7 +139,7 @@ public class COPSClientOpenMsgTest {
         Assert.assertEquals("Version: 1", lines[1]);
         Assert.assertEquals("Flags: UNSOLICITED", lines[2]);
         Assert.assertEquals("OpCode: OPN", lines[3]);
-        Assert.assertEquals("Client-type: TYPE_1", lines[4]);
+        Assert.assertEquals("Client-type: -32758", lines[4]);
     }
 
     /**
@@ -154,7 +149,7 @@ public class COPSClientOpenMsgTest {
      */
     @Test
     public void testWriteMinimal() throws Exception {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.SOLICITED, ClientType.TYPE_2,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.SOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")), null, null, null);
 
         msg.writeData(outSocket);
@@ -176,7 +171,7 @@ public class COPSClientOpenMsgTest {
      */
     @Test
     public void testWriteAllIpv4() throws Exception {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, ClientType.TYPE_1,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")),
                 new COPSClientSI(CSIType.NAMED, new COPSData("123456")),
                 new COPSIpv4LastPdpAddr("localhost", 7777, (short)0),
@@ -201,7 +196,7 @@ public class COPSClientOpenMsgTest {
      */
     @Test
     public void testWriteAllIpv6() throws Exception {
-        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, ClientType.TYPE_2,
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(1, Flag.UNSOLICITED, IPCMMClient.CLIENT_TYPE,
                 new COPSPepId(new COPSData("12345")),
                 new COPSClientSI(CSIType.NAMED, new COPSData("123456")),
                 new COPSIpv6LastPdpAddr("localhost", 7777, (short)0),

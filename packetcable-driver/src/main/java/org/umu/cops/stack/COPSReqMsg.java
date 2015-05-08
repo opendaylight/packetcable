@@ -6,7 +6,6 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSObjHeader.CType;
@@ -109,7 +108,7 @@ public class COPSReqMsg extends COPSMsg {
      * @throws java.lang.IllegalArgumentException
      */
     @Deprecated
-    public COPSReqMsg(final ClientType clientType, final COPSHandle handle, final COPSContext context,
+    public COPSReqMsg(final short clientType, final COPSHandle handle, final COPSContext context,
                       final COPSIntegrity integrity, final COPSInterface inInterface, final COPSInterface outInterface,
                       final Set<COPSClientSI> clientSIs, final Map<COPSContext, Set<COPSLPDPDecision>> decisions) {
         this(1, Flag.UNSOLICITED, clientType, handle, context, integrity, inInterface, outInterface,
@@ -130,7 +129,7 @@ public class COPSReqMsg extends COPSMsg {
      * @param decisions - the Decisions by context (optional)
      * @throws java.lang.IllegalArgumentException
      */
-    public COPSReqMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle handle,
+    public COPSReqMsg(final int version, final Flag flag, final short clientType, final COPSHandle handle,
                       final COPSContext context, final COPSIntegrity integrity, final COPSInterface inInterface,
                       final COPSInterface outInterface, final Set<COPSClientSI> clientSIs,
                       final Map<COPSContext, Set<COPSLPDPDecision>> decisions) {

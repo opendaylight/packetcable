@@ -2,7 +2,6 @@ package org.umu.cops.ospep;
 
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSReason.ReasonCode;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
@@ -23,7 +22,7 @@ public class COPSPepOSMsgSender {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
      * COPS client handle used to uniquely identify a particular
@@ -38,7 +37,7 @@ public class COPSPepOSMsgSender {
      * @param clientHandle      Client handle
      * @param sock              Socket connected to the PDP
      */
-    public COPSPepOSMsgSender (final ClientType clientType, final COPSHandle clientHandle, final Socket sock) {
+    public COPSPepOSMsgSender (final short clientType, final COPSHandle clientHandle, final Socket sock) {
         // COPS Handle
         _handle = clientHandle;
         _clientType = clientType;
@@ -58,7 +57,7 @@ public class COPSPepOSMsgSender {
      * Gets the client-type
      * @return  Client-type value
      */
-    public ClientType getClientType() {
+    public int getClientType() {
         return _clientType;
     }
 

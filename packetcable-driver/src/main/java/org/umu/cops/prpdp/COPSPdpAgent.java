@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSError.ErrorTypes;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -41,7 +40,7 @@ public class COPSPdpAgent extends Thread {
     /**
         Client-type of connecting PEP
      */
-    private ClientType _clientType;
+    private short _clientType;
 
     /**
         Accounting timer (secs)
@@ -70,7 +69,7 @@ public class COPSPdpAgent extends Thread {
      * @param clientType    COPS Client-type
      * @param process       Object to perform policy data processing
      */
-    public COPSPdpAgent(final ClientType clientType, final COPSPdpDataProcess process) {
+    public COPSPdpAgent(final short clientType, final COPSPdpDataProcess process) {
         _serverPort = WELL_KNOWN_PDP_PORT;
         _kaTimer = KA_TIMER_VALUE;
         _acctTimer = ACCT_TIMER_VALUE;
@@ -87,7 +86,7 @@ public class COPSPdpAgent extends Thread {
      * @param clientType    COPS Client-type
      * @param process   Object to perform policy data processing
      */
-    public COPSPdpAgent(final int port, final ClientType clientType, final COPSPdpDataProcess process) {
+    public COPSPdpAgent(final int port, final short clientType, final COPSPdpDataProcess process) {
         _serverPort = port;
 
         _kaTimer = KA_TIMER_VALUE;
@@ -134,7 +133,7 @@ public class COPSPdpAgent extends Thread {
      * Gets the client-type
      * @return   The client-type
      */
-    public ClientType getClientType() {
+    public short getClientType() {
         return _clientType;
     }
 
@@ -233,7 +232,7 @@ public class COPSPdpAgent extends Thread {
         final COPSPepId pepId = cMsg.getPepId();
 
         // Validate Client Type
-        if (msg.getHeader().getClientType().equals(_clientType)) {
+        if (msg.getHeader().getClientType() == _clientType) {
             // Unsupported client type
             final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(msg.getHeader().getClientType(),
                     new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA), null, null);

@@ -3,7 +3,6 @@ package org.umu.cops.ospep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ public class COPSPepOSConnection implements Runnable {
     protected final int _responseTime;
 
     /** COPS Client-type */
-    protected ClientType _clientType;
+    protected short _clientType;
 
     /**
         Accounting timer value (secs)
@@ -61,7 +60,7 @@ public class COPSPepOSConnection implements Runnable {
      * @param clientType    PEP's client-type
      * @param sock          Socket connected to PDP
      */
-    public COPSPepOSConnection(final ClientType clientType, final Socket sock) {
+    public COPSPepOSConnection(final short clientType, final Socket sock) {
         _clientType = clientType;
         _sock = sock;
 
@@ -178,7 +177,7 @@ public class COPSPepOSConnection implements Runnable {
                     cTime = (int) (new Date().getTime());
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
-                        final COPSKAMsg msg = new COPSKAMsg(_clientType, null);
+                        final COPSKAMsg msg = new COPSKAMsg(null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }

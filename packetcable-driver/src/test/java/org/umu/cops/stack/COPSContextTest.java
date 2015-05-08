@@ -16,11 +16,6 @@ import java.io.ByteArrayOutputStream;
 public class COPSContextTest {
 
     @Test(expected = IllegalArgumentException.class)
-    public void invalidRType() {
-        new COPSContext(RType.NA, (short)0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void nullRType() {
         new COPSContext(null, (short)0);
     }
