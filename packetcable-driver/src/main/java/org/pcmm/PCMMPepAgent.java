@@ -124,10 +124,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
         // Build OPN
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, getClientType());
 
-        COPSPepId pepId = new COPSPepId();
-        COPSData d = new COPSData(getPepID());
-        pepId.setData(d);
-
+        COPSPepId pepId = new COPSPepId(new COPSData(getPepID()));
         COPSClientOpenMsg msg = new COPSClientOpenMsg();
         msg.add(hdr);
         msg.add(pepId);

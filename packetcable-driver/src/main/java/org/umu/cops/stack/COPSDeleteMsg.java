@@ -126,8 +126,6 @@ public class COPSDeleteMsg extends COPSMsg {
     public void add (COPSIntegrity integrity) throws COPSException {
         if (integrity == null)
             throw new COPSException ("Null Integrity");
-        if (!integrity.isMessageIntegrity())
-            throw new COPSException ("Error Integrity");
         _integrity = integrity;
         setMsgLength();
     }
@@ -140,7 +138,7 @@ public class COPSDeleteMsg extends COPSMsg {
      */
     public COPSHandle getClientHandle() {
         return _clientHandle;
-    };
+    }
 
     /**
      * Get Reason
@@ -150,7 +148,7 @@ public class COPSDeleteMsg extends COPSMsg {
      */
     public COPSReason getReason() {
         return _reason;
-    };
+    }
 
     /**
      * Returns true if it has integrity object
@@ -160,7 +158,7 @@ public class COPSDeleteMsg extends COPSMsg {
      */
     public boolean hasIntegrity() {
         return (_integrity != null);
-    };
+    }
 
     /**
      * Get Integrity. Should check hasIntegrity() before calling
@@ -202,18 +200,18 @@ public class COPSDeleteMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
-            switch (objHdr.getCNum()) {
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
                 case HANDLE:
-                    _clientHandle = new COPSHandle(buf);
+                    _clientHandle = COPSHandle.parse(objHdrData, buf);
                     _dataStart += _clientHandle.getDataLength();
                     break;
                 case REASON_CODE:
-                    _reason = new COPSReason(buf);
+                    _reason = COPSReason.parse(objHdrData, buf);
                     _dataStart += _reason.getDataLength();
                     break;
                 case MSG_INTEGRITY:
-                    _integrity = new COPSIntegrity(buf);
+                    _integrity = COPSIntegrity.parse(objHdrData, buf);
                     _dataStart += _integrity.getDataLength();
                     break;
                 default:

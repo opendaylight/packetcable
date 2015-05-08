@@ -6,6 +6,9 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSObjHeader.CNum;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -75,28 +78,28 @@ public class COPSDecisionMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
-            switch (objHdr.getCNum()) {
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
                 case HANDLE:
-                    _clientHandle = new COPSHandle(buf);
+                    _clientHandle = COPSHandle.parse(objHdrData, buf);
                     _dataStart += _clientHandle.getDataLength();
                     break;
                 case CONTEXT:
                     //dec context
-                    _decContext = new COPSContext(buf);
+                    _decContext = COPSContext.parse(objHdrData, buf);
                     _dataStart += _decContext.getDataLength();
                     break;
                 case ERROR:
-                    _error = new COPSError(buf);
+                    _error = COPSError.parse(objHdrData, buf);
                     _dataStart += _error.getDataLength();
                     break;
                 case DEC:
-                    COPSDecision decs = new COPSDecision(buf);
+                    COPSDecision decs = COPSDecision.parse(objHdrData, buf);
                     _dataStart += decs.getDataLength();
                     addDecision(decs, _decContext);
                     break;
                 case MSG_INTEGRITY:
-                    _integrity = new COPSIntegrity(buf);
+                    _integrity = COPSIntegrity.parse(objHdrData, buf);
                     _dataStart += _integrity.getDataLength();
                     break;
                 default: {
@@ -192,13 +195,13 @@ public class COPSDecisionMsg extends COPSMsg {
         if (_error != null)
             throw new COPSException ("No null error");
 
-        if (decision.isLocalDecision())
+        if (decision.getHeader().getCNum().equals(CNum.LPDP_DEC))
             throw new COPSException ("Is local decision");
 
         Vector v = (Vector) _decisions.get(context);
         if (v == null) v = new Vector();
 
-        if (decision.isFlagSet()) {//Commented out as advised by Felix
+        if (!decision.getFlag().equals(DecisionFlag.NA)) {//Commented out as advised by Felix
             //if (v.size() != 0)
             //{
             //Only one set of decision flags is allowed
@@ -230,8 +233,6 @@ public class COPSDecisionMsg extends COPSMsg {
     public void add (COPSIntegrity integrity)  throws COPSException {
         if (integrity == null)
             throw new COPSException ("Null Integrity");
-        if (!integrity.isMessageIntegrity())
-            throw new COPSException ("Error Integrity");
         _integrity = integrity;
         setMsgLength();
     }
@@ -314,7 +315,7 @@ public class COPSDecisionMsg extends COPSMsg {
      */
     public boolean hasError() {
         return (_error != null);
-    };
+    }
 
     /**
      * Should check hasError() before calling
@@ -324,7 +325,7 @@ public class COPSDecisionMsg extends COPSMsg {
      */
     public COPSError getError() {
         return _error;
-    };
+    }
 
     /**
      * Returns a map of decision for which is an arry of context and vector
@@ -335,7 +336,7 @@ public class COPSDecisionMsg extends COPSMsg {
      */
     public Hashtable getDecisions() {
         return _decisions;
-    };
+    }
 
     /**
      * Returns true if it has integrity object
@@ -345,7 +346,7 @@ public class COPSDecisionMsg extends COPSMsg {
      */
     public boolean hasIntegrity() {
         return (_integrity != null);
-    };
+    }
 
     /**
      * Should check hasIntegrity() before calling
@@ -355,7 +356,7 @@ public class COPSDecisionMsg extends COPSMsg {
      */
     public COPSIntegrity getIntegrity() {
         return _integrity;
-    };
+    }
 
     /**
      * Method setMsgLength

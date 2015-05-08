@@ -12,9 +12,11 @@ import org.umu.cops.stack.COPSObjHeader.CType;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * COPS Report Type (RFC 2748 pag. 16
+ * COPS Report Type (RFC 2748 pg. 16)
  *
  *   The Type of Report on the request state associated with a handle:
  *
@@ -34,127 +36,115 @@ import java.net.Socket;
  * @version COPSReportType.java, v 1.00 2003
  *
  */
-public class COPSReportType extends COPSPrObjBase {
+public class COPSReportType extends COPSObjBase {
 
-    public final static String[] msgMap = {
-        "Unknown",
-        "Success",
-        "Failure",
-        "Accounting",
-    };
+    private final static Map<Integer, ReportType> VAL_TO_RPT_TYPE = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_RPT_TYPE.put(ReportType.NA.ordinal(), ReportType.NA);
+        VAL_TO_RPT_TYPE.put(ReportType.SUCCESS.ordinal(), ReportType.SUCCESS);
+        VAL_TO_RPT_TYPE.put(ReportType.FAILURE.ordinal(), ReportType.FAILURE);
+        VAL_TO_RPT_TYPE.put(ReportType.ACCOUNTING.ordinal(), ReportType.ACCOUNTING);
+    }
 
-    private COPSObjHeader _objHdr;
-    private short _rType;
-    private short _reserved;
+    private final static Map<ReportType, String> RPT_TYPE_TO_STRING = new ConcurrentHashMap<>();
+    static {
+        RPT_TYPE_TO_STRING.put(ReportType.NA, "Unknown.");
+        RPT_TYPE_TO_STRING.put(ReportType.SUCCESS, "Success.");
+        RPT_TYPE_TO_STRING.put(ReportType.FAILURE, "Failure.");
+        RPT_TYPE_TO_STRING.put(ReportType.ACCOUNTING, "Accounting.");
+    }
 
-    public final static short SUCCESS = 1;
-    public final static short FAILURE = 2;
-    public final static short ACCT = 3;
+    /**
+     * The type of report
+     */
+    private final ReportType _rType;
 
-    public COPSReportType(short rType) {
-        _objHdr = new COPSObjHeader(CNum.RPT, CType.DEF);
+    /**
+     * What is this attribute used for???
+     */
+    private final short _reserved;
+
+    /**
+     * Constructor generally used for sending messages
+     * @param rType - the report type
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSReportType(final ReportType rType) {
+        this(new COPSObjHeader(CNum.RPT, CType.DEF), rType, (short)0);
+    }
+
+    /**
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSObjHeader information is known
+     * @param hdr - the object header
+     * @param rType - the report type
+     * @param reserved - ???
+     * @throws java.lang.IllegalArgumentException
+     */
+    protected COPSReportType(final COPSObjHeader hdr, final ReportType rType, final short reserved) {
+        super(hdr);
+        if (!hdr.getCNum().equals(CNum.RPT))
+            throw new IllegalArgumentException("Must have a CNum value of " + CNum.RPT);
+        if (!hdr.getCType().equals(CType.DEF))
+            throw new IllegalArgumentException("Must have a CType value of " + CType.DEF);
+        if (rType == null) throw new IllegalArgumentException("Report type must not be null");
+        if (rType.equals(ReportType.NA))
+            throw new IllegalArgumentException("Report type must not be of type " + ReportType.NA);
+
         _rType = rType;
-        _objHdr.setDataLength((short) 4);
+        _reserved = reserved;
     }
 
-    /**
-          Parse data and create COPSReportType object
-     */
-    protected COPSReportType(byte[] dataPtr) {
-        _objHdr = COPSObjHeader.parse(dataPtr);
+    public ReportType getReportType() { return _rType; }
 
-        _rType |= ((short) dataPtr[4]) << 8;
-        _rType |= ((short) dataPtr[5]) & 0xFF;
-        _reserved |= ((short) dataPtr[6]) << 8;
-        _reserved |= ((short) dataPtr[7]) & 0xFF;
-
-        _objHdr.setDataLength((short) 4);
+    @Override
+    public int getDataLength() {
+        return 4;
     }
 
-    /**
-     * Returns size in number of octects, including header
-     *
-     * @return   a short
-     *
-     */
-    public short getDataLength() {
-        //Add the size of the header also
-        return (_objHdr.getDataLength());
-    }
+    @Override
+    protected void writeBody(final Socket id) throws IOException {
+        final byte[] buf = new byte[4];
 
-    /**
-     * If it is Success, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isSuccess() {
-        return (_rType == SUCCESS );
-    };
-
-    /**
-     * If it is Failure, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isFailure() {
-        return (_rType == FAILURE);
-    };
-
-    /**
-     * If it is Accounting, return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isAccounting() {
-        return (_rType == ACCT);
-    };
-
-    /**
-     * Always return true
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isReport() {
-        return true;
-    };
-
-    /**
-     * Write data in network byte order on a given network socket
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        _objHdr.writeData(id);
-
-        byte[] buf = new byte[4];
-
-        buf[0] = (byte) (_rType >> 8);
-        buf[1] = (byte) _rType;
+        buf[0] = (byte) (_rType.ordinal() >> 8);
+        buf[1] = (byte) _rType.ordinal();
         buf[2] = (byte) (_reserved >> 8);
         buf[3] = (byte) _reserved;
 
         COPSUtil.writeData(id, buf, 4);
     }
 
-    /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
-     */
-    public void dump(OutputStream os) throws IOException {
-        _objHdr.dump(os);
-        os.write(new String("Report: " + msgMap[_rType] + "\n").getBytes());
+    @Override
+    protected void dumpBody(final OutputStream os) throws IOException {
+        os.write(("Report: " + RPT_TYPE_TO_STRING.get(_rType) + "\n").getBytes());
     }
+
+    /**
+     * Creates this object from a byte array
+     * @param objHdrData - the header
+     * @param dataPtr - the data to parse
+     * @return - a new Timer
+     * @throws java.lang.IllegalArgumentException
+     */
+    public static COPSReportType parse(final COPSObjHeaderData objHdrData, byte[] dataPtr) {
+        short rType = 0;
+        rType |= ((short) dataPtr[4]) << 8;
+        rType |= ((short) dataPtr[5]) & 0xFF;
+
+        short reserved = 0;
+        reserved |= ((short) dataPtr[6]) << 8;
+        reserved |= ((short) dataPtr[7]) & 0xFF;
+
+        return new COPSReportType(objHdrData.header, VAL_TO_RPT_TYPE.get((int)rType), reserved);
+    }
+
+    /**
+     * The supported report types
+     */
+    public enum ReportType {
+        NA, SUCCESS, FAILURE, ACCOUNTING
+    }
+
 }
 
 

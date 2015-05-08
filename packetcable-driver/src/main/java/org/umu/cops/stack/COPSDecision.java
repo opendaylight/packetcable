@@ -12,194 +12,219 @@ import org.umu.cops.stack.COPSObjHeader.CType;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * COPS Decision
+ * COPS Decision (RFC 2748)
  *
- * @version COPSDecision.java, v 1.00 2003
+ * Decision made by the PDP. Appears in replies. The specific non-
+ * mandatory decision objects required in a decision to a particular
+ * request depend on the type of client.
  *
+ * C-Num = 6
+ * C-Type = 1, Decision Flags (Mandatory)
+ *
+ * Commands:
+ * 0 = NULL Decision (No configuration data available)
+ * 1 = Install (Admit request/Install configuration)
+ * 2 = Remove (Remove request/Remove configuration)
+ *
+ * Flags:
+ * 0x01 = Trigger Error (Trigger error message if set)
+ * Note: Trigger Error is applicable to client-types that
+ * are capable of sending error notifications for signaled
+ * messages.
+ *
+ * Flag values not applicable to a given context's R-Type or
+ * client-type MUST be ignored by the PEP.
+ *
+ * C-Type = 2, Stateless Data
+ *
+ * This type of decision object carries additional stateless
+ * information that can be applied by the PEP locally. It is a
+ * variable length object and its internal format SHOULD be
+ * specified in the relevant COPS extension document for the given
+ * client-type. This object is optional in Decision messages and is
+ * interpreted relative to a given context.
+ *
+ * It is expected that even outsourcing PEPs will be able to make
+ * some simple stateless policy decisions locally in their LPDP. As
+ * this set is well known and implemented ubiquitously, PDPs are
+ * aware of it as well (either universally, through configuration,
+ * or using the Client-Open message). The PDP may also include this
+ * information in its decision, and the PEP MUST apply it to the
+ * resource allocation event that generated the request.
+ *
+ * C-Type = 3, Replacement Data
+ *
+ * This type of decision object carries replacement data that is to
+ * replace existing data in a signaled message. It is a variable
+ * length object and its internal format SHOULD be specified in the
+ * relevant COPS extension document for the given client-type. It is
+ * optional in Decision messages and is interpreted relative to a
+ * given context.
+ *
+ * C-Type = 4, Client Specific Decision Data
+ *
+ * Additional decision types can be introduced using the Client
+ * Specific Decision Data Object. It is a variable length object and
+ * its internal format SHOULD be specified in the relevant COPS
+ * extension document for the given client-type. It is optional in
+ * Decision messages and is interpreted relative to a given context.
+ *
+ * C-Type = 5, Named Decision Data
+ *
+ * Named configuration information is encapsulated in this version
+ * of the decision object in response to configuration requests. It
+ * is a variable length object and its internal format SHOULD be
+ * specified in the relevant COPS extension document for the given
+ * client-type. It is optional in Decision messages and is
+ * interpreted relative to both a given context and decision flags.
  */
 public class COPSDecision extends COPSObjBase {
 
-    // CType
-    @Deprecated public final static byte DEC_DEF = 1;
-    @Deprecated public final static byte DEC_STATELESS = 2;
-    @Deprecated public final static byte DEC_REPL = 3;
-    @Deprecated public final static byte DEC_CSI = 4;
-    @Deprecated public final static byte DEC_NAMED = 5;
-
-    // Command
-    @Deprecated public final static byte DEC_NULL = 0;
-    @Deprecated public final static byte DEC_INSTALL = 1;
-    @Deprecated public final static byte DEC_REMOVE = 2;
-
-    // Flags
-    @Deprecated public final static byte F_REQERROR = 0x1;
-    @Deprecated public final static byte F_REQSTATE = 0x2;
-
-    protected COPSObjHeader _objHdr;
-    private COPSData _data;
-    private short _cmdCode;
-    private short _flags;
-    private COPSData _padding;
-
-    /**
-      Constructor to create a Decision object. By default creates
-      a decision object which is of fixed length.
-     */
-    public COPSDecision(byte cType) {
-        _objHdr = new COPSObjHeader(CNum.DEC, COPSObjHeader.VAL_TO_CTYPE.get((int)cType));
-        _cmdCode = 0;
-        _flags = 0;
-        if (cType == CType.DEF.ordinal()) _objHdr.setDataLength( (short) 4);
+    static Map<Integer, Command> VAL_TO_CMD = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_CMD.put(Command.NULL.ordinal(), Command.NULL);
+        VAL_TO_CMD.put(Command.INSTALL.ordinal(), Command.INSTALL);
+        VAL_TO_CMD.put(Command.REMOVE.ordinal(), Command.REMOVE);
     }
 
-    public COPSDecision() {
-        _objHdr = new COPSObjHeader(CNum.DEC, CType.DEF);
-        _cmdCode = 0;
-        _flags = 0;
-        _objHdr.setDataLength( (short) 4);
+    static Map<Integer, DecisionFlag> VAL_TO_FLAG = new ConcurrentHashMap<>();
+    static {
+        VAL_TO_FLAG.put(DecisionFlag.NA.ordinal(), DecisionFlag.NA);
+        VAL_TO_FLAG.put(DecisionFlag.REQERROR.ordinal(), DecisionFlag.REQERROR);
+        VAL_TO_FLAG.put(DecisionFlag.REQSTATE.ordinal(), DecisionFlag.REQSTATE);
     }
 
     /**
-          Initialize the decision object with values from COPSObj header
+     * All CTypes are supported except NA
      */
-    protected COPSDecision(byte[] dataPtr) {
-        _objHdr = COPSObjHeader.parse(dataPtr);
+    private final Command _cmdCode;
+    private final DecisionFlag _flags;
+    private final COPSData _data;
+    private final COPSData _padding;
 
-        _cmdCode = 0;
-        _flags = 0;
-        if (_objHdr.getCType().equals(CType.DEF)) {
-            _cmdCode |= ((short) dataPtr[4]) << 8;
-            _cmdCode |= ((short) dataPtr[5]) & 0xFF;
-            _flags |= ((short) dataPtr[6]) << 8;
-            _flags |= ((short) dataPtr[7]) & 0xFF;
+    /**
+     * Constructor generally used for sending messages without any extra data
+     * @param cmdCode - the command
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSDecision(final Command cmdCode) {
+        this(CType.DEF, cmdCode, DecisionFlag.NA, new COPSData());
+    }
 
-            _objHdr.setDataLength((short) 4);
+    /**
+     * Constructor generally used for sending messages with a specific CType and extra data and a NA decision flag
+     * @param cType - the CType
+     * @param data - the data
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSDecision(final CType cType, final COPSData data) {
+        this(cType, Command.NULL, DecisionFlag.NA, data);
+    }
+
+    /**
+     * Constructor generally used for sending messages with a specific Command and DecisionFlag
+     * @param cmdCode - the command
+     * @param flags - the flags
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSDecision(final Command cmdCode, final DecisionFlag flags) {
+        this(CType.DEF, cmdCode, flags, new COPSData());
+    }
+
+    /**
+     * Constructor generally used for sending messages with a specific, CType, Command and DecisionFlag
+     * @param cType - the CType
+     * @param cmdCode - the command
+     * @param flags - the flags
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSDecision(final CType cType, final Command cmdCode, final DecisionFlag flags) {
+        this(cType, cmdCode, flags, new COPSData());
+    }
+
+    /**
+     * Constructor generally used for sending messages with a specific, CType, Command, DecisionFlag and data
+     * @param cType - the CType
+     * @param cmdCode - the command
+     * @param flags - the flags
+     * @param data - the data
+     * @throws java.lang.IllegalArgumentException
+     */
+    public COPSDecision(final CType cType, final Command cmdCode, final DecisionFlag flags,
+                        final COPSData data) {
+        this(new COPSObjHeader(CNum.DEC, cType), cmdCode, flags, data);
+    }
+
+    /**
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSObjHeader information is known
+     * @param hdr - the object header
+     * @param cmdCode - the command
+     * @param flags - the flags
+     * @param data - the data
+     * @throws java.lang.IllegalArgumentException
+     */
+    protected COPSDecision(final COPSObjHeader hdr, final Command cmdCode, final DecisionFlag flags,
+                           final COPSData data) {
+        super(hdr);
+        // TODO - find a better way to make this check
+        if (this.getClass().getName().equals("org.umu.cops.stack.COPSDecision") && !hdr.getCNum().equals(CNum.DEC))
+            throw new IllegalArgumentException("CNum must be equal to " + CNum.DEC);
+
+        if (hdr.getCType().equals(CType.NA)) throw new IllegalArgumentException("CType must not be " + CType.NA);
+        if (cmdCode == null) throw new IllegalArgumentException("Command code must not be null");
+        if (flags == null) throw new IllegalArgumentException("Flags must not be null");
+        if (data == null) throw new IllegalArgumentException("Data object must not be null");
+
+        _cmdCode = cmdCode;
+        _flags = flags;
+        _data = data;
+
+        if ((_data.length() % 4) != 0) {
+            final int padLen = 4 - (_data.length() % 4);
+            _padding = COPSObjectParser.getPadding(padLen);
         } else {
-            int dLen = _objHdr.getDataLength() - 4;
-            COPSData d = new COPSData(dataPtr, 4, dLen);
-            setData(d);
+            _padding = new COPSData();
         }
     }
 
     /**
-     * Method getDataLength
-     *
-     * @return   a short
-     *
+     * Returns the command
+     * @return - the command
      */
-    public short getDataLength() {
-        int lpadding = 0;
-        if (_padding != null) lpadding = _padding.length();
-        return ((short) (_objHdr.getDataLength() + lpadding));
+    public Command getCommand() { return _cmdCode; }
+
+    @Override
+    public int getDataLength() {
+        return 4 + _data.length() + _padding.length();
     }
-
-
 
     /**
      * Get the associated data if decision object is of cType 2 or higher
-     *
      * @return   a COPSData
-     *
      */
     public COPSData getData() {
         return (_data);
     }
 
     /**
-     * Set the decision data if decision object is of cType 2 or higher
-     *
-     * @param    data                a  COPSData
-     *
-     */
-    public void setData(COPSData data) {
-        if (data.length() % 4 != 0) {
-            int padLen = 4 - data.length() % 4;
-            _padding = getPadding(padLen);
-        }
-        _data = data;
-        _objHdr.setDataLength((short) data.length());
-    }
-
-    /**
-     * Retruns true if cType = 1
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isFlagSet() {
-        return ( _objHdr.getCType().ordinal() == 1);
-    };
-
-    /**
      * If cType == 1 , get the flags associated
-     *
      * @return   a short
-     *
      */
-    public short getFlags() {
-        return (_flags);
-    };
-
-    /**
-     * If cType == 1 ,set the cmd code
-     *
-     * @param    cCode               a  byte
-     *
-     */
-    public void setCmdCode(byte cCode) {
-        _cmdCode = (short) cCode;
+    public DecisionFlag getFlag() {
+        return _flags;
     }
-
-    /**
-     * If cType == 1 ,set the cmd flags
-     *
-     * @param    flags               a  short
-     *
-     */
-    public void setFlags(short flags) {
-        _flags = flags;
-    }
-
-    /**
-     * Method isNullDecision
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isNullDecision() {
-        return ( _cmdCode == 0);
-    };
-
-    /**
-     * Method isInstallDecision
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isInstallDecision() {
-        return ( _cmdCode == 1);
-    };
-
-    /**
-     * Method isRemoveDecision
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isRemoveDecision() {
-        return ( _cmdCode == 2);
-    };
 
     /**
      * Method getTypeStr
-     *
      * @return   a String
-     *
      */
     public String getTypeStr() {
-        switch (_objHdr.getCType()) {
+        switch (this.getHeader().getCType()) {
             case DEF:
                 return "Default";
             case STATELESS:
@@ -215,80 +240,117 @@ public class COPSDecision extends COPSObjBase {
         }
     }
 
-    /**
-     * Method isDecision
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isDecision() {
-        return true;
-    };
-
-    /**
-     * Method isLocalDecision
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean isLocalDecision() {
-        return false;
-    };
-
-    /**
-     * Writes data to a given network socket
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        _objHdr.writeData(id);
-
-        if (_objHdr.getCType().ordinal() >= 2) {
-            COPSUtil.writeData(id, _data.getData(), _data.length());
+    @Override
+    protected void writeBody(final Socket socket) throws IOException {
+/*
+        if (this.getHeader().getCType().ordinal() >= 2) {
+            COPSUtil.writeData(socket, _data.getData(), _data.length());
             if (_padding != null) {
-                COPSUtil.writeData(id, _padding.getData(), _padding.length());
+                COPSUtil.writeData(socket, _padding.getData(), _padding.length());
             }
         } else {
             byte[] buf = new byte[4];
-            buf[0] = (byte) (_cmdCode >> 8);
-            buf[1] = (byte) _cmdCode;
-            buf[2] = (byte) (_flags >> 8);
-            buf[3] = (byte) _flags;
-            COPSUtil.writeData(id, buf, 4);
+            buf[0] = (byte) (_cmdCode.ordinal() >> 8);
+            buf[1] = (byte) _cmdCode.ordinal();
+            buf[2] = (byte) (_flags.ordinal() >> 8);
+            buf[3] = (byte) _flags.ordinal();
+            COPSUtil.writeData(socket, buf, 4);
         }
+*/
+        final byte[] buf = new byte[4];
+        buf[0] = (byte) (_cmdCode.ordinal() >> 8);
+        buf[1] = (byte) _cmdCode.ordinal();
+        buf[2] = (byte) (_flags.ordinal() >> 8);
+        buf[3] = (byte) _flags.ordinal();
+        COPSUtil.writeData(socket, buf, 4);
+
+        COPSUtil.writeData(socket, _data.getData(), _data.length());
+        if (_padding != null) {
+            COPSUtil.writeData(socket, _padding.getData(), _padding.length());
+        }
+    }
+
+    @Override
+    protected void dumpBody(final OutputStream os) throws IOException {
+        if (this.getHeader().getCType().equals(CType.DEF)) {
+            os.write(("Decision (" + getTypeStr() + ")\n").getBytes());
+            os.write(("Command code: " + _cmdCode + "\n").getBytes());
+            os.write(("Command flags: " + _flags + "\n").getBytes());
+        } else {
+            os.write(("Decision (" + getTypeStr() + ")\n").getBytes());
+            os.write(("Data: " + _data.str() + "\n").getBytes());
+        }
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSDecision)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final COPSDecision that = (COPSDecision) o;
+
+        return _cmdCode == that._cmdCode && _flags == that._flags &&
+                (_data.equals(that._data) && _padding.equals(that._padding) ||
+                        COPSUtil.copsDataPaddingEquals(this._data, this._padding, that._data, that._padding));
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + _data.hashCode();
+        result = 31 * result + _cmdCode.hashCode();
+        result = 31 * result + _flags.hashCode();
+        result = 31 * result + _padding.hashCode();
+        return result;
     }
 
     /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
+     * Parses bytes to return a COPSDecision object
+     * @param objHdrData - the associated header
+     * @param dataPtr - the data to parse
+     * @return - the object
+     * @throws java.lang.IllegalArgumentException
      */
-    public void dump(OutputStream os) throws IOException {
-        _objHdr.dump(os);
+    public static COPSDecision parse(final COPSObjHeaderData objHdrData, final byte[] dataPtr) {
+        int _cmdCode = 0;
+        _cmdCode |= ((short) dataPtr[4]) << 8;
+        _cmdCode |= ((short) dataPtr[5]) & 0xFF;
 
-        if (_objHdr.getCType().ordinal() == 1) {
-            os.write(new String("Decision (" + getTypeStr() + ")\n").getBytes());
-            os.write(new String("Command code: " + _cmdCode + "\n").getBytes());
-            os.write(new String("Command flags: " + _flags + "\n").getBytes());
+        int _flags = 0;
+        _flags |= ((short) dataPtr[6]) << 8;
+        _flags |= ((short) dataPtr[7]) & 0xFF;
+
+        final COPSData d;
+        if (objHdrData.header.getCType().equals(CType.DEF)) {
+            d = null;
         } else {
-            os.write(new String("Decision (" + getTypeStr() + ")\n").getBytes());
-            os.write(new String("Data: " + _data.str() + "\n").getBytes());
+            d = new COPSData(dataPtr, 8, objHdrData.msgByteCount - 8);
         }
+        return new COPSDecision(objHdrData.header, COPSDecision.VAL_TO_CMD.get(_cmdCode),
+                COPSDecision.VAL_TO_FLAG.get(_flags), d);
     }
+
+    /**
+     * Supported command types
+     */
+    public enum Command {
+        NULL,    // No configuration data available
+        INSTALL, // Admit request/install configuration
+        REMOVE   // Remove request/remove configuration
+    }
+
+    public enum DecisionFlag {
+        NA,
+        REQERROR, // = Trigger error
+        REQSTATE, // = ???
+    }
+
 }
-
-
-
-
-
-
-
-
-
-

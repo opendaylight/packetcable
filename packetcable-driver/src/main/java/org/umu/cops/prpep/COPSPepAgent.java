@@ -6,24 +6,13 @@
 
 package org.umu.cops.prpep;
 
+import org.umu.cops.stack.*;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Hashtable;
-
-import org.umu.cops.stack.COPSAcctTimer;
-import org.umu.cops.stack.COPSClientAcceptMsg;
-import org.umu.cops.stack.COPSClientCloseMsg;
-import org.umu.cops.stack.COPSClientOpenMsg;
-import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSError;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSKATimer;
-import org.umu.cops.stack.COPSMsg;
-import org.umu.cops.stack.COPSPepId;
-import org.umu.cops.stack.COPSTransceiver;
 
 /**
  * This is a provisioning COPS PEP. Responsible for making
@@ -124,13 +113,11 @@ public class COPSPepAgent {
      * @param    psHost              PDP host name
      * @param    psPort              PDP port
      * @return   <tt>true</tt> if PDP accepts the connection; <tt>false</tt> otherwise
-     * @throws   java.net.UnknownHostException
      * @throws   java.io.IOException
      * @throws   COPSException
      * @throws   COPSPepException
      */
-    public boolean connect(String psHost, int psPort)
-    throws UnknownHostException, IOException, COPSException, COPSPepException {
+    public boolean connect(String psHost, int psPort) throws IOException, COPSException, COPSPepException {
 
         // COPSDebug.out(getClass().getName(), "Thread ( " + _pepID + ") - Connecting to PDP");
         _psHost = psHost;
@@ -256,15 +243,12 @@ public class COPSPepAgent {
      * @throws   COPSPepException
      *
      */
-    private COPSPepConnection processConnection(String psHost, int psPort)
-    throws UnknownHostException, IOException, COPSException, COPSPepException {
+    private COPSPepConnection processConnection(String psHost, int psPort) throws IOException, COPSException,
+            COPSPepException {
         // Build OPN
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, _clientType);
 
-        COPSPepId pepId = new COPSPepId();
-        COPSData d = new COPSData(_pepID);
-        pepId.setData(d);
-
+        COPSPepId pepId = new COPSPepId(new COPSData(_pepID));
         COPSClientOpenMsg msg = new COPSClientOpenMsg();
         msg.add(hdr);
         msg.add(pepId);

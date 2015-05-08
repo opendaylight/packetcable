@@ -6,6 +6,8 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -82,11 +84,9 @@ public class COPSClientOpenMsg extends COPSMsg {
      * @throws   COPSException
      *
      */
-    public void add (COPSPepId pepid) throws COPSException {
+    public void add(COPSPepId pepid) throws COPSException {
         if (pepid == null)
             throw new COPSException ("Null COPSPepId");
-        if (!pepid.isPepId())
-            throw new COPSException ("Error COPSPepId");
         _pepId = pepid;
         setMsgLength();
     }
@@ -102,8 +102,6 @@ public class COPSClientOpenMsg extends COPSMsg {
     public void add (COPSClientSI clientSI) throws COPSException {
         if (clientSI == null)
             throw new COPSException ("Null COPSClientSI");
-        if (!clientSI.isClientSI())
-            throw new COPSException ("Error COPSClientSI");
         _clientSI = clientSI;
         setMsgLength();
     }
@@ -116,11 +114,11 @@ public class COPSClientOpenMsg extends COPSMsg {
      * @throws   COPSException
      *
      */
-    public void add (COPSPdpAddress pdpAddr) throws COPSException {
+    public void add(COPSPdpAddress pdpAddr) throws COPSException {
         if (pdpAddr == null)
             throw new COPSException ("Null COPSPdpAddress");
-        if (!pdpAddr.isLastPdpAddress())
-            throw new COPSException ("Error COPSPdpAddress");
+        if (pdpAddr.getHeader().getCNum().equals(CNum.LAST_PDP_ADDR))
+            throw new COPSException ("Error Last PDP address object added, invalid");
         _pdpAddress = pdpAddr;
         setMsgLength();
     }
@@ -133,11 +131,9 @@ public class COPSClientOpenMsg extends COPSMsg {
      * @throws   COPSException
      *
      */
-    public void add (COPSIntegrity integrity) throws COPSException {
+    public void add(COPSIntegrity integrity) throws COPSException {
         if (integrity == null)
             throw new COPSException ("Null Integrity");
-        if (!integrity.isMessageIntegrity())
-            throw new COPSException ("Error Integrity");
         _integrity = integrity;
         setMsgLength();
     }
@@ -249,26 +245,22 @@ public class COPSClientOpenMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
-            switch (objHdr.getCNum()) {
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
                 case PEPID:
-                    _pepId = new COPSPepId(buf);
+                    _pepId = COPSPepId.parse(objHdrData, buf);
                     _dataStart += _pepId.getDataLength();
                     break;
                 case LAST_PDP_ADDR:
-                    if (objHdr.getCType().ordinal() == 1) {
-                        _pdpAddress = new COPSIpv4LastPdpAddr(buf);
-                    } else if (objHdr.getCType().ordinal() == 2) {
-                        _pdpAddress = new COPSIpv6LastPdpAddr(buf);
-                    }
+                    _pdpAddress = COPSPdpAddress.parse(objHdrData, buf);
                     _dataStart += _pdpAddress.getDataLength();
                     break;
                 case CSI:
-                    _clientSI = new COPSClientSI(buf);
+                    _clientSI = COPSClientSI.parse(objHdrData, buf);
                     _dataStart += _clientSI.getDataLength();
                     break;
                 case MSG_INTEGRITY:
-                    _integrity = new COPSIntegrity(buf);
+                    _integrity = COPSIntegrity.parse(objHdrData, buf);
                     _dataStart += _integrity.getDataLength();
                     break;
                 default:

@@ -1,21 +1,14 @@
 package org.umu.cops.ospep;
 
+import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSReason.ReasonCode;
+import org.umu.cops.stack.COPSReportType.ReportType;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Vector;
-
-import org.umu.cops.stack.COPSClientSI;
-import org.umu.cops.stack.COPSContext;
-import org.umu.cops.stack.COPSDeleteMsg;
-import org.umu.cops.stack.COPSException;
-import org.umu.cops.stack.COPSHandle;
-import org.umu.cops.stack.COPSHeader;
-import org.umu.cops.stack.COPSReason;
-import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReportType;
-import org.umu.cops.stack.COPSReqMsg;
-import org.umu.cops.stack.COPSSyncStateMsg;
 
 /**
  * COPS message transceiver class for outsourcing connections at the PEP side.
@@ -79,7 +72,7 @@ public class COPSPepOSMsgSender {
         // Create COPS Message
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_REQ, _clientType);
 
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG , (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
 
         COPSHandle handle = _handle;
 
@@ -118,7 +111,7 @@ public class COPSPepOSMsgSender {
             COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
             COPSHandle hnd = _handle;
 
-            COPSReportType report = new COPSReportType(COPSReportType.FAILURE);
+            COPSReportType report = new COPSReportType(ReportType.FAILURE);
 
             msg.add(hdr);
             msg.add(hnd);
@@ -152,7 +145,7 @@ public class COPSPepOSMsgSender {
             COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
             COPSHandle hnd = _handle;
 
-            COPSReportType report = new COPSReportType(COPSReportType.SUCCESS);
+            COPSReportType report = new COPSReportType(ReportType.SUCCESS);
 
             msg.add(hdr);
             msg.add(hnd);
@@ -184,7 +177,7 @@ public class COPSPepOSMsgSender {
             COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_RPT, _clientType);
             COPSHandle hnd = _handle;
 
-            COPSReportType report = new COPSReportType(COPSReportType.ACCT);
+            COPSReportType report = new COPSReportType(ReportType.ACCOUNTING);
 
             msg.add(hdr);
             msg.add(hnd);
@@ -243,7 +236,7 @@ public class COPSPepOSMsgSender {
         COPSHandle handle = _handle;
 
         // *** TODO: use real reason codes
-        COPSReason reason = new COPSReason((short) 234, (short) 345);
+        COPSReason reason = new COPSReason(ReasonCode.NA, ReasonCode.NA);
 
         COPSDeleteMsg msg = new COPSDeleteMsg();
         try {

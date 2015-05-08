@@ -270,7 +270,7 @@ public class COPSPdpReqStateMan {
         // Named ClientSI
         Vector clientSIs = msg.getClientSI();
         Hashtable repSIs = new Hashtable(40);
-        String strobjprid = new String();
+        String strobjprid = "";
         for (Enumeration e = clientSIs.elements() ; e.hasMoreElements() ;) {
             COPSClientSI clientSI = (COPSClientSI) e.nextElement();
 
@@ -291,15 +291,19 @@ public class COPSPdpReqStateMan {
 
         //** Here we must act in accordance with
         //** the report received
-        if (rtypemsg.isSuccess()) {
-            _status = ST_REPORT;
-            _process.successReport(this, repSIs);
-        } else if (rtypemsg.isFailure()) {
-            _status = ST_REPORT;
-            _process.failReport(this, repSIs);
-        } else if (rtypemsg.isAccounting()) {
-            _status = ST_ACCT;
-            _process.acctReport(this, repSIs);
+        switch (rtypemsg.getReportType()) {
+            case SUCCESS:
+                _status = ST_REPORT;
+                _process.successReport(this, repSIs);
+                break;
+            case FAILURE:
+                _status = ST_REPORT;
+                _process.failReport(this, repSIs);
+                break;
+            case ACCOUNTING:
+                _status = ST_ACCT;
+                _process.acctReport(this, repSIs);
+                break;
         }
     }
 

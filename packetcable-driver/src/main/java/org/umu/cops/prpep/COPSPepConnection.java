@@ -9,6 +9,8 @@ package org.umu.cops.prpep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -398,8 +400,9 @@ public class COPSPepConnection implements Runnable {
                     logger.warn("Unable to find state manager with key - " + handle.getId().str());
 
                 // Check message type
-                if (decision.getFlags() == COPSDecision.F_REQSTATE) {
-                    if (decision.isRemoveDecision())
+                // TODO FIXME - Use of manager object could result in a NPE
+                if (decision.getFlag().equals(DecisionFlag.REQSTATE)) {
+                    if (decision.getCommand().equals(Command.REMOVE))
                         // Delete Request State
                         manager.processDeleteRequestState(dMsg);
                     else
@@ -427,6 +430,7 @@ public class COPSPepConnection implements Runnable {
         if (manager == null)
             logger.warn("Unable to find state manager with key - " + handle.getId().str());
 
+        // TODO FIXME - Use of manager object could result in a NPE
         manager.processOpenNewRequestState();
     }
 
@@ -452,7 +456,7 @@ public class COPSPepConnection implements Runnable {
             logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
-        COPSPepReqStateMan manager = (COPSPepReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        COPSPepReqStateMan manager = _managerMap.get(cMsg.getClientHandle().getId().str());
         if (manager == null) {
             logger.warn("Unable to find state manager with key - " + cMsg.getClientHandle().getId().str());
         } else {

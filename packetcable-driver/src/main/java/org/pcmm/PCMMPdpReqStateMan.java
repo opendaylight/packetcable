@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSReportType.ReportType;
 
 import java.net.Socket;
 import java.util.*;
@@ -311,7 +312,7 @@ public class PCMMPdpReqStateMan {
         logger.info("rtypemsg process");
         //** Here we must act in accordance with
         //** the report received
-        if (rtypemsg.isSuccess()) {
+        if (rtypemsg.getReportType().equals(ReportType.SUCCESS)) {
             logger.info("rtypemsg success");
             _status = ST_REPORT;
             if (_process != null)
@@ -333,14 +334,14 @@ public class PCMMPdpReqStateMan {
                         PCMMGlobalConfig.setGateID2(gateMsg.getGateID().getGateID());
                 }
             }
-        } else if (rtypemsg.isFailure()) {
+        } else if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
             logger.info("rtypemsg failure");
             _status = ST_REPORT;
             if (_process != null)
             _process.failReport(this, gateMsg);
             else
                 logger.info("Gate message error - " + gateMsg.getError().toString());
-        } else if (rtypemsg.isAccounting()) {
+        } else if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
             logger.info("rtypemsg account");
             _status = ST_ACCT;
             if (_process != null)

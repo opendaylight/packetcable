@@ -7,6 +7,10 @@
 package org.umu.cops.prpdp;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -108,14 +112,12 @@ public class COPSPdpMsgSender {
 
             // Decisions (no flags supplied)
             //  <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
 
             // Remove Decisions
             //  <Decision: Flags>
             if (removeDecs.size() > 0) {
-                COPSDecision rdec1 = new COPSDecision();
-                rdec1.setCmdCode(COPSDecision.DEC_REMOVE);
-
+                COPSDecision rdec1 = new COPSDecision(Command.REMOVE);
                 decisionMsg.addDecision(rdec1, cntxt);
 
                 for (Enumeration e = removeDecs.keys() ; e.hasMoreElements() ;) {
@@ -123,15 +125,15 @@ public class COPSPdpMsgSender {
                     String strepd = (String) removeDecs.get(strprid);
 
                     //  <Named Decision Data: Provisioning> (PRID)
-                    COPSDecision dec2 = new COPSDecision(COPSDecision.DEC_NAMED);
                     COPSPrID prid = new COPSPrID();
                     prid.setData(new COPSData(strprid));
-                    dec2.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                    COPSDecision dec2 = new COPSDecision(CType.NAMED,
+                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
                     //  <Named Decision Data: Provisioning> (EPD)
-                    COPSDecision dec3 = new COPSDecision(COPSDecision.DEC_NAMED);
                     COPSPrEPD epd = new COPSPrEPD();
                     epd.setData(new COPSData(strepd));
-                    dec3.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                    COPSDecision dec3 = new COPSDecision(CType.NAMED,
+                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                     decisionMsg.addDecision(dec2, cntxt);
                     decisionMsg.addDecision(dec3, cntxt);
@@ -141,9 +143,7 @@ public class COPSPdpMsgSender {
             // Install Decisions
             //  <Decision: Flags>
             if (installDecs.size() > 0) {
-                COPSDecision idec1 = new COPSDecision();
-                idec1.setCmdCode(COPSDecision.DEC_INSTALL);
-
+                COPSDecision idec1 = new COPSDecision(Command.INSTALL);
                 decisionMsg.addDecision(idec1, cntxt);
 
                 for (Enumeration e = installDecs.keys() ; e.hasMoreElements() ;) {
@@ -151,15 +151,15 @@ public class COPSPdpMsgSender {
                     String strepd = (String) installDecs.get(strprid);
 
                     //  <Named Decision Data: Provisioning> (PRID)
-                    COPSDecision dec2 = new COPSDecision(COPSDecision.DEC_NAMED);
                     COPSPrID prid = new COPSPrID();
                     prid.setData(new COPSData(strprid));
-                    dec2.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                    COPSDecision dec2 = new COPSDecision(CType.NAMED,
+                            new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
                     //  <Named Decision Data: Provisioning> (EPD)
-                    COPSDecision dec3 = new COPSDecision(COPSDecision.DEC_NAMED);
                     COPSPrEPD epd = new COPSPrEPD();
                     epd.setData(new COPSData(strepd));
-                    dec3.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                    COPSDecision dec3 = new COPSDecision(CType.NAMED,
+                            new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                     decisionMsg.addDecision(dec2, cntxt);
                     decisionMsg.addDecision(dec3, cntxt);
@@ -229,13 +229,11 @@ public class COPSPdpMsgSender {
 
             // Decisions (no flags supplied)
             //  <Context>
-            COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+            COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
 
             // Remove Decisions
             //  <Decision: Flags>
-            COPSDecision rdec1 = new COPSDecision();
-            rdec1.setCmdCode(COPSDecision.DEC_REMOVE);
-
+            COPSDecision rdec1 = new COPSDecision(Command.REMOVE);
             decisionMsg.addDecision(rdec1, cntxt);
 
             for (Enumeration e = removeDecs.keys() ; e.hasMoreElements() ;) {
@@ -243,15 +241,15 @@ public class COPSPdpMsgSender {
                 String strepd = (String) removeDecs.get(strprid);
 
                 //  <Named Decision Data: Provisioning> (PRID)
-                COPSDecision dec2 = new COPSDecision(COPSDecision.DEC_NAMED);
                 COPSPrID prid = new COPSPrID();
                 prid.setData(new COPSData(strprid));
-                dec2.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                COPSDecision dec2 = new COPSDecision(CType.NAMED,
+                        new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
                 //  <Named Decision Data: Provisioning> (EPD)
-                COPSDecision dec3 = new COPSDecision(COPSDecision.DEC_NAMED);
                 COPSPrEPD epd = new COPSPrEPD();
                 epd.setData(new COPSData(strepd));
-                dec3.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                COPSDecision dec3 = new COPSDecision(CType.NAMED,
+                        new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                 decisionMsg.addDecision(dec2, cntxt);
                 decisionMsg.addDecision(dec3, cntxt);
@@ -259,9 +257,7 @@ public class COPSPdpMsgSender {
 
             // Install Decisions
             //  <Decision: Flags>
-            COPSDecision idec1 = new COPSDecision();
-            idec1.setCmdCode(COPSDecision.DEC_INSTALL);
-
+            COPSDecision idec1 = new COPSDecision(Command.INSTALL);
             decisionMsg.addDecision(idec1, cntxt);
 
             for (Enumeration e = installDecs.keys() ; e.hasMoreElements() ;) {
@@ -269,15 +265,15 @@ public class COPSPdpMsgSender {
                 String strepd = (String) installDecs.get(strprid);
 
                 //  <Named Decision Data: Provisioning> (PRID)
-                COPSDecision dec2 = new COPSDecision(COPSDecision.DEC_NAMED);
                 COPSPrID prid = new COPSPrID();
                 prid.setData(new COPSData(strprid));
-                dec2.setData(new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
+                COPSDecision dec2 = new COPSDecision(CType.NAMED,
+                        new COPSData(prid.getDataRep(), 0, prid.getDataLength()));
                 //  <Named Decision Data: Provisioning> (EPD)
-                COPSDecision dec3 = new COPSDecision(COPSDecision.DEC_NAMED);
                 COPSPrEPD epd = new COPSPrEPD();
                 epd.setData(new COPSData(strepd));
-                dec3.setData(new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
+                COPSDecision dec3 = new COPSDecision(CType.NAMED,
+                        new COPSData(epd.getDataRep(), 0, epd.getDataLength()));
 
                 decisionMsg.addDecision(dec2, cntxt);
                 decisionMsg.addDecision(dec3, cntxt);
@@ -327,12 +323,9 @@ public class COPSPdpMsgSender {
 
         // Decisions
         //  <Context>
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
         //  <Decision: Flags>
-        COPSDecision dec = new COPSDecision();
-        dec.setCmdCode(COPSDecision.DEC_REMOVE);
-        dec.setFlags(COPSDecision.F_REQSTATE);
-
+        COPSDecision dec = new COPSDecision(Command.REMOVE, DecisionFlag.REQSTATE);
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         try {
             decisionMsg.add(hdr);
@@ -373,12 +366,9 @@ public class COPSPdpMsgSender {
 
         // Decisions
         //  <Context>
-        COPSContext cntxt = new COPSContext(COPSContext.CONFIG, (short) 0);
+        COPSContext cntxt = new COPSContext(RType.CONFIG, (short) 0);
         //  <Decision: Flags>
-        COPSDecision dec = new COPSDecision();
-        dec.setCmdCode(COPSDecision.DEC_INSTALL);
-        dec.setFlags(COPSDecision.F_REQSTATE);
-
+        COPSDecision dec = new COPSDecision(Command.INSTALL, DecisionFlag.REQSTATE);
         COPSDecisionMsg decisionMsg = new COPSDecisionMsg();
         try {
             decisionMsg.add(hdr);

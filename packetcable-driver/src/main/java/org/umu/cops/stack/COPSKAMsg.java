@@ -68,8 +68,6 @@ public class COPSKAMsg extends COPSMsg {
     public void add (COPSIntegrity integrity) throws COPSException {
         if (integrity == null)
             throw new COPSException ("Null Integrity");
-        if (!integrity.isMessageIntegrity())
-            throw new COPSException ("Error Integrity");
         _integrity = integrity;
         setMsgLength();
     }
@@ -123,10 +121,10 @@ public class COPSKAMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
-            switch (objHdr.getCNum()) {
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
             case MSG_INTEGRITY:
-                _integrity = new COPSIntegrity(buf);
+                _integrity = COPSIntegrity.parse(objHdrData, buf);
                 _dataStart += _integrity.getDataLength();
                 break;
             default: {

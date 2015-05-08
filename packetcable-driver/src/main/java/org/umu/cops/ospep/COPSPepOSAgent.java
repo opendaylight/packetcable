@@ -7,7 +7,6 @@ import org.umu.cops.stack.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -244,20 +243,17 @@ public class COPSPepOSAgent {
      *
      * Not send [<PDPRedirAddr>], [<Integrity>]
      *
-     * @throws   UnknownHostException
      * @throws   IOException
      * @throws   COPSException
      * @throws   COPSPepException
      *
      */
-    private COPSPepOSConnection processConnection(String psHost, int psPort) throws UnknownHostException, IOException, COPSException, COPSPepException {
+    private COPSPepOSConnection processConnection(String psHost, int psPort) throws IOException, COPSException,
+            COPSPepException {
         // Build OPN
         COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, _clientType);
 
-        COPSPepId pepId = new COPSPepId();
-        COPSData d = new COPSData(_pepID);
-        pepId.setData(d);
-
+        COPSPepId pepId = new COPSPepId(new COPSData(_pepID));
         COPSClientOpenMsg msg = new COPSClientOpenMsg();
         msg.add(hdr);
         msg.add(pepId);

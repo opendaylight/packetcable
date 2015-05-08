@@ -6,6 +6,8 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSObjHeader.CNum;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -69,7 +71,7 @@ public class COPSClientAcceptMsg extends COPSMsg {
      *
      */
     public void add (COPSTimer timer) throws COPSException {
-        if (timer.isKATimer()) {
+        if (timer.getHeader().getCNum().equals(CNum.KA)) {
             _kaTimer = (COPSKATimer) timer;
         } else {
             _acctTimer = (COPSAcctTimer) timer;
@@ -88,8 +90,6 @@ public class COPSClientAcceptMsg extends COPSMsg {
     public void add (COPSIntegrity integrity) throws COPSException {
         if (integrity == null)
             throw new COPSException ("Null Integrity");
-        if (!integrity.isMessageIntegrity())
-            throw new COPSException ("Error Integrity");
         _integrity = integrity;
         setMsgLength();
     }
@@ -175,18 +175,18 @@ public class COPSClientAcceptMsg extends COPSMsg {
             byte[] buf = new byte[data.length - _dataStart];
             System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
 
-            COPSObjHeader objHdr = COPSObjHeader.parse(buf);
-            switch (objHdr.getCNum()) {
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
                 case KA:
-                    _kaTimer = new COPSKATimer(buf);
+                    _kaTimer = COPSKATimer.parse(objHdrData, buf);
                     _dataStart += _kaTimer.getDataLength();
                     break;
                 case ACCT_TIMER:
-                    _acctTimer = new COPSAcctTimer(buf);
+                    _acctTimer = COPSAcctTimer.parse(objHdrData, buf);
                     _dataStart += _acctTimer.getDataLength();
                     break;
                 case MSG_INTEGRITY:
-                    _integrity = new COPSIntegrity(buf);
+                    _integrity = COPSIntegrity.parse(objHdrData, buf);
                     _dataStart += _integrity.getDataLength();
                     break;
                 default:

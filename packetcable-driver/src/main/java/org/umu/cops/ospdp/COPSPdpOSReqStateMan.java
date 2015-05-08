@@ -215,15 +215,19 @@ public class COPSPdpOSReqStateMan {
 
         //** We should act here in accordance with
         //** the received report
-        if (rtypemsg.isSuccess()) {
-            _status = ST_REPORT;
-            _process.successReport(this, clientSIs);
-        } else if (rtypemsg.isFailure()) {
-            _status = ST_REPORT;
-            _process.failReport(this, clientSIs);
-        } else if (rtypemsg.isAccounting()) {
-            _status = ST_ACCT;
-            _process.acctReport(this, clientSIs);
+        switch (rtypemsg.getReportType()) {
+            case SUCCESS:
+                _status = ST_REPORT;
+                _process.successReport(this, clientSIs);
+                break;
+            case FAILURE:
+                _status = ST_REPORT;
+                _process.failReport(this, clientSIs);
+                break;
+            case ACCOUNTING:
+                _status = ST_ACCT;
+                _process.acctReport(this, clientSIs);
+                break;
         }
     }
 

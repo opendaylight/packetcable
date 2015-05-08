@@ -3,6 +3,7 @@ package org.umu.cops.ospdp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSError.ErrorTypes;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -229,7 +230,7 @@ public class COPSPdpOSAgent extends Thread {
         if (msg.getHeader().getClientType() != _clientType) {
             // Unsupported client type
             COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg.getHeader().getClientType());
-            COPSError err = new COPSError(COPSError.COPS_ERR_UNSUPPORTED_CLIENT_TYPE, (short) 0);
+            COPSError err = new COPSError(ErrorTypes.UNSUPPORTED_CLIENT_TYPE, ErrorTypes.NA);
             COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
             closeMsg.add(cHdr);
             closeMsg.add(err);
@@ -246,7 +247,7 @@ public class COPSPdpOSAgent extends Thread {
         if (pepId == null) {
             // Mandatory COPS object missing
             COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg.getHeader().getClientType());
-            COPSError err = new COPSError(COPSError.COPS_ERR_MANDATORY_OBJECT_MISSING, (short) 0);
+            COPSError err = new COPSError(ErrorTypes.MANDATORY_OBJECT_MISSING, ErrorTypes.NA);
             COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
             closeMsg.add(cHdr);
             closeMsg.add(err);
@@ -266,7 +267,7 @@ public class COPSPdpOSAgent extends Thread {
 
             // Unsupported objects
             COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, msg.getHeader().getClientType());
-            COPSError err = new COPSError(COPSError.COPS_ERR_UNKNOWN_OBJECT, (short) 0);
+            COPSError err = new COPSError(ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA);
             COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
             closeMsg.add(cHdr);
             closeMsg.add(err);
