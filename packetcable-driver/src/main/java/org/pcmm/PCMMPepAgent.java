@@ -10,6 +10,8 @@ import org.umu.cops.prpep.COPSPepAgent;
 import org.umu.cops.prpep.COPSPepConnection;
 import org.umu.cops.prpep.COPSPepException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -49,7 +51,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
      * @param clientType
      *            Client-type
      */
-    public PCMMPepAgent(String pepID, short clientType) {
+    public PCMMPepAgent(final String pepID, final ClientType clientType) {
         super(pepID, clientType);
         serverPort = WELL_KNOWN_CMTS_PORT;
     }
@@ -60,7 +62,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
      * @param clientType
      *            Client-type
      */
-    public PCMMPepAgent(short clientType) {
+    public PCMMPepAgent(final ClientType clientType) {
         super(clientType);
         serverPort = WELL_KNOWN_CMTS_PORT;
     }
@@ -122,12 +124,8 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
      */
     private COPSPepConnection processConnection(Socket socket) throws IOException, COPSException, COPSPepException {
         // Build OPN
-        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, getClientType());
-
-        COPSPepId pepId = new COPSPepId(new COPSData(getPepID()));
-        COPSClientOpenMsg msg = new COPSClientOpenMsg();
-        msg.add(hdr);
-        msg.add(pepId);
+        final COPSPepId pepId = new COPSPepId(new COPSData(getPepID()));
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(getClientType(), pepId, null, null, null);
 
         // Create Socket and send OPN
         /*
@@ -141,7 +139,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
         logger.info("Receive the resposne from PDP");
         COPSMsg recvmsg = COPSTransceiver.receiveMsg(socket);
 
-        if (recvmsg.getHeader().isAClientAccept()) {
+        if (recvmsg.getHeader().getOpCode().equals(OPCode.CAT)) {
             logger.info("isAClientAccept from PDP");
             COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvmsg;
 
@@ -172,7 +170,7 @@ public class PCMMPepAgent extends COPSPepAgent implements Runnable {
             new Thread(conn).start();
 
             return conn;
-        } else if (recvmsg.getHeader().isAClientClose()) {
+        } else if (recvmsg.getHeader().getOpCode().equals(OPCode.CC)) {
             logger.info("isAClientClose from PDP");
             COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
             error = cMsg.getError();

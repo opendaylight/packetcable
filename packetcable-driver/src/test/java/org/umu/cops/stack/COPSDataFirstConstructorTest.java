@@ -13,7 +13,7 @@ public class COPSDataFirstConstructorTest {
     @Test
     public void defaultConstructor() {
         final COPSData data = new COPSData();
-        Assert.assertEquals(null, data.getData());
+        Assert.assertArrayEquals(new byte[0], data.getData());
         Assert.assertEquals(0, data.length());
         Assert.assertEquals("", data.str());
         Assert.assertTrue(data.equals(new COPSData()));

@@ -6,9 +6,9 @@
 
 package org.umu.cops.prpep;
 
-import java.util.Hashtable;
-
 import org.umu.cops.stack.COPSError;
+
+import java.util.Map;
 
 /**
  * COPSPepDataProcess process policy data and events.
@@ -21,52 +21,52 @@ public abstract class COPSPepDataProcess {
     /**
      * Establish PDP decisions
      *
-     * @param removeDecs
-     * @param installDecs
-     * @param errorDecs
+     * @param man - the state manager
+     * @param removeDecs - the remove decisions
+     * @param installDecs - the install decisions
+     * @param errorDecs - the error decisions
      */
 
-	public abstract void setDecisions(COPSPepReqStateMan man, Hashtable removeDecs, Hashtable installDecs, Hashtable errorDecs);
+	public abstract void setDecisions(COPSPepReqStateMan man, Map<String, String> removeDecs,
+                                      Map<String, String> installDecs, Map<String, String> errorDecs);
 
     /**
      *  If the report is fail, return true
      *
-     * @return
+     * @return - t/f
      */
     public abstract boolean isFailReport(COPSPepReqStateMan man);
 
     /**
      * Return Report Data
      *
-     * @return
+     * @return - the report data
      */
-    public abstract Hashtable getReportData(COPSPepReqStateMan man);
+    public abstract Map<String, String> getReportData(COPSPepReqStateMan man);
 
     /**
      * Return Client Data
      *
-     * @return
+     * @return - the client data
      */
-    public abstract Hashtable getClientData(COPSPepReqStateMan man);
+    public abstract Map<String, String> getClientData(COPSPepReqStateMan man);
 
     /**
-     * Return Accouting Data
+     * Return Accounting Data
      *
-     * @return
+     * @return - the accounting data
      */
-    public abstract Hashtable getAcctData(COPSPepReqStateMan man);
+    public abstract Map<String, String> getAcctData(COPSPepReqStateMan man);
 
     /**
      * Notify the connection closed
-     *
-     * @param error
      */
-    public abstract void notifyClosedConnection (COPSPepReqStateMan man, COPSError error);
+    public abstract void notifyClosedConnection(COPSPepReqStateMan man, COPSError error);
 
     /**
      * Notify the KAlive timeout
      */
-    public abstract void notifyNoKAliveReceived (COPSPepReqStateMan man);
+    public abstract void notifyNoKAliveReceived(COPSPepReqStateMan man);
 
     /**
      * Process a PDP request to close a Request State
@@ -78,7 +78,7 @@ public abstract class COPSPepDataProcess {
     /**
      * Process a PDP request to open a new Request State
      *
-     * @param man
+     * @param man       Request State Manager
      */
     public abstract void newRequestState(COPSPepReqStateMan man);
 }

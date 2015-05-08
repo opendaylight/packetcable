@@ -33,7 +33,7 @@ public class COPSData {
      * Default constructor
      */
     public COPSData() {
-        _dataBuf = null;
+        _dataBuf = new byte[0];
         _dLen = 0;
     }
 

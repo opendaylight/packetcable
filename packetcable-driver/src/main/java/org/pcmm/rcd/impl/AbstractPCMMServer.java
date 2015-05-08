@@ -3,23 +3,24 @@
  */
 package org.pcmm.rcd.impl;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.concurrent.Executors;
-
 import org.pcmm.PCMMConstants;
 import org.pcmm.PCMMProperties;
 import org.pcmm.concurrent.IWorkerPool;
 import org.pcmm.concurrent.impl.WorkerPool;
-// import org.junit.Assert;
 import org.pcmm.messages.impl.MessageFactory;
 import org.pcmm.rcd.IPCMMServer;
 import org.pcmm.state.IState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.umu.cops.stack.COPSHeader;
+import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSMsg;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.Executors;
+
+// import org.junit.Assert;
 
 /*
  * (non-Javadoc)
@@ -109,7 +110,7 @@ public abstract class AbstractPCMMServer implements IPCMMServer {
 	 * This client is used to handle requests from within the Application
 	 * Manager
 	 * 
-	 * @param socket
+	 * @param socket - the connection to the PCMM server
 	 * @return client handler
 	 */
 	protected abstract IPCMMClientHandler getPCMMClientHandler(Socket socket);
@@ -204,7 +205,7 @@ public abstract class AbstractPCMMServer implements IPCMMServer {
 			 */
 			// if (getSocket() != null)
 			// handlersPool.remove(getSocket());
-			COPSMsg message = MessageFactory.getInstance().create(COPSHeader.COPS_OP_CC);
+			COPSMsg message = MessageFactory.getInstance().create(OPCode.CC);
 			sendRequest(message);
 			return super.disconnect();
 		}

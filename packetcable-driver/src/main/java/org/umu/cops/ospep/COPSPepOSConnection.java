@@ -3,10 +3,15 @@ package org.umu.cops.ospep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.*;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,7 +29,7 @@ public class COPSPepOSConnection implements Runnable {
     protected final int _responseTime;
 
     /** COPS Client-type */
-    protected final short _clientType;
+    protected ClientType _clientType;
 
     /**
         Accounting timer value (secs)
@@ -42,15 +47,9 @@ public class COPSPepOSConnection implements Runnable {
     protected Date _lastRecKa;
 
     /**
-        Opcode of the latest message sent
-    */
-    protected byte _lastmessage;
-
-    /**
         Maps a COPS Client Handle to a Request State Manager
      */
     protected final Map<String, COPSPepOSReqStateMan> _managerMap;
-    // map < String(COPSHandle), COPSPepOSReqStateMan>;
 
     /**
         COPS error returned by PDP
@@ -62,7 +61,7 @@ public class COPSPepOSConnection implements Runnable {
      * @param clientType    PEP's client-type
      * @param sock          Socket connected to PDP
      */
-    public COPSPepOSConnection(short clientType, Socket sock) {
+    public COPSPepOSConnection(final ClientType clientType, final Socket sock) {
         _clientType = clientType;
         _sock = sock;
 
@@ -70,8 +69,6 @@ public class COPSPepOSConnection implements Runnable {
         _acctTimer = 0;
         _kaTimer = 0;
         _responseTime = 10000;
-        _lastmessage = COPSHeader.COPS_OP_CAT;
-
         _managerMap = new ConcurrentHashMap<>();
     }
 
@@ -134,14 +131,6 @@ public class COPSPepOSConnection implements Runnable {
     }
 
     /**
-     * Gets the opcode of the lastest message sent
-     * @return  Message opcode
-     */
-    public byte getLastmessage() {
-        return _lastmessage;
-    }
-
-    /**
      * Sets keep-alive timer
      * @param kaTimer   Keep-alive timer value (secs)
      */
@@ -168,7 +157,7 @@ public class COPSPepOSConnection implements Runnable {
         try {
             while (!_sock.isClosed()) {
                 if (_sock.getInputStream().available() != 0) {
-                    _lastmessage = processMessage(_sock);
+                    processMessage(_sock);
                     _lastRecKa = new Date();
                 }
 
@@ -189,11 +178,7 @@ public class COPSPepOSConnection implements Runnable {
                     cTime = (int) (new Date().getTime());
 
                     if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
-                        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_KA);
-                        COPSKAMsg msg = new COPSKAMsg();
-
-                        msg.add(hdr);
-
+                        final COPSKAMsg msg = new COPSKAMsg(_clientType, null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }
@@ -240,26 +225,21 @@ public class COPSPepOSConnection implements Runnable {
     /**
      * Gets a COPS message from the socket and processes it
      * @param conn  Socket connected to the PDP
-     * @return COPS message type
      * @throws COPSPepException
      * @throws COPSException
      * @throws IOException
      */
-    protected byte processMessage(Socket conn) throws COPSPepException, COPSException, IOException {
+    protected void processMessage(Socket conn) throws COPSPepException, COPSException, IOException {
         COPSMsg msg = COPSTransceiver.receiveMsg(conn);
 
-        if (msg.getHeader().isAClientClose()) {
+        if (msg.getHeader().getOpCode().equals(OPCode.CC)) {
             handleClientCloseMsg(conn, msg);
-            return COPSHeader.COPS_OP_CC;
-        } else if (msg.getHeader().isADecision()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.DEC)) {
             handleDecisionMsg(/*OJO conn, */msg);
-            return COPSHeader.COPS_OP_DEC;
-        } else if (msg.getHeader().isASyncStateReq()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.SSQ)) {
             handleSyncStateReqMsg(conn, msg);
-            return COPSHeader.COPS_OP_SSQ;
-        } else if (msg.getHeader().isAKeepAlive()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.KA)) {
             handleKeepAliveMsg(conn, msg);
-            return COPSHeader.COPS_OP_KA;
         } else {
             throw new COPSPepException("Message not expected (" + msg.getHeader().getOpCode() + ").");
         }
@@ -351,7 +331,7 @@ public class COPSPepOSConnection implements Runnable {
     private void handleDecisionMsg(/*OJO Socket conn, */COPSMsg msg) throws COPSPepException {
         COPSDecisionMsg dMsg = (COPSDecisionMsg) msg;
         COPSHandle handle = dMsg.getClientHandle();
-        COPSPepOSReqStateMan manager = (COPSPepOSReqStateMan) _managerMap.get(handle.getId().str());
+        COPSPepOSReqStateMan manager = _managerMap.get(handle.getId().str());
         manager.processDecision(dMsg);
     }
 
@@ -392,7 +372,9 @@ public class COPSPepOSConnection implements Runnable {
      * @throws COPSException
      * @throws COPSPepException
      */
-    protected COPSPepOSReqStateMan addRequestState(String clientHandle, COPSPepOSDataProcess process, Vector clientSIs) throws COPSException, COPSPepException {
+    protected COPSPepOSReqStateMan addRequestState(final String clientHandle, final COPSPepOSDataProcess process,
+                                                   final List<COPSClientSI> clientSIs)
+            throws COPSException, COPSPepException {
         COPSPepOSReqStateMan manager = new COPSPepOSReqStateMan(_clientType, clientHandle);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);

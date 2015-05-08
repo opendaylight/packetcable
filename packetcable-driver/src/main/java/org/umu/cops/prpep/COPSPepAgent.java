@@ -7,12 +7,13 @@
 package org.umu.cops.prpep;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Hashtable;
 
 /**
  * This is a provisioning COPS PEP. Responsible for making
@@ -28,7 +29,7 @@ public class COPSPepAgent {
     /**
         PEP's client-type
      */
-    private short _clientType;
+    private ClientType _clientType;
 
     /**
         PDP host name
@@ -55,7 +56,7 @@ public class COPSPepAgent {
      * @param    pepID              PEP-ID
      * @param    clientType         Client-type
      */
-    public COPSPepAgent(String pepID, short clientType) {
+    public COPSPepAgent(final String pepID, final ClientType clientType) {
         _pepID = pepID;
         _clientType = clientType;
     }
@@ -64,7 +65,7 @@ public class COPSPepAgent {
      * Creates a PEP agent with a PEP-ID equal to "noname"
      * @param    clientType         Client-type
      */
-    public COPSPepAgent(short clientType) {
+    public COPSPepAgent(final ClientType clientType) {
 
         // PEPId
         try {
@@ -88,7 +89,7 @@ public class COPSPepAgent {
      * Gets the COPS client-type
      * @return  PEP's client-type
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -161,18 +162,10 @@ public class COPSPepAgent {
      * @throws COPSException
      * @throws IOException
      */
-    public void disconnect(COPSError error)
-    throws COPSException, IOException {
-
-        COPSHeader cHdr = new COPSHeader(COPSHeader.COPS_OP_CC, _clientType);
-        COPSClientCloseMsg closeMsg = new COPSClientCloseMsg();
-        closeMsg.add(cHdr);
-        if (error != null)
-            closeMsg.add(error);
-
+    public void disconnect(final COPSError error) throws COPSException, IOException {
+        final COPSClientCloseMsg closeMsg = new COPSClientCloseMsg(_clientType, error, null, null);
         closeMsg.writeData(_conn.getSocket());
         _conn.close();
-        _conn = null;
     }
 
     /**
@@ -181,8 +174,8 @@ public class COPSPepAgent {
      * @throws COPSPepException
      * @throws COPSException
      */
-    public COPSPepReqStateMan addRequestState (String handle, COPSPepDataProcess process)
-    throws COPSPepException, COPSException {
+    public COPSPepReqStateMan addRequestState(final String handle, final COPSPepDataProcess process)
+            throws COPSPepException, COPSException {
         if (_conn != null) {
             return _conn.addRequestState(handle, process);
         }
@@ -196,20 +189,10 @@ public class COPSPepAgent {
      * @throws COPSPepException
      * @throws COPSException
      */
-    public void deleteRequestState (COPSPepReqStateMan man)
+    public void deleteRequestState(final COPSPepReqStateMan man)
     throws COPSPepException, COPSException {
         if (_conn != null)
             _conn.deleteRequestState(man);
-    }
-
-    /**
-     * Gets all the request state managers
-     * @return  A <tt>Hashtable</tt> holding all active request state managers
-     */
-    public Hashtable getReqStateMans() {
-        if (_conn != null)
-            return _conn.getReqStateMans();
-        return null;
     }
 
     /**
@@ -243,26 +226,22 @@ public class COPSPepAgent {
      * @throws   COPSPepException
      *
      */
-    private COPSPepConnection processConnection(String psHost, int psPort) throws IOException, COPSException,
-            COPSPepException {
+    private COPSPepConnection processConnection(String psHost, int psPort)
+            throws IOException, COPSException, COPSPepException {
         // Build OPN
-        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_OPN, _clientType);
-
-        COPSPepId pepId = new COPSPepId(new COPSData(_pepID));
-        COPSClientOpenMsg msg = new COPSClientOpenMsg();
-        msg.add(hdr);
-        msg.add(pepId);
+        final COPSClientOpenMsg msg = new COPSClientOpenMsg(_clientType, new COPSPepId(new COPSData(_pepID)),
+                null, null, null);
 
         // Create Socket and send OPN
-        InetAddress addr = InetAddress.getByName(psHost);
-        Socket socket = new Socket(addr,psPort);
+        final InetAddress addr = InetAddress.getByName(psHost);
+        final Socket socket = new Socket(addr,psPort);
         msg.writeData(socket);
 
         // Receive the response
-        COPSMsg recvmsg = COPSTransceiver.receiveMsg(socket);
+        final COPSMsg recvmsg = COPSTransceiver.receiveMsg(socket);
 
-        if (recvmsg.getHeader().isAClientAccept()) {
-            COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvmsg;
+        if (recvmsg.getHeader().getOpCode().equals(OPCode.CAT)) {
+            final COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvmsg;
 
             // Support
             if (cMsg.getIntegrity() != null) {
@@ -270,26 +249,26 @@ public class COPSPepAgent {
             }
 
             // Mandatory KATimer
-            COPSKATimer kt = cMsg.getKATimer();
+            final COPSKATimer kt = cMsg.getKATimer();
             if (kt == null)
                 throw new COPSPepException ("Mandatory COPS object missing (KA Timer)");
             short _kaTimeVal = kt.getTimerVal();
 
             // ACTimer
-            COPSAcctTimer at = cMsg.getAcctTimer();
+            final COPSAcctTimer at = cMsg.getAcctTimer();
             short _acctTimer = 0;
             if (at != null)
                 _acctTimer = at.getTimerVal();
 
             // Create the connection manager
-            COPSPepConnection conn = new COPSPepConnection(_clientType, socket);
+            final COPSPepConnection conn = new COPSPepConnection(_clientType, socket);
             conn.setKaTimer(_kaTimeVal);
             conn.setAcctTimer(_acctTimer);
             new Thread(conn).start();
 
             return conn;
-        } else if (recvmsg.getHeader().isAClientClose()) {
-            COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
+        } else if (recvmsg.getHeader().getOpCode().equals(OPCode.CC)) {
+            final COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvmsg;
             _error = cMsg.getError();
             socket.close();
             return null;

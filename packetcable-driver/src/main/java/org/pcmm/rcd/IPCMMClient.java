@@ -4,9 +4,10 @@
 
 package org.pcmm.rcd;
 
-import java.net.InetAddress;
-
+import org.umu.cops.stack.COPSHeader.ClientType;
 import org.umu.cops.stack.COPSMsg;
+
+import java.net.InetAddress;
 
 /**
  * <p>
@@ -26,7 +27,8 @@ public interface IPCMMClient {
 	/**
 	 * PCMM client-type
 	 */
-	static final short CLIENT_TYPE = (short) 0x800A;
+//	static final short CLIENT_TYPE = (short) 0x800A;
+	static final ClientType CLIENT_TYPE = ClientType.TYPE_1;
 
 	/**
 	 * sends a message to the server.

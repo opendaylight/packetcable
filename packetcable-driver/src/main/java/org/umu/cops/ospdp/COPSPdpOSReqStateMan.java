@@ -1,6 +1,7 @@
 package org.umu.cops.ospdp;
 
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
 import java.util.Vector;
@@ -61,7 +62,7 @@ public class COPSPdpOSReqStateMan {
     /**
      * COPS client-type that identifies the policy client
      */
-    protected short _clientType;
+    protected ClientType _clientType;
 
     /**
      *  COPS client handle used to uniquely identify a particular
@@ -87,7 +88,7 @@ public class COPSPdpOSReqStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public COPSPdpOSReqStateMan(short clientType, String clientHandle) {
+    public COPSPdpOSReqStateMan(final ClientType clientType, final String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _status = ST_CREATE;
@@ -105,7 +106,7 @@ public class COPSPdpOSReqStateMan {
      * Gets the client-type
      * @return   Client-type value
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -166,13 +167,12 @@ public class COPSPdpOSReqStateMan {
      * @throws COPSPdpException
      */
     protected void processRequest(COPSReqMsg msg) throws COPSPdpException {
-        Vector clientSIs = msg.getClientSI();
-
         //** Here we must retrieve a decision depending on the
         //** supplied ClientSIs
         /*Vector removeDecs = new Vector();
         Vector installDecs = new Vector();*/
-        _process.setClientData(this, clientSIs);
+        if (msg.getClientSI() != null)
+            _process.setClientData(this, msg.getClientSI().toArray(new COPSClientSI[msg.getClientSI().size()]));
 
         Vector removeDecs = _process.getRemovePolicy(this);
         Vector installDecs = _process.getInstallPolicy(this);
@@ -188,7 +188,7 @@ public class COPSPdpOSReqStateMan {
      * @param msg   Report message from the PEP
      * @throws COPSPdpException
      */
-    protected void processReport(COPSReportMsg msg) throws COPSPdpException {
+    protected void processReport(final COPSReportMsg msg) throws COPSPdpException {
         //** Analyze the report
         //**
 
@@ -208,27 +208,28 @@ public class COPSPdpOSReqStateMan {
         // COPSHandle handlemsg = msg.getClientHandle();
 
         // Report Type
-        COPSReportType rtypemsg = msg.getReport();
+        final COPSReportType rtypemsg = msg.getReport();
 
         // Named ClientSI
-        Vector clientSIs = msg.getClientSI();
-
-        //** We should act here in accordance with
-        //** the received report
-        switch (rtypemsg.getReportType()) {
-            case SUCCESS:
-                _status = ST_REPORT;
-                _process.successReport(this, clientSIs);
-                break;
-            case FAILURE:
-                _status = ST_REPORT;
-                _process.failReport(this, clientSIs);
-                break;
-            case ACCOUNTING:
-                _status = ST_ACCT;
-                _process.acctReport(this, clientSIs);
-                break;
+        if (msg.getClientSI() != null) {
+            //** Here we must act in accordance with
+            //** the report received
+            switch (rtypemsg.getReportType()) {
+                case SUCCESS:
+                    _status = ST_REPORT;
+                    _process.successReport(this, msg.getClientSI());
+                    break;
+                case FAILURE:
+                    _status = ST_REPORT;
+                    _process.failReport(this, msg.getClientSI());
+                    break;
+                case ACCOUNTING:
+                    _status = ST_ACCT;
+                    _process.acctReport(this, msg.getClientSI());
+                    break;
+            }
         }
+
     }
 
     /**

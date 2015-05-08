@@ -6,6 +6,10 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.Flag;
+import org.umu.cops.stack.COPSHeader.OPCode;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -32,248 +36,166 @@ import java.net.Socket;
  *
  */
 public class COPSDeleteMsg extends COPSMsg {
-    /* COPSHeader coming from base class */
-    private COPSHandle  _clientHandle;
-    private COPSReason _reason;
-    private COPSIntegrity _integrity;
+    // Required
+    private final COPSHandle  _clientHandle;
+    private final COPSReason _reason;
 
-    public COPSDeleteMsg() {
-        _clientHandle = null;
-        _reason = null;
-        _integrity = null;
+    // Optional
+    private final COPSIntegrity _integrity;
+
+    /**
+     * Constructor (generally used for sending messages) which probably should not be used as the PCMM version and
+     * Flag values on the header are being hardcoded to 1 and UNSOLICITED respectively. Use the next one below instead
+     * @param clientType - the type of client that created the message (required)
+     * @param handle - the COPS Handle (required)
+     * @param reason - the reason (required)
+     * @param integrity - the integrity (optional)
+     * @throws java.lang.IllegalArgumentException
+     */
+    @Deprecated
+    public COPSDeleteMsg(final ClientType clientType, final COPSHandle handle, final COPSReason reason,
+                         final COPSIntegrity integrity) {
+        this(new COPSHeader(OPCode.DRQ, clientType), handle, reason, integrity);
     }
 
     /**
-          Parse data and create COPSDeleteMsg object
+     * Constructor (generally used for sending messages).
+     * @param version - the supported PCMM Version
+     * @param flag - the flag...
+     * @param clientType - the type of client that created the message (required)
+     * @param handle - the COPS Handle (required)
+     * @param reason - the reason (required)
+     * @param integrity - the integrity (optional)
+     * @throws java.lang.IllegalArgumentException
      */
-    protected COPSDeleteMsg(byte[] data) throws COPSException {
-        _clientHandle = null;
-        _reason = null;
-        _integrity = null;
-        parse(data);
+    public COPSDeleteMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle handle,
+                         final COPSReason reason, final COPSIntegrity integrity) {
+        this(new COPSHeader(version, flag, OPCode.DRQ, clientType), handle, reason, integrity);
     }
 
     /**
-     * Checks the sanity of COPS message and throw an
-     * COPSException when data is bad.
-     *
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSHeader information is known.
+     * @param hdr - COPS Header
+     * @param handle - the COPS Handle (required)
+     * @param reason - the reason (required)
+     * @param integrity - the integrity (optional)
+     * @throws java.lang.IllegalArgumentException
      */
-    public void checkSanity() throws COPSException {
-        if ((_hdr == null) || (_clientHandle == null) || (_reason == null))
-            throw new COPSException("Bad message format");
-    }
+    protected COPSDeleteMsg(final COPSHeader hdr, final COPSHandle handle, final COPSReason reason,
+                         final COPSIntegrity integrity) {
+        super(hdr);
+        if (!hdr.getOpCode().equals(OPCode.DRQ))
+            throw new IllegalArgumentException("OPCode must be of type - " + OPCode.DRQ);
+        if (handle == null) throw new IllegalArgumentException("COPSHandle must not be null");
+        if (reason == null) throw new IllegalArgumentException("COPSReason must not be null");
 
-    /**
-     * Add message header
-     *
-     * @param    hdr                 a  COPSHeader
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSHeader hdr) throws COPSException {
-        if (hdr == null)
-            throw new COPSException ("Null Header");
-        if (hdr.getOpCode() != COPSHeader.COPS_OP_DRQ)
-            throw new COPSException ("Error Header (no COPS_OP_DRQ)");
-        _hdr = hdr;
-        setMsgLength();
-    }
-
-    /**
-     * Add Reason object to the message
-     *
-     * @param    reason              a  COPSReason
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSReason reason) throws COPSException {
-        if (_reason != null)
-            throw new COPSException ("No null Reason");
-
-        //Message integrity object should be the very last one
-        //If it is already added
-        if (_integrity != null)
-            throw new COPSException ("No null Integrity");
-        _reason = reason;
-        setMsgLength();
-    }
-
-    /**
-     * Add Handle object
-     *
-     * @param    handle              a  COPSHandle
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSHandle handle) throws COPSException {
-        if (handle == null)
-            throw new COPSException ("Null Handle");
         _clientHandle = handle;
-        setMsgLength();
-    }
-
-    /**
-     * Add Integrity object
-     *
-     * @param    integrity           a  COPSIntegrity
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSIntegrity integrity) throws COPSException {
-        if (integrity == null)
-            throw new COPSException ("Null Integrity");
+        _reason = reason;
         _integrity = integrity;
-        setMsgLength();
     }
 
-    /**
-     * Get Client Handle
-     *
-     * @return   a COPSHandle
-     *
-     */
+    // Getters
     public COPSHandle getClientHandle() {
         return _clientHandle;
     }
-
-    /**
-     * Get Reason
-     *
-     * @return   a COPSReason
-     *
-     */
     public COPSReason getReason() {
         return _reason;
     }
-
-    /**
-     * Returns true if it has integrity object
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean hasIntegrity() {
-        return (_integrity != null);
-    }
-
-    /**
-     * Get Integrity. Should check hasIntegrity() before calling
-     *
-     * @return   a COPSIntegrity
-     *
-     */
     public COPSIntegrity getIntegrity() {
         return (_integrity);
     }
 
-    /**
-     * Writes data to given network socket
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        if (_hdr != null) _hdr.writeData(id);
-        if (_clientHandle != null) _clientHandle.writeData(id);
-        if (_reason != null) _reason.writeData(id);
-        if (_integrity != null) _integrity.writeData(id);
+    @Override
+    protected int getDataLength() {
+        int out = _clientHandle.getDataLength() + _clientHandle.getHeader().getHdrLength();
+        out += _reason.getDataLength() + _reason.getHeader().getHdrLength();
+        if (_integrity != null) out += _integrity.getDataLength() + _integrity.getHeader().getHdrLength();
+        return out;
     }
 
-    /**
-     * Parse data
-     *
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void parse(byte[] data) throws COPSException {
-        super.parseHeader(data);
-
-        while (_dataStart < _dataLength) {
-            byte[] buf = new byte[data.length - _dataStart];
-            System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
-
-            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
-            switch (objHdrData.header.getCNum()) {
-                case HANDLE:
-                    _clientHandle = COPSHandle.parse(objHdrData, buf);
-                    _dataStart += _clientHandle.getDataLength();
-                    break;
-                case REASON_CODE:
-                    _reason = COPSReason.parse(objHdrData, buf);
-                    _dataStart += _reason.getDataLength();
-                    break;
-                case MSG_INTEGRITY:
-                    _integrity = COPSIntegrity.parse(objHdrData, buf);
-                    _dataStart += _integrity.getDataLength();
-                    break;
-                default:
-                    throw new COPSException("Bad Message format, unknown object type");
-            }
-        }
-        checkSanity();
+    @Override
+    protected void writeBody(final Socket socket) throws IOException {
+        _clientHandle.writeData(socket);
+        _reason.writeData(socket);
+        if (_integrity != null) _integrity.writeData(socket);
     }
 
-    /**
-     * Parse data
-     *
-     * @param    hdr                 a  COPSHeader
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void parse(COPSHeader hdr, byte[] data) throws COPSException {
-        if (hdr.getOpCode() != COPSHeader.COPS_OP_DRQ)
-            throw new COPSException("Error Header");
-        _hdr = hdr;
-        parse(data);
-        setMsgLength();
-    }
-
-    /**
-     * Set the message length, base on the set of objects it contains
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void setMsgLength()  throws COPSException  {
-        short len = 0;
-        if (_clientHandle != null) len += _clientHandle.getDataLength();
-        if (_reason != null) len += _reason.getDataLength();
-        if (_integrity != null) len += _integrity.getDataLength();
-        _hdr.setMsgLength(len);
-    }
-
-    /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
-     */
-    public void dump(OutputStream os) throws IOException {
-        _hdr.dump(os);
-
-        if (_clientHandle != null)
-            _clientHandle.dump(os);
-
-        if (_reason != null)
-            _reason.dump(os);
-
+    @Override
+    protected void dumpBody(final OutputStream os) throws IOException {
+        _clientHandle.dump(os);
+        _reason.dump(os);
         if (_integrity != null) {
             _integrity.dump(os);
         }
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSDeleteMsg)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final COPSDeleteMsg that = (COPSDeleteMsg) o;
+
+        return _clientHandle.equals(that._clientHandle) &&
+                !(_integrity != null ? !_integrity.equals(that._integrity) : that._integrity != null) &&
+                _reason.equals(that._reason);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + _clientHandle.hashCode();
+        result = 31 * result + _reason.hashCode();
+        result = 31 * result + (_integrity != null ? _integrity.hashCode() : 0);
+        return result;
+    }
+
+    /**
+     * Responsible for parsing a byte array to create a COPSDecisionMsg object
+     * @param hdrData - the object's header data
+     * @param data - the byte array to parse
+     * @return - the message object
+     * @throws COPSException
+     */
+    public static COPSDeleteMsg parse(final COPSHeaderData hdrData, final byte[] data) throws COPSException {
+        // Variables for constructor
+        COPSHandle clientHandle = null;
+        COPSReason reason = null;
+        COPSIntegrity integrity = null;
+
+        int dataStart = 0;
+        while (dataStart < data.length) {
+            final byte[] buf = new byte[data.length - dataStart];
+            System.arraycopy(data, dataStart, buf, 0, data.length - dataStart);
+
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
+                case HANDLE:
+                    clientHandle = COPSHandle.parse(objHdrData, buf);
+                    break;
+                case REASON_CODE:
+                    reason = COPSReason.parse(objHdrData, buf);
+                    break;
+                case MSG_INTEGRITY:
+                    integrity = COPSIntegrity.parse(objHdrData, buf);
+                    break;
+                default:
+                    throw new COPSException("Bad Message format, unknown object type");
+            }
+            dataStart += objHdrData.msgByteCount;
+        }
+
+        return new COPSDeleteMsg(hdrData.header, clientHandle, reason, integrity);
+    }
 }
 
 

@@ -7,12 +7,12 @@
 package org.umu.cops.prpep;
 
 import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSHeader.ClientType;
 
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * COPSPepReqStateMan manages Request State using Client Handle (RFC 2748 pag. 21)
@@ -90,7 +90,7 @@ public class COPSPepReqStateMan {
     /**
      * The client-type identifies the policy client
      */
-    protected short _clientType;
+    protected ClientType _clientType;
 
     /**
      *  The client handle is used to uniquely identify a particular
@@ -124,7 +124,7 @@ public class COPSPepReqStateMan {
      * @param    clientHandle                a Client Handle
      *
      */
-    public COPSPepReqStateMan(short clientType, String clientHandle) {
+    public COPSPepReqStateMan(final ClientType clientType, final String clientHandle) {
         _handle = new COPSHandle(new COPSData(clientHandle));
         _clientType = clientType;
         _syncState = true;
@@ -147,7 +147,7 @@ public class COPSPepReqStateMan {
      * @return   a short
      *
      */
-    public short getClientType() {
+    public ClientType getClientType() {
         return _clientType;
     }
 
@@ -193,13 +193,14 @@ public class COPSPepReqStateMan {
 
         // If an object for retrieving PEP features exists,
         // use it for retrieving them
-        Hashtable clientSIs;
+        final Map<String, String> clientSIs;
         if (_process != null)
             clientSIs = _process.getClientData(this);
         else
-            clientSIs = null;
+            clientSIs = new HashMap<>();
 
         // Send the request
+        // TODO - do we really want to send when this is empty???
         _sender.sendRequest(clientSIs);
 
         // Initial state
@@ -231,61 +232,52 @@ public class COPSPepReqStateMan {
         // COPSDebug.out(getClass().getName(), "ClientId:" + getClientHandle().getId().str());
 
         // COPSHandle handle = dMsg.getClientHandle();
-        Hashtable decisions = dMsg.getDecisions();
+        final Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
 
-        Hashtable removeDecs = new Hashtable(40);
-        Hashtable installDecs = new Hashtable(40);
-        Hashtable errorDecs = new Hashtable(40);
-        for (Enumeration e = decisions.keys() ; e.hasMoreElements() ;) {
+        final Map<String, String> removeDecs = new HashMap<>();
+        final Map<String, String> installDecs = new HashMap<>();
 
-            COPSContext context = (COPSContext) e.nextElement();
-            Vector v = (Vector) decisions.get(context);
-            Enumeration ee = v.elements();
-            COPSDecision cmddecision = (COPSDecision) ee.nextElement();
-
-            // cmddecision --> we must check whether it is an error!
-
-            if (cmddecision.getCommand().equals(Command.INSTALL)) {
-                String prid = "";
-                for (; ee.hasMoreElements() ;) {
-                    COPSDecision decision = (COPSDecision) ee.nextElement();
-
-                    COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
-                    switch (obj.getSNum()) {
-                    case COPSPrObjBase.PR_PRID:
-                        prid = obj.getData().str();
-                        break;
-                    case COPSPrObjBase.PR_EPD:
-                        installDecs.put(prid, obj.getData().str());
-                        break;
-                    default:
-                        break;
+        for (Set<COPSDecision> copsDecisions: decisions.values()) {
+            final COPSDecision cmddecision = copsDecisions.iterator().next();
+            String prid = "";
+            switch (cmddecision.getCommand()) {
+                case INSTALL:
+                    for (final COPSDecision decision : copsDecisions) {
+                        final COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+                        switch (obj.getSNum()) {
+                            case COPSPrObjBase.PR_PRID:
+                                prid = obj.getData().str();
+                                break;
+                            case COPSPrObjBase.PR_EPD:
+                                installDecs.put(prid, obj.getData().str());
+                                break;
+                            default:
+                                break;
+                        }
                     }
-                }
+                    break;
+                case REMOVE:
+                    for (final COPSDecision decision : copsDecisions) {
+                        final COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+                        switch (obj.getSNum()) {
+                            case COPSPrObjBase.PR_PRID:
+                                prid = obj.getData().str();
+                                break;
+                            case COPSPrObjBase.PR_EPD:
+                                removeDecs.put(prid, obj.getData().str());
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    break;
             }
 
-            if (cmddecision.getCommand().equals(Command.REMOVE)) {
-
-                String prid = "";
-                for (; ee.hasMoreElements() ;) {
-                    COPSDecision decision = (COPSDecision) ee.nextElement();
-
-                    COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
-                    switch (obj.getSNum()) {
-                    case COPSPrObjBase.PR_PRID:
-                        prid = obj.getData().str();
-                        break;
-                    case COPSPrObjBase.PR_EPD:
-                        removeDecs.put(prid, obj.getData().str());
-                        break;
-                    default:
-                        break;
-                    }
-                }
-            }
         }
 
         //** Apply decisions to the configuration
+        // TODO - why is this collection never getting populated???
+        final Map<String, String> errorDecs = new HashMap<>();
         _process.setDecisions(this, removeDecs, installDecs, errorDecs);
         _status = ST_DECS;
 
@@ -353,13 +345,14 @@ public class COPSPepReqStateMan {
         _syncState = false;
         // If an object for retrieving PEP features exists,
         // use it for retrieving them
-        Hashtable clientSIs;
+        final Map<String, String> clientSIs;
         if (_process != null)
             clientSIs = _process.getClientData(this);
         else
-            clientSIs = null;
+            clientSIs = new HashMap<>();
 
         // Send request
+        // TODO - do we really want to send the request when the map is empty???
         _sender.sendRequest(clientSIs);
 
         _status = ST_SYNC;
@@ -384,10 +377,11 @@ public class COPSPepReqStateMan {
     protected void processAcctReport()
     throws COPSPepException {
 
-        Hashtable report = new Hashtable();
-        if (_process != null)
-            report = _process.getAcctData(this);
+        final Map<String, String> report;
+        if (_process != null) report = _process.getAcctData(this);
+        else report = new HashMap<>();
 
+        // TODO - do we really want to send when the map is empty???
         _sender.sendAcctReport(report);
 
         _status = ST_ACCT;

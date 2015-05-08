@@ -21,6 +21,7 @@ import org.umu.cops.prpdp.COPSPdpConnection;
 import org.umu.cops.prpdp.COPSPdpDataProcess;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSDecision.Command;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -76,14 +77,14 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
                     logger.debug("waiting for OPN message from CMTS");
                     COPSMsg opnMessage = client.readMessage();
                     // Client-Close
-                    if (opnMessage.getHeader().isAClientClose()) {
+                    if (opnMessage.getHeader().getOpCode().equals(OPCode.CC)) {
                         COPSError error = ((COPSClientCloseMsg) opnMessage).getError();
                         logger.debug("CMTS requetsed Client-Close");
                         throw new PCMMException(new PCMMError((short)error.getErrCode().ordinal(),
                                 (short)error.getErrSubCode().ordinal()));
                     } else // Client-Open
                     {
-                        if (opnMessage.getHeader().isAClientOpen()) {
+                        if (opnMessage.getHeader().getOpCode().equals(OPCode.OPN)) {
                             logger.debug("OPN message received from CMTS");
                             COPSClientOpenMsg opn = (COPSClientOpenMsg) opnMessage;
                             if (opn.getClientSI() == null) {
@@ -105,19 +106,19 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
                             // send CAT response
                             Properties prop = new Properties();
                             logger.debug("send CAT to the CMTS ");
-                            COPSMsg catMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_CAT, prop);
+                            COPSMsg catMsg = MessageFactory.getInstance().create(OPCode.CAT, prop);
                             client.sendRequest(catMsg);
                             // wait for REQ msg
                             COPSMsg reqMsg = client.readMessage();
                             // Client-Close
-                            if (reqMsg.getHeader().isAClientClose()) {
+                            if (reqMsg.getHeader().getOpCode().equals(OPCode.CC)) {
                                 COPSError error = ((COPSClientCloseMsg) opnMessage).getError();
                                 logger.debug("CMTS requetsed Client-Close");
                                 throw new PCMMException(new PCMMError((short)error.getErrCode().ordinal(),
                                         (short)error.getErrSubCode().ordinal()));
                             } else // Request
                             {
-                                if (reqMsg.getHeader().isARequest()) {
+                                if (reqMsg.getHeader().getOpCode().equals(OPCode.REQ)) {
                                     logger.debug("Received REQ message form CMTS");
                                     // end connection attempts
                                     COPSReqMsg req = (COPSReqMsg) reqMsg;
@@ -214,21 +215,21 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             prop.put(MessageProperties.DECISION_CMD_CODE, Command.INSTALL);
             prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
-            COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
+            COPSMsg decisionMsg = MessageFactory.getInstance().create(OPCode.DEC, prop);
             // ** Send the GateSet Decision
             // **
             sendRequest(decisionMsg);
             // TODO check on this ?
             // waits for the gate-set-ack or error
             COPSMsg responseMsg = readMessage();
-            if (responseMsg.getHeader().isAReport()) {
+            if (responseMsg.getHeader().getOpCode().equals(OPCode.RPT)) {
                 logger.info("processing received report from CMTS");
                 COPSReportMsg reportMsg = (COPSReportMsg) responseMsg;
-                if (reportMsg.getClientSI().size() == 0) {
+                if (reportMsg.getClientSI() == null) {
                     logger.debug("CMTS responded with an empty SI");
                     return false;
                 }
-                COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
+                COPSClientSI clientSI = reportMsg.getClientSI();
                 IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
                 IPCMMError error = responseGate.getError();
                 if (error != null) {
@@ -291,7 +292,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             byte[] data = gate.getData();
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
-            COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
+            COPSMsg decisionMsg = MessageFactory.getInstance().create(OPCode.DEC, prop);
             // ** Send the GateSet Decision
             // **
             try {
@@ -302,13 +303,13 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             }
             // waits for the gate-delete-ack or error
             COPSMsg responseMsg = readMessage();
-            if (responseMsg.getHeader().isAReport()) {
+            if (responseMsg.getHeader().getOpCode().equals(OPCode.RPT)) {
                 logger.info("processing received report from CMTS");
                 COPSReportMsg reportMsg = (COPSReportMsg) responseMsg;
-                if (reportMsg.getClientSI().size() == 0) {
+                if (reportMsg.getClientSI() == null) {
                     return false;
                 }
-                COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
+                COPSClientSI clientSI = reportMsg.getClientSI();
                 IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
                 IPCMMError error = responseGate.getError();
                 if (error != null) {
@@ -372,7 +373,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             byte[] data = gate.getData();
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
-            COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
+            COPSMsg decisionMsg = MessageFactory.getInstance().create(OPCode.DEC, prop);
             // ** Send the GateSet Decision
             // **
             try {
@@ -383,13 +384,13 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             }
             // waits for the gate-Info-ack or error
             COPSMsg responseMsg = readMessage();
-            if (responseMsg.getHeader().isAReport()) {
+            if (responseMsg.getHeader().getOpCode().equals(OPCode.RPT)) {
                 logger.info("processing received report from CMTS");
                 COPSReportMsg reportMsg = (COPSReportMsg) responseMsg;
-                if (reportMsg.getClientSI().size() == 0) {
+                if (reportMsg.getClientSI() == null) {
                     return false;
                 }
-                COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
+                COPSClientSI clientSI = reportMsg.getClientSI();
                 IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
                 IPCMMError error = responseGate.getError();
                 ITransactionID responseTransactionID = responseGate.getTransactionID();
@@ -466,7 +467,7 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             prop.put(MessageProperties.DECISION_FLAG, Command.NULL);
             byte[] data = gate.getData();
             prop.put(MessageProperties.GATE_CONTROL, new COPSData(data, 0, data.length));
-            COPSMsg decisionMsg = MessageFactory.getInstance().create(COPSHeader.COPS_OP_DEC, prop);
+            COPSMsg decisionMsg = MessageFactory.getInstance().create(OPCode.DEC, prop);
             // ** Send the GateSet Decision
             // **
             try {
@@ -477,13 +478,13 @@ public class PCMMPolicyServer extends AbstractPCMMServer implements IPCMMPolicyS
             }
             // waits for the gate-Info-ack or error
             COPSMsg responseMsg = readMessage();
-            if (responseMsg.getHeader().isAReport()) {
+            if (responseMsg.getHeader().getOpCode().equals(OPCode.RPT)) {
                 logger.info("processing received report from CMTS");
                 COPSReportMsg reportMsg = (COPSReportMsg) responseMsg;
-                if (reportMsg.getClientSI().size() == 0) {
+                if (reportMsg.getClientSI() == null) {
                     return false;
                 }
-                COPSClientSI clientSI = (COPSClientSI) reportMsg.getClientSI().elementAt(0);
+                COPSClientSI clientSI = reportMsg.getClientSI();
                 IPCMMGate responseGate = new PCMMGateReq(clientSI.getData().getData());
                 IPCMMError error = responseGate.getError();
                 ITransactionID responseTransactionID = responseGate.getTransactionID();

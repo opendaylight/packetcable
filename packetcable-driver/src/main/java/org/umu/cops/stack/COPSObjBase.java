@@ -75,9 +75,7 @@ public abstract class COPSObjBase {
         }
 
         final COPSObjBase that = (COPSObjBase) o;
-
-        return !(!_objHdr.equals(that._objHdr));
-
+        return _objHdr.equals(that._objHdr);
     }
 
     @Override

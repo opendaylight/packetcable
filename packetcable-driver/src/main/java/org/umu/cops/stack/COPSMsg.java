@@ -11,111 +11,88 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 /**
- * COPS Message
- *
- * @version COPSMsg.java, v 1.00 2003
- *
+ * Represents messages coming from and going to a COPS device such as a CMTS
  */
 abstract public class COPSMsg {
 
-    protected COPSHeader _hdr;
-    protected int _dataLength;
-    protected int _dataStart;
+    /**
+     * The COPS header that is associated with all COPS messages
+     */
+    private final COPSHeader _hdr;
 
     /**
-     * Method getHeader
-     *
+     * Base constructor
+     * @param hdr - the header
+     */
+    public COPSMsg(final COPSHeader hdr) {
+        if (hdr == null) throw new IllegalArgumentException("Header must not be null");
+        this._hdr = hdr;
+    }
+    /**
+     * Returns the message header object
      * @return   a COPSHeader
-     *
      */
     public COPSHeader getHeader() {
         return _hdr;
     }
 
     /**
-     * Method writeData
-     *
-     * @param    id                  a  Socket
-     *
+     * Method writeData. Implementers should be calling super.writeData() for the header prior to writing out the rest.
+     * @param    socket                  a  Socket
      * @throws   IOException
-     *
      */
-    public abstract void writeData(Socket id) throws IOException;
-
-    /**
-     * Method getMsgLength
-     *
-     * @return   an int
-     *
-     */
-    public int getMsgLength() {
-        return _hdr.getMsgLength();
+    public final void writeData(final Socket socket) throws IOException {
+        // checkSanity();
+        _hdr.writeData(socket, _hdr.getHdrLength() + getDataLength());
+        writeBody(socket);
     }
 
     /**
-     * Method parse
-     *
-     * @param    hdr                 a  COPSHeader
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
+     * Returns the number of bytes to be contained within the payload excluding the header
+     * @return - a positive value including the header size
      */
-    protected abstract void parse(COPSHeader hdr, byte[] data) throws COPSException;
+    protected abstract int getDataLength();
 
     /**
-     * Method parse
-     *
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
+     * Writes out the body data over a socket
+     * @param socket - the socket to which to write
      */
-    protected abstract void parse(byte[] data) throws COPSException;
-
-    /**
-     * Method parseHeader
-     *
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void parseHeader(byte[] data) throws COPSException {
-        _dataLength = 0;
-        _dataStart = 0;
-        if (_hdr == null) {
-            // _hdr = new COPSHeader(COPSHeader.COPS_OP_CAT);
-            _hdr = new COPSHeader(data);
-            _dataStart += 8;
-            _dataLength = _hdr.getMsgLength();
-        } else {
-            //header is already read
-            _dataLength = _hdr.getMsgLength() - 8;
-        }
-
-        //validate the message length
-        //Should fill on the 32bit boundary
-        if ((_hdr.getMsgLength() % 4 != 0)) {
-            throw new COPSException("Bad message format: COPS message is not on 32 bit bounday");
-        }
-    }
-
-    /** Checks the sanity of COPS message and throw an
-         COPSBadDataException when data is bad.
-    */
-    public abstract void checkSanity()throws COPSException;
+    protected abstract void writeBody(Socket socket) throws IOException;
 
     /**
      * Write an object textual description in the output stream
-     *
      * @param    os                  an OutputStream
-     *
      * @throws   IOException
-     *
      */
-    public void dump(OutputStream os) throws IOException {
-        os.write(new String("COPS Message").getBytes());
+    final public void dump(final OutputStream os) throws IOException {
+        _hdr.dump(os);
+        dumpBody(os);
     }
 
+    /**
+     * Creates a string representation of this object and sends it to an output stream
+     * @param os - the output stream
+     * @throws IOException
+     */
+    protected abstract void dumpBody(final OutputStream os) throws IOException;
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSMsg)) {
+            return false;
+        }
+
+        final COPSMsg copsMsg = (COPSMsg) o;
+
+        return _hdr.equals(copsMsg._hdr);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return _hdr.hashCode();
+    }
 }

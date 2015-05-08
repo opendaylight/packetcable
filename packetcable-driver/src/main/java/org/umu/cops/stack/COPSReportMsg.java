@@ -6,11 +6,13 @@
 
 package org.umu.cops.stack;
 
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.Flag;
+import org.umu.cops.stack.COPSHeader.OPCode;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Vector;
 
 /**
  * COPS Report Message (RFC 2748 pag. 25)
@@ -49,303 +51,182 @@ import java.util.Vector;
  *
  */
 public class COPSReportMsg extends COPSMsg {
-    /* COPSHeader coming from base class */
-    private COPSHandle _clientHandle;
-    private COPSReportType _report;
-    private Vector _clientSI;
-    private COPSIntegrity _integrity;
+    // Required
+    private final COPSHandle _clientHandle;
+    private final COPSReportType _report;
+    private final COPSIntegrity _integrity;
 
-    public COPSReportMsg() {
-        _clientHandle = null;
-        _report = null;
-        _integrity = null;
-        _clientSI = new Vector(20);
+    // TODO - Determine why previous implementation had a collection of Client SIs when the specification reads
+    // that there may be only one. May need to revert back to a Set<COPSClientSI>
+    // Optional
+    private final COPSClientSI _clientSI;
+
+    /**
+     * Constructor (generally used for sending messages) which probably should not be used as the PCMM version and
+     * Flag values on the header are being hardcoded to 1 and UNSOLICITED respectively. Use the next one below instead
+     * @param clientType - the type of client that created the message (required)
+     * @param clientHandle - the COPS Handle (required)
+     * @param report - the report (required)
+     * @param clientSI - the client SI (optional)
+     * @param integrity - the integrity (optional)
+     * @throws java.lang.IllegalArgumentException
+     */
+    @Deprecated
+    public COPSReportMsg(final ClientType clientType, final COPSHandle clientHandle, final COPSReportType report,
+                         final COPSClientSI clientSI, final COPSIntegrity integrity) {
+        this(new COPSHeader(OPCode.RPT, clientType), clientHandle, report, clientSI, integrity);
     }
 
     /**
-          Parse data and create COPSReportMsg object
+     * Constructor (generally used for sending messages).
+     * @param version - the supported PCMM Version
+     * @param flag - the flag...
+     * @param clientType - the type of client that created the message (required)
+     * @param clientHandle - the COPS Handle (required)
+     * @param report - the report (required)
+     * @param clientSI - the client SI (optional)
+     * @param integrity - the integrity (optional)
+     * @throws java.lang.IllegalArgumentException
      */
-    protected COPSReportMsg (byte[] data) throws COPSException {
-        _clientHandle = null;
-        _report = null;
-        _integrity = null;
-        parse(data);
+    public COPSReportMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle clientHandle, final COPSReportType report,
+                         final COPSClientSI clientSI, final COPSIntegrity integrity) {
+        this(new COPSHeader(version, flag, OPCode.RPT, clientType), clientHandle, report, clientSI, integrity);
     }
 
     /**
-     * Checks the sanity of COPS message and throw an
-     * COPSException when data is bad.
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSHeader information is known.
+     * @param hdr - COPS Header
+     * @param clientHandle - the COPS Handle (required)
+     * @param report - the report (required)
+     * @param clientSI - the client SI (optional)
+     * @param integrity - the integrity (optional)
+     * @throws java.lang.IllegalArgumentException
      */
-    public void checkSanity() throws COPSException {
-        if ((_hdr == null) || (_clientHandle == null) || (_report == null))
-            throw new COPSException("Bad message format");
-    }
+    protected COPSReportMsg(final COPSHeader hdr, final COPSHandle clientHandle, final COPSReportType report,
+                         final COPSClientSI clientSI, final COPSIntegrity integrity) {
+        super(hdr);
+        if (!hdr.getOpCode().equals(OPCode.RPT))
+            throw new IllegalArgumentException("OPCode must be of type - " + OPCode.RPT);
+        if (clientHandle == null) throw new IllegalArgumentException("COPSHandle must not be null");
+        if (report == null) throw new IllegalArgumentException("COPSReportType must not be null");
 
-    /**
-     * Add message header
-     *
-     * @param    hdr                 a  COPSHeader
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSHeader hdr) throws COPSException {
-        if (hdr == null)
-            throw new COPSException ("Null Header");
-        if (hdr.getOpCode() != COPSHeader.COPS_OP_RPT)
-            throw new COPSException ("Error Header (no COPS_OP_REQ)");
-        _hdr = hdr;
-        setMsgLength();
-    }
-
-    /**
-     * Add Report object to the message
-     *
-     * @param    report              a  COPSReportType
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSReportType report) throws COPSException {
-        if (report == null)
-            throw new COPSException ("Null Handle");
-
-        //Message integrity object should be the very last one
-        //If it is already added
-        if (_integrity != null)
-            throw new COPSException ("No null Handle");
-
+        _clientHandle = clientHandle;
         _report = report;
-        setMsgLength();
-    }
-
-    /**
-     * Add client handle to the message
-     *
-     * @param    handle              a  COPSHandle
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSHandle handle) throws COPSException {
-        if (handle == null)
-            throw new COPSException ("Null Handle");
-
-        //Message integrity object should be the very last one
-        //If it is already added
-        if (_integrity != null)
-            throw new COPSException ("No null Handle");
-
-        _clientHandle = handle;
-        setMsgLength();
-    }
-
-    /**
-     * Add one or more clientSI objects
-     *
-     * @param    clientSI            a  COPSClientSI
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSClientSI clientSI) throws COPSException {
-        if (clientSI == null)
-            throw new COPSException ("Null ClientSI");
-        _clientSI.add(clientSI);
-        setMsgLength();
-    }
-
-    /**
-     * Add integrity object
-     *
-     * @param    integrity           a  COPSIntegrity
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSIntegrity integrity) throws COPSException {
-        if (integrity == null)
-            throw new COPSException ("Null Integrity");
+        _clientSI = clientSI;
         _integrity = integrity;
-        setMsgLength();
     }
 
-    /**
-     * Get client Handle
-     *
-     * @return   a COPSHandle
-     *
-     */
+    // Getters
     public COPSHandle getClientHandle() {
         return _clientHandle;
     }
-
-    /**
-     * Get report type
-     *
-     * @return   a COPSReportType
-     *
-     */
     public COPSReportType getReport() {
         return _report;
     }
-
-    /**
-     * Get clientSI
-     *
-     * @return   a Vector
-     *
-     */
-    public Vector getClientSI() {
+    public COPSClientSI getClientSI() {
         return _clientSI;
     }
-
-    /**
-     * Returns true if it has Integrity object
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean hasIntegrity() {
-        return (_integrity != null);
-    }
-
-
-    /**
-     * Get Integrity. Should check hasIntegrity() before calling
-     *
-     * @return   a COPSIntegrity
-     *
-     */
     public COPSIntegrity getIntegrity() {
         return (_integrity);
     }
 
-    /**
-     * Writes data to given network socket
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        //checkSanity();
-        if (_hdr != null) _hdr.writeData(id);
-        if (_clientHandle != null) _clientHandle.writeData(id);
-        if (_report != null) _report.writeData(id);
+    @Override
+    protected int getDataLength() {
+        int out = _clientHandle.getDataLength() + _clientHandle.getHeader().getHdrLength();
+        out += _report.getDataLength() + _report.getHeader().getHdrLength();
+        if (_clientSI != null) out += _clientSI.getDataLength() + _clientSI.getHeader().getHdrLength();
+        if (_integrity != null) out += _integrity.getDataLength() + _integrity.getHeader().getHdrLength();
+        return out;
+    }
 
-        for (Enumeration e = _clientSI.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-            clientSI.writeData(id);
+    @Override
+    protected void writeBody(final Socket socket) throws IOException {
+        _clientHandle.writeData(socket);
+        _report.writeData(socket);
+        if (_clientSI != null) _clientSI.writeData(socket);
+        if (_integrity != null) _integrity.writeData(socket);
+    }
+
+    @Override
+    protected void dumpBody(final OutputStream os) throws IOException {
+        _clientHandle.dump(os);
+        _report.dump(os);
+        if (_clientSI != null) _clientSI.dump(os);
+        if (_integrity != null) _integrity.dump(os);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSReportMsg)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
         }
 
-        if (_integrity != null) _integrity.writeData(id);
+        final COPSReportMsg that = (COPSReportMsg) o;
+
+        return _clientHandle.equals(that._clientHandle) &&
+                !(_clientSI != null ? !_clientSI.equals(that._clientSI) : that._clientSI != null) &&
+                !(_integrity != null ? !_integrity.equals(that._integrity) : that._integrity != null) &&
+                _report.equals(that._report);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + _clientHandle.hashCode();
+        result = 31 * result + _report.hashCode();
+        result = 31 * result + (_integrity != null ? _integrity.hashCode() : 0);
+        result = 31 * result + (_clientSI != null ? _clientSI.hashCode() : 0);
+        return result;
     }
 
     /**
-     * Parse data
-     *
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
+     * Responsible for parsing a byte array to create a COPSDecisionMsg object
+     * @param hdrData - the object's header data
+     * @param data - the byte array to parse
+     * @return - the message object
+     * @throws COPSException
      */
-    protected void parse(byte[] data) throws COPSException {
-        super.parseHeader(data);
+    public static COPSReportMsg parse(final COPSHeaderData hdrData, final byte[] data) throws COPSException {
+        // Variables for constructor
+        COPSHandle clientHandle = null;
+        COPSReportType report = null;
+        COPSIntegrity integrity = null;
+        COPSClientSI clientSI = null;
 
-        while (_dataStart < _dataLength) {
-            byte[] buf = new byte[data.length - _dataStart];
-            System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
+        int dataStart = 0;
+        while (dataStart < data.length) {
+            final byte[] buf = new byte[data.length - dataStart];
+            System.arraycopy(data, dataStart, buf, 0, data.length - dataStart);
 
             final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
             switch (objHdrData.header.getCNum()) {
                 case HANDLE:
-                    _clientHandle = COPSHandle.parse(objHdrData, buf);
-                    _dataStart += _clientHandle.getDataLength();
+                    clientHandle = COPSHandle.parse(objHdrData, buf);
                     break;
                 case RPT:
-                    _report = COPSReportType.parse(objHdrData, buf);
-                    _dataStart += _report.getDataLength();
+                    report = COPSReportType.parse(objHdrData, buf);
                     break;
                 case CSI:
-                    COPSClientSI csi = COPSClientSI.parse(objHdrData, buf);
-                    _dataStart += csi.getDataLength();
-                    _clientSI.add(csi);
+                    clientSI = COPSClientSI.parse(objHdrData, buf);
                     break;
                 case MSG_INTEGRITY:
-                    _integrity = COPSIntegrity.parse(objHdrData, buf);
-                    _dataStart += _integrity.getDataLength();
+                    integrity = COPSIntegrity.parse(objHdrData, buf);
                     break;
                 default:
                     throw new COPSException("Bad Message format, unknown object type");
             }
-        }
-        checkSanity();
-    }
-
-    /**
-     * Parse data
-     *
-     * @param    hdr                 a  COPSHeader
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void parse(COPSHeader hdr, byte[] data) throws COPSException {
-        if (hdr.getOpCode() != COPSHeader.COPS_OP_RPT)
-            throw new COPSException ("Null Header");
-        _hdr = hdr;
-        parse(data);
-        setMsgLength();
-    }
-
-    /**
-     * Set the message length, base on the set of objects it contains
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void setMsgLength() throws COPSException {
-        short len = 0;
-        if (_clientHandle != null) len += _clientHandle.getDataLength();
-        if (_report != null) len += _report.getDataLength();
-
-        for (Enumeration e = _clientSI.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-            len += clientSI.getDataLength();
+            dataStart += objHdrData.msgByteCount;
         }
 
-        if (_integrity != null) len += _integrity.getDataLength();
-        _hdr.setMsgLength(len);
-    }
-
-    /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
-     */
-    public void dump(OutputStream os) throws IOException {
-        _hdr.dump(os);
-
-        if (_clientHandle != null)
-            _clientHandle.dump(os);
-
-        if (_report != null)
-            _report.dump(os);
-
-        for (Enumeration e = _clientSI.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-            clientSI.dump(os);
-        }
-
-        if (_integrity != null) {
-            _integrity.dump(os);
-        }
+        return new COPSReportMsg(hdrData.header, clientHandle, report, clientSI, integrity);
     }
 }
 

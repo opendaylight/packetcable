@@ -6,18 +6,18 @@
 
 package org.umu.cops.stack;
 
-import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.Flag;
+import org.umu.cops.stack.COPSHeader.OPCode;
 import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 
 /**
- * COPS Request Message (RFC 2748 pag. 22)
+ * COPS Request Message (RFC 2748 page. 22)
  *
  *   The PEP establishes a request state client handle for which the
  *   remote PDP may maintain state. The remote PDP then uses this handle
@@ -82,234 +82,152 @@ import java.util.Vector;
  */
 public class COPSReqMsg extends COPSMsg {
 
-    /* COPSHeader coming from base class */
-    private COPSHandle _clientHandle;
-    private COPSContext _context;
-    private COPSInterface _inInterface;
-    private COPSInterface _outInterface;
-    private Vector _clientSIs;
-    private Hashtable _decisions;
-    private COPSIntegrity _integrity;
-    private COPSContext _lpdpContext;
+    // Required Attributes
+    private final COPSHandle _clientHandle;
+    private final COPSContext _context;
 
-    public COPSReqMsg() {
-        _clientHandle = null;
-        _context = null;
-        _inInterface = null;
-        _outInterface = null;
-        _clientSIs = new Vector(20);
-        _decisions = new Hashtable();
-        _integrity = null;
-        _lpdpContext = null;
+    // Optional Attributes
+    private final COPSInterface _inInterface;
+    private final COPSInterface _outInterface;
+    private final COPSIntegrity _integrity;
+
+    // Collection Attributes (can be empty)
+    private final Set<COPSClientSI> _clientSIs;
+    private final Map<COPSContext, Set<COPSLPDPDecision>> _decisions;
+
+    /**
+     * Constructor (generally used for sending messages) which probably should not be used as the PCMM version and
+     * Flag values on the header are being hardcoded to 1 and UNSOLICITED respectively. Use the next one below instead
+     * @param clientType - the type of client that created the message  (required)
+     * @param handle - the COPS Handle (required)
+     * @param context - the COPS Context  (required)
+     * @param integrity - the COPS Integrity (optional)
+     * @param inInterface - the In Interface (optional)
+     * @param outInterface - the Out interface (optional)
+     * @param clientSIs - the Client SIs (optional)
+     * @param decisions - the Decisions by context (optional)
+     * @throws java.lang.IllegalArgumentException
+     */
+    @Deprecated
+    public COPSReqMsg(final ClientType clientType, final COPSHandle handle, final COPSContext context,
+                      final COPSIntegrity integrity, final COPSInterface inInterface, final COPSInterface outInterface,
+                      final Set<COPSClientSI> clientSIs, final Map<COPSContext, Set<COPSLPDPDecision>> decisions) {
+        this(1, Flag.UNSOLICITED, clientType, handle, context, integrity, inInterface, outInterface,
+                clientSIs, decisions);
     }
 
     /**
-          Parse data and create COPSReqMsg object
+     * Recommended constructor generally for use by a client sending messages.
+     * @param version - the supported PCMM Version (required)
+     * @param flag - the flag...  (required)
+     * @param clientType - the type of client that created the message  (required)
+     * @param handle - the COPS Handle  (required)
+     * @param context - the COPS Context  (required)
+     * @param integrity - the COPS Integrity (optional)
+     * @param inInterface - the In Interface (optional)
+     * @param outInterface - the Out interface (optional)
+     * @param clientSIs - the Client SIs (optional)
+     * @param decisions - the Decisions by context (optional)
+     * @throws java.lang.IllegalArgumentException
      */
-    protected COPSReqMsg(byte[] data) throws COPSException {
-        parse(data);
+    public COPSReqMsg(final int version, final Flag flag, final ClientType clientType, final COPSHandle handle,
+                      final COPSContext context, final COPSIntegrity integrity, final COPSInterface inInterface,
+                      final COPSInterface outInterface, final Set<COPSClientSI> clientSIs,
+                      final Map<COPSContext, Set<COPSLPDPDecision>> decisions) {
+        this(new COPSHeader(version, flag, OPCode.REQ, clientType), handle, context, integrity, inInterface,
+                outInterface, clientSIs, decisions);
     }
 
     /**
-     * Checks the sanity of COPS message and throw an
-     * COPSBadDataException when data is bad.
+     * Constructor generally used when parsing the bytes of an inbound COPS message but can also be used when the
+     * COPSHeader information is known.
+     * @param hdr - COPS Header (required)
+     * @param handle - the COPS Handle (required)
+     * @param context - the COPS Context (required)
+     * @param integrity - the COPS Integrity (optional)
+     * @param inInterface - the In Interface (optional)
+     * @param outInterface - the Out interface (optional)
+     * @param clientSIs - the Client SIs (optional)
+     * @param decisions - the Decisions by context (optional)
+     * @throws java.lang.IllegalArgumentException
      */
-    public void checkSanity() throws COPSException {
-        if ((_hdr == null) || (_clientHandle == null) || (_context == null)) {
-            throw new COPSException("Bad message format");
-        }
-    }
+    protected COPSReqMsg(final COPSHeader hdr, final COPSHandle handle, final COPSContext context,
+                      final COPSIntegrity integrity, final COPSInterface inInterface, final COPSInterface outInterface,
+                      final Set<COPSClientSI> clientSIs, final Map<COPSContext, Set<COPSLPDPDecision>> decisions) {
+        super(hdr);
+        if (!hdr.getOpCode().equals(OPCode.REQ))
+            throw new IllegalArgumentException("OPCode must be of type - " + OPCode.REQ);
+        if (handle == null) throw new IllegalArgumentException("COPSHandle must not be null");
+        if (context == null) throw new IllegalArgumentException("COPSContext must not be null");
 
-    /**
-     * Add an IN or OUT interface object
-     *
-     * @param    inter               a  COPSInterface
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSInterface inter) throws COPSException {
-        if (inter == null)
-            throw new COPSException ("No Interface");
-
-        //Message integrity object should be the very last one
-        //If it is already added
-        if (_integrity != null)
-            throw new COPSException ("Integrity should be the last one");
-
-        if (inter.isInInterface()) {
-            if (_inInterface != null)
-                throw new COPSException ("Object inInterface exits");
-            _inInterface = inter;
-        } else {
-            if (_outInterface != null)
-                throw new COPSException("Object outInterface exits");
-            _outInterface = inter;
-        }
-        setMsgLength();
-    }
-
-    /**
-     * Add header to the message
-     *
-     * @param    hdr                 a  COPSHeader
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSHeader hdr) throws COPSException {
-        if (hdr == null)
-            throw new COPSException ("Null Header");
-        if (hdr.getOpCode() != COPSHeader.COPS_OP_REQ)
-            throw new COPSException ("Error Header (no COPS_OP_REQ)");
-        _hdr = hdr;
-        setMsgLength();
-    }
-
-    /**
-     * Add Context object to the message
-     *
-     * @param    context             a  COPSContext
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSContext context) throws COPSException {
-        if (context == null)
-            throw new COPSException ("Null Context");
-        _context = context;
-        setMsgLength();
-    }
-
-    /**
-     * Add client handle to the message
-     *
-     * @param    handle              a  COPSHandle
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSHandle handle) throws COPSException {
-        if (handle == null)
-            throw new COPSException ("Null Handle");
         _clientHandle = handle;
-        setMsgLength();
-    }
-
-    /**
-     * Add one or more clientSI objects
-     *
-     * @param    clientSI            a  COPSClientSI
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSClientSI clientSI) throws COPSException {
-        if (clientSI == null)
-            throw new COPSException ("Null ClientSI");
-        _clientSIs.add(clientSI);
-        setMsgLength();
-    }
-
-    /**
-     * Add one or more local decision object for a given decision context
-     * the context is optional, if null all decision object are tided to
-     * message context
-     *
-     * @param    decision            a  COPSLPDPDecision
-     * @param    context             a  COPSContext
-     *
-     * @throws   COPSException
-     *
-     */
-    public void addLocalDecision(COPSLPDPDecision decision, COPSContext context) throws COPSException {
-        Vector v = (Vector) _decisions.get(context);
-        if (!decision.getFlag().equals(DecisionFlag.NA)) {
-            if (v.size() != 0) {
-                //Only one set of decision flags is allowed
-                //for each context
-                throw new COPSException ("Bad Message format, only one set of decision flags is allowed.");
-            }
-        } else {
-            if (v.size() == 0) {
-                //The flags decision must precede any other
-                //decision message, since the decision is not
-                //flags throw exception
-                throw new COPSException ("Bad Message format, flags decision must precede any other decision object.");
-            }
-        }
-        v.add(decision);
-        _decisions.put(context,v);
-
-        setMsgLength();
-    }
-
-    /**
-     * Add integrity object
-     *
-     * @param    integrity           a  COPSIntegrity
-     *
-     * @throws   COPSException
-     *
-     */
-    public void add (COPSIntegrity integrity) throws COPSException {
-        if (integrity == null)
-            throw new COPSException ("Null Integrity");
+        _context = context;
         _integrity = integrity;
-        setMsgLength();
+        _inInterface = inInterface;
+        _outInterface = outInterface;
+
+        if (clientSIs == null) _clientSIs = Collections.unmodifiableSet(new HashSet<COPSClientSI>());
+        else _clientSIs = Collections.unmodifiableSet(clientSIs);
+
+        if (decisions == null) _decisions = Collections.unmodifiableMap(new HashMap<COPSContext, Set<COPSLPDPDecision>>());
+        else _decisions = Collections.unmodifiableMap(decisions);
     }
 
-    /**
-     * Writes data to given socket
-     *
-     * @param    id                  a  Socket
-     *
-     * @throws   IOException
-     *
-     */
-    public void writeData(Socket id) throws IOException {
-        // checkSanity();
-        if (_hdr != null) _hdr.writeData(id);
-        if (_clientHandle != null) _clientHandle.writeData(id);
-        if (_context != null) _context.writeData(id);
 
-        for (Enumeration e = _clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-            clientSI.writeData(id);
+    // Getters of optional members - all can return null
+    public COPSIntegrity getIntegrity() { return _integrity; }
+    public COPSInterface getInInterface() { return _inInterface; }
+    public COPSInterface getOutInterface() { return _outInterface; }
+//    public COPSContext getLpdpContext() { return _lpdpContext; }
+
+    @Override
+    protected void writeBody(final Socket socket) throws IOException {
+        _clientHandle.writeData(socket);
+        _context.writeData(socket);
+
+        if (_inInterface != null) _inInterface.writeData(socket);
+        if (_outInterface != null) _outInterface.writeData(socket);
+
+        for (final COPSClientSI clientSI : _clientSIs) {
+            clientSI.writeData(socket);
         }
 
         //Display any local decisions
-        for (Enumeration e = _decisions.keys() ; e.hasMoreElements() ;) {
-
-            COPSContext context = (COPSContext) e.nextElement();
-            Vector v = (Vector) _decisions.get(context);
-            context.writeData(id);
-
-            for (Enumeration ee = v.elements() ; e.hasMoreElements() ;) {
-                COPSLPDPDecision decision = (COPSLPDPDecision) ee.nextElement();
-                decision.writeData(id);
+        for (final Map.Entry<COPSContext, Set<COPSLPDPDecision>> entry : _decisions.entrySet()) {
+            entry.getKey().writeData(socket);
+            for (final COPSDecision decision : entry.getValue()) {
+                decision.writeData(socket);
             }
         }
 
-        if (_integrity != null) _integrity.writeData(id);
-
+        if (_integrity != null) _integrity.writeData(socket);
     }
 
-    /**
-     * Return Header
-     *
-     * @return   a COPSHeader
-     *
-     */
-    public COPSHeader getHeader() {
-        return _hdr;
+    @Override
+    protected int getDataLength() {
+        int out = _context.getDataLength() + _context.getHeader().getHdrLength();
+        out += _clientHandle.getDataLength() + _clientHandle.getHeader().getHdrLength();
+        if (_inInterface != null) out += _inInterface.getDataLength() + _inInterface.getHeader().getHdrLength();
+        if (_outInterface != null) out += _outInterface.getDataLength() + _outInterface.getHeader().getHdrLength();
+
+        for (final COPSClientSI clientSI : _clientSIs) {
+            out += clientSI.getDataLength() + clientSI.getHeader().getHdrLength();
+        }
+
+        for (final Map.Entry<COPSContext, Set<COPSLPDPDecision>> entry : _decisions.entrySet()) {
+            out += entry.getKey().getDataLength() + entry.getKey().getHeader().getHdrLength();
+            for (final COPSDecision decision : entry.getValue()) {
+                out += decision.getDataLength() + decision.getHeader().getHdrLength();
+            }
+        }
+
+        if (_integrity != null) out += _integrity.getDataLength() + _integrity.getHeader().getHdrLength();
+        return out;
     }
 
     /**
      * Return client Handle
-     *
      * @return   a COPSHandle
-     *
      */
     public COPSHandle getClientHandle() {
         return _clientHandle;
@@ -317,251 +235,45 @@ public class COPSReqMsg extends COPSMsg {
 
     /**
      * Return Context
-     *
      * @return   a COPSContext
-     *
      */
     public COPSContext getContext() {
         return _context;
     }
 
     /**
-     * Returns true if it has In Interface
-     *
-     * @return   a boolean
-     *
+     * Returns a Set of ClientSI objects
+     * @return not null but can be empty
      */
-    public boolean hasInInterface() {
-        return (_inInterface == null);
-    }
-
-    /**
-     * Should check hasInInterface() before calling
-     *
-     * @return   a COPSInterface
-     *
-     */
-    public COPSInterface getInInterface() {
-        return _inInterface;
-    }
-
-    /**
-     * Returns true if it has Out interface
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean hasOutInterface() {
-        return (_outInterface == null);
-    }
-
-    /**
-     * Should check hasOutInterface() before calling
-     *
-     * @return   a COPSInterface
-     *
-     */
-    public COPSInterface getOutInterface() {
-        return _outInterface;
-    }
-
-    /**
-     * Returns a vector if ClientSI objects
-     *
-     * @return   a Vector
-     *
-     */
-    public Vector getClientSI() {
+    public Set<COPSClientSI> getClientSI() {
         return _clientSIs;
     }
 
     /**
-     * Returns a HashTable of any local decisions
-     *
-     * @return   a Hashtable
-     *
+     * Returns a Map of COPSDecision objects
+     * @return not null but can be empty
      */
-    public Hashtable getLpdpDecisions() {
+    public Map<COPSContext, Set<COPSLPDPDecision>> getDecisions() {
         return _decisions;
     }
 
-    /**
-     * Returns true if it has Integrity object
-     *
-     * @return   a boolean
-     *
-     */
-    public boolean hasIntegrity() {
-        return (_integrity == null);
-    }
-
-    /**
-     * Get Integrity. Should check hasIntegrity() becfore calling
-     *
-     * @return   a COPSIntegrity
-     *
-     */
-    public COPSIntegrity getIntegrity() {
-        return _integrity;
-    }
-
-    /**
-     * Parses the data and fills COPSReqMsg with its constituents
-     *
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void parse(byte[] data) throws COPSException {
-        super.parseHeader(data);
-
-        while (_dataStart < _dataLength) {
-            byte[] buf = new byte[data.length - _dataStart];
-            System.arraycopy(data,_dataStart,buf,0,data.length - _dataStart);
-
-            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
-            switch (objHdrData.header.getCNum()) {
-                case HANDLE:
-                    _clientHandle = COPSHandle.parse(objHdrData, buf);
-                    _dataStart += _clientHandle.getDataLength();
-                    break;
-                case CONTEXT:
-                    if (_context == null) {
-                        //Message context
-                        _context = COPSContext.parse(objHdrData, buf);
-                        _dataStart += _context.getDataLength();
-                    } else {
-                        //lpdp context
-                        _lpdpContext = COPSContext.parse(objHdrData, buf);
-                        _dataStart += _lpdpContext.getDataLength();
-                    }
-                    break;
-                case ININTF:
-                    if (objHdrData.header.getCType().equals(CType.DEF)) {
-                        _inInterface = COPSObjectParser.parseIpv4Interface(objHdrData, buf, true);
-                    } else {
-                        _inInterface = COPSObjectParser.parseIpv6Interface(objHdrData, buf, true);
-                    }
-                    _dataStart += _inInterface.getDataLength();
-                    break;
-                case OUTINTF:
-                    if (objHdrData.header.getCType().equals(CType.DEF)) {
-                        _outInterface = COPSObjectParser.parseIpv4Interface(objHdrData, buf, false);
-                    } else {
-                        _outInterface = COPSObjectParser.parseIpv6Interface(objHdrData, buf, false);
-                    }
-                    _dataStart += _outInterface.getDataLength();
-                    break;
-                case LPDP_DEC:
-                    COPSLPDPDecision lpdp = COPSLPDPDecision.parse(objHdrData, buf);
-                    _dataStart += lpdp.getDataLength();
-                    addLocalDecision(lpdp, _lpdpContext);
-                    break;
-                case CSI:
-                    COPSClientSI csi = COPSClientSI.parse(objHdrData, buf);
-                    _dataStart += csi.getDataLength();
-                    _clientSIs.add(csi);
-                    break;
-                case MSG_INTEGRITY:
-                    _integrity = COPSIntegrity.parse(objHdrData, buf);
-                    _dataStart += _integrity.getDataLength();
-                    break;
-                default:
-                    throw new COPSException("Bad Message format, unknown object type");
-            }
-        }
-        checkSanity();
-
-    }
-
-    /**
-     * Parses the data and fills that follows the header hdr and fills COPSReqMsg
-     *
-     * @param    hdr                 a  COPSHeader
-     * @param    data                a  byte[]
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void parse(COPSHeader hdr, byte[] data) throws COPSException {
-        _hdr = hdr;
-        parse(data);
-        setMsgLength();
-    }
-
-    /**
-     * Set the message length, base on the set of objects it contains
-     *
-     * @throws   COPSException
-     *
-     */
-    protected void setMsgLength() throws COPSException {
-        short len = 0;
-
-        if (_clientHandle != null)
-            len += _clientHandle.getDataLength();
-
-        if (_context != null)
-            len += _context.getDataLength();
-
-        for (Enumeration e = _clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
-            len += clientSI.getDataLength();
-        }
-
-        //Display any local decisions
-        for (Enumeration e = _decisions.keys() ; e.hasMoreElements() ;) {
-
-            COPSContext context = (COPSContext) e.nextElement();
-            Vector v = (Vector) _decisions.get(context);
-            len += context.getDataLength();
-
-            for (Enumeration ee = v.elements() ; e.hasMoreElements() ;) {
-                COPSLPDPDecision decision = (COPSLPDPDecision) ee.nextElement();
-                len += decision.getDataLength();
-            }
-        }
-
-        if (_integrity != null) {
-            len += _integrity.getDataLength();
-        }
-
-        _hdr.setMsgLength((int) len);
-
-    }
-
-    /**
-     * Write an object textual description in the output stream
-     *
-     * @param    os                  an OutputStream
-     *
-     * @throws   IOException
-     *
-     */
-    public void dump(OutputStream os) throws IOException {
-        _hdr.dump(os);
-
+    @Override
+    protected void dumpBody(final OutputStream os) throws IOException {
         if (_clientHandle != null)
             _clientHandle.dump(os);
 
         if (_context != null)
             _context.dump(os);
 
-        for (Enumeration e = _clientSIs.elements() ; e.hasMoreElements() ;) {
-            COPSClientSI clientSI = (COPSClientSI) e.nextElement();
+        for (final COPSClientSI clientSI : _clientSIs) {
             clientSI.dump(os);
         }
 
         //Display any local decisions
-        for (Enumeration e = _decisions.keys() ; e.hasMoreElements() ;) {
+        for (final Map.Entry<COPSContext, Set<COPSLPDPDecision>> entry : _decisions.entrySet()) {
+            entry.getKey().dump(os);
 
-            COPSContext context = (COPSContext) e.nextElement();
-            Vector v = (Vector) _decisions.get(context);
-            context.dump(os);
-
-            for (Enumeration ee = v.elements() ; e.hasMoreElements() ;) {
-                COPSLPDPDecision decision = (COPSLPDPDecision) ee.nextElement();
+            for (final COPSDecision decision : entry.getValue()) {
                 decision.dump(os);
             }
         }
@@ -570,5 +282,149 @@ public class COPSReqMsg extends COPSMsg {
             _integrity.dump(os);
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof COPSReqMsg)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final COPSReqMsg that = (COPSReqMsg) o;
+
+        if (this._clientSIs.size() != that._clientSIs.size()) return false;
+        for (final COPSClientSI thisClientSI : this._clientSIs) {
+            boolean found = false;
+            for (final COPSClientSI thatClientSI: that._clientSIs) {
+                if (thisClientSI.equals(thatClientSI)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (! found) return false;
+        }
+
+        for (final Map.Entry<COPSContext, Set<COPSLPDPDecision>> entry : this._decisions.entrySet()) {
+            final Set<COPSLPDPDecision> thatDecisions = that._decisions.get(entry.getKey());
+            if (thatDecisions == null) return false;
+
+            for (final COPSLPDPDecision thisDecision : entry.getValue()) {
+                boolean found = false;
+                for (final COPSLPDPDecision thatDecision: thatDecisions) {
+                    if (thisDecision.equals(thatDecision)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (! found) return false;
+            }
+        }
+
+        if (!this._clientHandle.equals(that._clientHandle)) return false;
+        if (!this._context.equals(that._context)) return false;
+
+        if (this._integrity == null && that._integrity != null) return false;
+        if (this._integrity != null && that._integrity == null) return false;
+        if (this._integrity != null && that._integrity != null)
+            if (!this._integrity.equals(that._integrity)) return false;
+
+        if (this._inInterface == null && that._inInterface != null) return false;
+        if (this._inInterface != null && that._inInterface == null) return false;
+        if (this._inInterface != null && that._inInterface != null)
+            if (!this._inInterface.equals(that._inInterface)) return false;
+
+        if (this._outInterface == null && that._outInterface != null) return false;
+        if (this._outInterface != null && that._outInterface == null) return false;
+        if (this._outInterface != null && that._outInterface != null)
+            if (!this._outInterface.equals(that._outInterface)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + _clientHandle.hashCode();
+        result = 31 * result + _context.hashCode();
+        result = 31 * result + (_inInterface != null ? _inInterface.hashCode() : 0);
+        result = 31 * result + (_outInterface != null ? _outInterface.hashCode() : 0);
+        result = 31 * result + _clientSIs.hashCode();
+        result = 31 * result + _decisions.hashCode();
+        result = 31 * result + (_integrity != null ? _integrity.hashCode() : 0);
+        return result;
+    }
+
+    /**
+     * Responsible for parsing a byte array to create a COPSReqMsg object
+     * @param hdrData - the object's header data
+     * @param data - the byte array to parse
+     * @return - the message object
+     * @throws COPSException
+     */
+    public static COPSReqMsg parse(final COPSHeaderData hdrData, final byte[] data) throws COPSException {
+        // Variables for constructor
+        COPSHandle clientHandle = null;
+        COPSContext context = null;
+        COPSContext lpdpContext = null;
+        COPSIntegrity integrity = null;
+        COPSInterface inInterface = null;
+        COPSInterface outInterface = null;
+        Set<COPSClientSI> clientSIs = new HashSet<>();
+        Map<COPSContext, Set<COPSLPDPDecision>> localDecisions = new HashMap<>();
+
+        int dataStart = 0;
+        while (dataStart < data.length) {
+            final byte[] buf = new byte[data.length - dataStart];
+            System.arraycopy(data, dataStart, buf, 0, data.length - dataStart);
+
+            final COPSObjHeaderData objHdrData = COPSObjectParser.parseObjHeader(buf);
+            switch (objHdrData.header.getCNum()) {
+                case HANDLE:
+                    clientHandle = COPSHandle.parse(objHdrData, buf);
+                    break;
+                case CONTEXT:
+                    if (context == null) context = COPSContext.parse(objHdrData, buf);
+                    else lpdpContext = COPSContext.parse(objHdrData, buf);
+                    break;
+                case ININTF:
+                    if (objHdrData.header.getCType().equals(CType.DEF)) {
+                        inInterface = COPSObjectParser.parseIpv4Interface(objHdrData, buf, true);
+                    } else inInterface = COPSObjectParser.parseIpv6Interface(objHdrData, buf, true);
+                    break;
+                case OUTINTF:
+                    if (objHdrData.header.getCType().equals(CType.DEF)) {
+                        outInterface = COPSObjectParser.parseIpv4Interface(objHdrData, buf, false);
+                    } else  outInterface = COPSObjectParser.parseIpv6Interface(objHdrData, buf, false);
+                    break;
+                case LPDP_DEC:
+                    if (localDecisions.get(lpdpContext) != null)
+                        localDecisions.get(lpdpContext).add(COPSLPDPDecision.parse(objHdrData, buf));
+                    else {
+                        final Set<COPSLPDPDecision> decisions = new HashSet<>();
+                        decisions.add(COPSLPDPDecision.parse(objHdrData, buf));
+                        localDecisions.put(lpdpContext, decisions);
+                    }
+                    break;
+                case CSI:
+                    clientSIs.add(COPSClientSI.parse(objHdrData, buf));
+                    break;
+                case MSG_INTEGRITY:
+                    integrity = COPSIntegrity.parse(objHdrData, buf);
+                    break;
+                default:
+                    throw new COPSException("Bad Message format, unknown object type");
+            }
+            dataStart += objHdrData.msgByteCount;
+        }
+
+        return new COPSReqMsg(hdrData.header, clientHandle, context, integrity, inInterface, outInterface,
+                clientSIs, localDecisions);
+    }
+
 }
 

@@ -8,12 +8,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSHeader.ClientType;
+import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Class for managing an provisioning connection at the PDP side.
@@ -34,16 +37,6 @@ public class PCMMPdpConnection implements Runnable {
     private COPSPepId _pepId;
 
     /**
-    Time of the latest keep-alive sent
-     */
-    private Date _lastKa;
-
-    /**
-   Opcode of the latest message sent
-    */
-    private byte _lastmessage;
-
-    /**
      *  Time of the latest keep-alive received
      */
     protected Date _lastRecKa;
@@ -51,8 +44,7 @@ public class PCMMPdpConnection implements Runnable {
     /**
    Maps a Client Handle to a Handler
      */
-    protected Hashtable _managerMap;
-    // map < String(COPSHandle), COPSPdpHandler> HandlerMap;
+    protected Map<String, PCMMPdpReqStateMan> _managerMap;
 
     /**
      *  PDP policy data processor class
@@ -84,44 +76,24 @@ public class PCMMPdpConnection implements Runnable {
     public PCMMPdpConnection(COPSPepId pepId, Socket sock, PCMMPdpDataProcess process) {
         _sock = sock;
         _pepId = pepId;
-
-        _lastKa = new Date();
-        _lastmessage = COPSHeader.COPS_OP_OPN;
-        _managerMap = new Hashtable(20);
-
+        _managerMap = new ConcurrentHashMap<>();
         _kaTimer = 120;
         _process = process;
-    }
-
-    /**
-     * Gets the time of that latest keep-alive sent
-     * @return Time of that latest keep-alive sent
-     */
-    public Date getLastKAlive() {
-        return _lastKa;
     }
 
     /**
      * Sets the keep-alive timer value
      * @param kaTimer Keep-alive timer value (secs)
      */
-    public void setKaTimer(short kaTimer) {
+    public void setKaTimer(final short kaTimer) {
         _kaTimer = kaTimer;
-    }
-
-    /**
-     * Gets the keep-alive timer value
-     * @return Keep-alive timer value (secs)
-     */
-    public short getKaTimer() {
-        return _kaTimer;
     }
 
     /**
      * Sets the accounting timer value
      * @param acctTimer Accounting timer value (secs)
      */
-    public void setAccTimer(short acctTimer) {
+    public void setAccTimer(final short acctTimer) {
         _acctTimer = acctTimer;
     }
 
@@ -134,35 +106,12 @@ public class PCMMPdpConnection implements Runnable {
     }
 
     /**
-     * Gets the latest COPS message
-     * @return   Code of the latest message sent
-     */
-    public byte getLastMessage() {
-        return _lastmessage;
-    }
-
-    /**
-     * Gets active handles
-     * @return   An <tt>Enumeration</tt> holding all active handles
-     */
-    public Enumeration getHandles() {
-        return _managerMap.keys();
-    }
-
-    /**
      * Gets the handle map
      * @return   A <tt>Hashtable</tt> holding the handle map
      */
-    public Hashtable getReqStateMans() {
-        return _managerMap;
-    }
-
-    /**
-     * Gets the PEP-ID
-     * @return   The ID of the PEP, as a <tt>String</tt>
-     */
-    public String getPepId() {
-        return _pepId.getData().str();
+    public Map<String, PCMMPdpReqStateMan> getReqStateMans() {
+        // Defensive copy
+        return new HashMap<>(_managerMap);
     }
 
     /**
@@ -199,7 +148,7 @@ public class PCMMPdpConnection implements Runnable {
         try {
             while (!_sock.isClosed()) {
                 if (_sock.getInputStream().available() != 0) {
-                    _lastmessage = processMessage(_sock);
+                    processMessage(_sock);
                     _lastRecKa = new Date();
                 }
 
@@ -209,7 +158,7 @@ public class PCMMPdpConnection implements Runnable {
                     int _startTime = (int) (_lastRecKa.getTime());
                     int cTime = (int) (new Date().getTime());
 
-                    if ((int)(cTime - _startTime) > _kaTimer*1000) {
+                    if ((cTime - _startTime) > _kaTimer*1000) {
                         _sock.close();
                         // Notify all Request State Managers
                         notifyNoKAAllReqStateMan();
@@ -219,12 +168,9 @@ public class PCMMPdpConnection implements Runnable {
                     _startTime = (int) (_lastSendKa.getTime());
                     cTime = (int) (new Date().getTime());
 
-                    if ((cTime - _startTime) > ((_kaTimer * 3/4) * 1000)) {
-                        COPSHeader hdr = new COPSHeader(COPSHeader.COPS_OP_KA);
-                        COPSKAMsg msg = new COPSKAMsg();
-
-                        msg.add(hdr);
-
+                    if ((cTime - _startTime) > ((_kaTimer*3/4)*1000)) {
+                        // TODO - determine what is the client type to be used here?
+                        final COPSKAMsg msg = new COPSKAMsg(ClientType.NA, null);
                         COPSTransceiver.sendMsg(msg, _sock);
                         _lastSendKa = new Date();
                     }
@@ -260,30 +206,22 @@ public class PCMMPdpConnection implements Runnable {
     /**
      * Gets a COPS message from the socket and processes it
      * @param    conn Socket connected to the PEP
-     * @return Type of COPS message
      */
-    private byte processMessage(Socket conn)
-    throws COPSPdpException, COPSException, IOException {
-        COPSMsg msg = COPSTransceiver.receiveMsg(conn);
+    private void processMessage(final Socket conn) throws COPSPdpException, COPSException, IOException {
+        final COPSMsg msg = COPSTransceiver.receiveMsg(conn);
 
-        if (msg.getHeader().isAClientClose()) {
+        if (msg.getHeader().getOpCode().equals(OPCode.CC)) {
             handleClientCloseMsg(conn, msg);
-            return COPSHeader.COPS_OP_CC;
-        } else if (msg.getHeader().isAKeepAlive()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.KA)) {
             handleKeepAliveMsg(conn, msg);
-            return COPSHeader.COPS_OP_KA;
-        } else if (msg.getHeader().isARequest()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.REQ)) {
             handleRequestMsg(conn, msg);
-            return COPSHeader.COPS_OP_REQ;
-        } else if (msg.getHeader().isAReport()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.RPT)) {
             handleReportMsg(conn, msg);
-            return COPSHeader.COPS_OP_RPT;
-        } else if (msg.getHeader().isADeleteReq()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.DRQ)) {
             handleDeleteRequestMsg(conn, msg);
-            return COPSHeader.COPS_OP_DRQ;
-        } else if (msg.getHeader().isASyncComplete()) {
+        } else if (msg.getHeader().getOpCode().equals(OPCode.SSQ)) {
             handleSyncComplete(conn, msg);
-            return COPSHeader.COPS_OP_SSC;
         } else {
             throw new COPSPdpException("Message not expected (" + msg.getHeader().getOpCode() + ").");
         }
@@ -306,10 +244,6 @@ public class PCMMPdpConnection implements Runnable {
     private void handleClientCloseMsg(Socket conn, COPSMsg msg) {
         COPSClientCloseMsg cMsg = (COPSClientCloseMsg) msg;
         _error = cMsg.getError();
-
-        // COPSDebug.out(getClass().getName(),"Got close request, closing connection " +
-        //  conn.getInetAddress() + ":" + conn.getPort() + ":[Error " + _error.getDescription() + "]");
-
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
@@ -372,8 +306,7 @@ public class PCMMPdpConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleDeleteRequestMsg(Socket conn, COPSMsg msg)
-    throws COPSPdpException {
+    private void handleDeleteRequestMsg(Socket conn, COPSMsg msg) throws COPSPdpException {
         COPSDeleteMsg cMsg = (COPSDeleteMsg) msg;
         // COPSDebug.out(getClass().getName(),"Removing ClientHandle for " +
         //  conn.getInetAddress() + ":" + conn.getPort() + ":[Reason " + cMsg.getReason().getDescription() + "]");
@@ -385,11 +318,12 @@ public class PCMMPdpConnection implements Runnable {
 
         // Delete clientHandler
         if (_managerMap.remove(cMsg.getClientHandle().getId().str()) == null) {
+            // TODO - Determine what to do here???
             // COPSDebug.out(getClass().getName(),"Missing for ClientHandle " +
             //  cMsg.getClientHandle().getId().getData());
         }
 
-        PCMMPdpReqStateMan man = (PCMMPdpReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        final PCMMPdpReqStateMan man = _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
             logger.warn("State manager not found");
         } else {
@@ -414,14 +348,13 @@ public class PCMMPdpConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleRequestMsg(Socket conn, COPSMsg msg)
-    throws COPSPdpException {
+    private void handleRequestMsg(Socket conn, COPSMsg msg) throws COPSPdpException {
 
-        COPSReqMsg reqMsg = (COPSReqMsg) msg;
-        COPSContext cntxt = reqMsg.getContext();
-        COPSHeader header = reqMsg.getHeader();
+        final COPSReqMsg reqMsg = (COPSReqMsg) msg;
+//        COPSContext cntxt = reqMsg.getContext();
+        final COPSHeader header = reqMsg.getHeader();
         //short reqType = cntxt.getRequestType();
-        short cType   = header.getClientType();
+        final ClientType cType = header.getClientType();
 
         // Support
         if (reqMsg.getIntegrity() != null) {
@@ -429,11 +362,11 @@ public class PCMMPdpConnection implements Runnable {
         }
 
         PCMMPdpReqStateMan man;
-        man = (PCMMPdpReqStateMan) _managerMap.get(reqMsg.getClientHandle().getId().str());
+        man = _managerMap.get(reqMsg.getClientHandle().getId().str());
         if (man == null) {
 
             man = new PCMMPdpReqStateMan(cType, reqMsg.getClientHandle().getId().str());
-            _managerMap.put(reqMsg.getClientHandle().getId().str(),man);
+            _managerMap.put(reqMsg.getClientHandle().getId().str(), man);
             man.setDataProcess(_process);
             man.initRequestState(_sock);
 
@@ -471,7 +404,7 @@ public class PCMMPdpConnection implements Runnable {
             logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
-        PCMMPdpReqStateMan man = (PCMMPdpReqStateMan) _managerMap.get(repMsg.getClientHandle().getId().str());
+        final PCMMPdpReqStateMan man = _managerMap.get(repMsg.getClientHandle().getId().str());
         if (man == null) {
             logger.warn("State manager not found");
         } else {
@@ -497,7 +430,7 @@ public class PCMMPdpConnection implements Runnable {
             logger.error("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
-        PCMMPdpReqStateMan man = (PCMMPdpReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        final PCMMPdpReqStateMan man = _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
             logger.warn("State manager not found");
         } else {
@@ -510,39 +443,21 @@ public class PCMMPdpConnection implements Runnable {
      * @throws COPSException
      * @throws COPSPdpException
      */
-    protected void syncAllRequestState()
-    throws COPSException, COPSPdpException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                PCMMPdpReqStateMan man = (PCMMPdpReqStateMan) _managerMap.get(handle);
-
-                man.syncRequestState();
-            }
+    protected void syncAllRequestState() throws COPSException, COPSPdpException {
+        for (final PCMMPdpReqStateMan man : _managerMap.values()) {
+            man.syncRequestState();
         }
     }
 
-    private void notifyCloseAllReqStateMan()
-    throws COPSPdpException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                PCMMPdpReqStateMan man = (PCMMPdpReqStateMan) _managerMap.get(handle);
-
-                man.processClosedConnection(_error);
-            }
+    private void notifyCloseAllReqStateMan() throws COPSPdpException {
+        for (final PCMMPdpReqStateMan man : _managerMap.values()) {
+            man.processClosedConnection(_error);
         }
     }
 
-    private void notifyNoKAAllReqStateMan()
-    throws COPSPdpException {
-        if (_managerMap.size() > 0) {
-            for (Enumeration e = _managerMap.keys() ; e.hasMoreElements() ;) {
-                String handle = (String) e.nextElement();
-                PCMMPdpReqStateMan man = (PCMMPdpReqStateMan) _managerMap.get(handle);
-
-                man.processNoKAConnection();
-            }
+    private void notifyNoKAAllReqStateMan() throws COPSPdpException {
+        for (final PCMMPdpReqStateMan man : _managerMap.values()) {
+            man.processNoKAConnection();
         }
     }
 
