@@ -8,6 +8,7 @@ package org.umu.cops.stack;
 
 import org.umu.cops.stack.COPSHeader.Flag;
 import org.umu.cops.stack.COPSHeader.OPCode;
+import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -73,6 +74,7 @@ public class COPSDecisionMsg extends COPSMsg {
     private final COPSError _error;
     private final Map<COPSContext, Set<COPSDecision>> _decisions;
     private final COPSIntegrity _integrity;
+    private final COPSClientSI _decSI;
 
     /**
      * Constructor for Decision messages containing a COPS Error.
@@ -81,11 +83,12 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param clientHandle - the handle (required)
      * @param error - the error (required)
      * @param integrity - the integrity (optional)
+     * @param decSI - the client SI for the description(optional)
      */
     @Deprecated
-    public COPSDecisionMsg(final short clientType, final COPSHandle clientHandle,
-                           final COPSError error, final COPSIntegrity integrity) {
-        this(new COPSHeader(OPCode.DEC, clientType), clientHandle, error, null, integrity);
+    public COPSDecisionMsg(final short clientType, final COPSHandle clientHandle, final COPSError error,
+                           final COPSIntegrity integrity, final COPSClientSI decSI) {
+        this(new COPSHeader(OPCode.DEC, clientType), clientHandle, error, null, integrity, decSI);
     }
 
     /**
@@ -94,10 +97,11 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param clientHandle - the handle (required)
      * @param error - the error (required)
      * @param integrity - the integrity (optional)
+     * @param decSI - the client SI for the description(optional)
      */
     public COPSDecisionMsg(final int version, final Flag flag, final short clientType, final COPSHandle clientHandle,
-                           final COPSError error, final COPSIntegrity integrity) {
-        this(new COPSHeader(version, flag, OPCode.DEC, clientType), clientHandle, error, null, integrity);
+                           final COPSError error, final COPSIntegrity integrity, final COPSClientSI decSI) {
+        this(new COPSHeader(version, flag, OPCode.DEC, clientType), clientHandle, error, null, integrity, decSI);
     }
 
     /**
@@ -107,11 +111,13 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param clientHandle - the handle (required)
      * @param decisions - the decisions (required)
      * @param integrity - the integrity (optional)
+     * @param decSI - the client SI for the description(optional)
      */
     @Deprecated
     public COPSDecisionMsg(final short clientType, final COPSHandle clientHandle,
-                           final Map<COPSContext, Set<COPSDecision>> decisions, final COPSIntegrity integrity) {
-        this(new COPSHeader(OPCode.DEC, clientType), clientHandle, null, decisions, integrity);
+                           final Map<COPSContext, Set<COPSDecision>> decisions, final COPSIntegrity integrity,
+                           final COPSClientSI decSI) {
+        this(new COPSHeader(OPCode.DEC, clientType), clientHandle, null, decisions, integrity, decSI);
     }
 
     /**
@@ -120,10 +126,12 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param clientHandle - the handle (required)
      * @param decisions - the decisions (required)
      * @param integrity - the integrity (optional)
+     * @param decSI - the client SI for the description(optional)
      */
     public COPSDecisionMsg(final int version, final Flag flag, final short clientType, final COPSHandle clientHandle,
-                           final Map<COPSContext, Set<COPSDecision>> decisions, final COPSIntegrity integrity) {
-        this(new COPSHeader(version, flag, OPCode.DEC, clientType), clientHandle, null, decisions, integrity);
+                           final Map<COPSContext, Set<COPSDecision>> decisions, final COPSIntegrity integrity,
+                           final COPSClientSI decSI) {
+        this(new COPSHeader(version, flag, OPCode.DEC, clientType), clientHandle, null, decisions, integrity, decSI);
     }
 
     /**
@@ -133,10 +141,11 @@ public class COPSDecisionMsg extends COPSMsg {
      * @param error - the error (if null, decisions must not be null or empty)
      * @param decisions - the decisions (must be empty or null if error is not)
      * @param integrity - the integrity (optional)
+     * @param decSI - the client SI for the description(optional)
      */
     protected COPSDecisionMsg(final COPSHeader hdr, final COPSHandle clientHandle,
                            final COPSError error, final Map<COPSContext, Set<COPSDecision>> decisions,
-                           final COPSIntegrity integrity) {
+                           final COPSIntegrity integrity, final COPSClientSI decSI) {
         super(hdr);
         if (!hdr.getOpCode().equals(OPCode.DEC))
             throw new IllegalArgumentException("OPCode must be of type - " + OPCode.DEC);
@@ -157,7 +166,7 @@ public class COPSDecisionMsg extends COPSMsg {
         _clientHandle = clientHandle;
         _error = error;
         _integrity = integrity;
-
+        _decSI = decSI;
     }
 
     // Getters
@@ -172,6 +181,9 @@ public class COPSDecisionMsg extends COPSMsg {
     }
     public COPSIntegrity getIntegrity() {
         return _integrity;
+    }
+    public COPSClientSI getDecSI() {
+        return _decSI;
     }
 
     @Override
@@ -188,6 +200,7 @@ public class COPSDecisionMsg extends COPSMsg {
         }
 
         if (_integrity != null) out += _integrity.getDataLength() + _integrity.getHeader().getHdrLength();
+        if (_decSI != null) out += _decSI.getDataLength() + _decSI.getHeader().getHdrLength();
 
         return out;
     }
@@ -207,6 +220,7 @@ public class COPSDecisionMsg extends COPSMsg {
         }
 
         if (_integrity != null) _integrity.writeData(socket);
+        if (_decSI != null) _decSI.writeData(socket);
     }
 
     @Override
@@ -225,6 +239,9 @@ public class COPSDecisionMsg extends COPSMsg {
         }
         if (_integrity != null) {
             _integrity.dump(os);
+        }
+        if (_decSI != null) {
+            _decSI.dump(os);
         }
     }
 
@@ -260,7 +277,8 @@ public class COPSDecisionMsg extends COPSMsg {
 
         return _clientHandle.equals(that._clientHandle) &&
                 !(_error != null ? !_error.equals(that._error) : that._error != null) &&
-                !(_integrity != null ? !_integrity.equals(that._integrity) : that._integrity != null);
+                !(_integrity != null ? !_integrity.equals(that._integrity) : that._integrity != null) &&
+                !(_decSI != null ? !_decSI.equals(that._decSI) : that._decSI != null);
 
     }
 
@@ -271,6 +289,7 @@ public class COPSDecisionMsg extends COPSMsg {
         result = 31 * result + (_error != null ? _error.hashCode() : 0);
         result = 31 * result + _decisions.hashCode();
         result = 31 * result + (_integrity != null ? _integrity.hashCode() : 0);
+        result = 31 * result + (_decSI != null ? _decSI.hashCode() : 0);
         return result;
     }
 
@@ -287,6 +306,7 @@ public class COPSDecisionMsg extends COPSMsg {
         COPSContext context = null;
         COPSError error = null;
         COPSIntegrity integrity = null;
+        COPSClientSI descSi = null;
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
 
         int dataStart = 0;
@@ -308,24 +328,42 @@ public class COPSDecisionMsg extends COPSMsg {
                     error = COPSError.parse(objHdrData, buf);
                     break;
                 case DEC:
-                    if (decisionMap.get(context) != null)
-                        decisionMap.get(context).add(COPSDecision.parse(objHdrData, buf));
-                    else {
-                        final Set<COPSDecision> decisions = new HashSet<>();
-                        decisions.add(COPSDecision.parse(objHdrData, buf));
-                        decisionMap.put(context, decisions);
+                    COPSDecision dec;
+                    if (objHdrData.header.getCType().equals(CType.CSI)) {
+                        // TODO - Revisit, this is pretty darn clunky
+                        try {
+                            dec = COPSDecision.parse(objHdrData, buf);
+                        } catch (IllegalArgumentException e) {
+                            descSi = COPSClientSI.parse(objHdrData, buf);
+                            dec = null;
+                        }
+                    } else {
+                        dec = COPSDecision.parse(objHdrData, buf);
                     }
+                    if (dec != null) {
+                        if (decisionMap.get(context) != null)
+                            decisionMap.get(context).add(dec);
+                        else {
+                            final Set<COPSDecision> decisions = new HashSet<>();
+                            decisions.add(dec);
+                            decisionMap.put(context, decisions);
+                        }
+                    }
+                    break;
+                case CSI:
+                    descSi = COPSClientSI.parse(objHdrData, buf);
                     break;
                 case MSG_INTEGRITY:
                     integrity = COPSIntegrity.parse(objHdrData, buf);
                     break;
                 default:
-                    throw new COPSException("Bad Message format, unknown object type");
+                    throw new COPSException("Bad Message format, unknown object type with CNum - "
+                            + objHdrData.header.getCNum());
             }
             dataStart += objHdrData.msgByteCount;
         }
 
-        return new COPSDecisionMsg(hdrData.header, clientHandle, error, decisionMap, integrity);
+        return new COPSDecisionMsg(hdrData.header, clientHandle, error, decisionMap, integrity, descSi);
     }
 
 }

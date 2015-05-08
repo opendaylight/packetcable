@@ -1,8 +1,8 @@
 package org.umu.cops.ospep;
 
+import org.umu.cops.prpep.COPSPepMsgSender;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSContext.RType;
-import org.umu.cops.stack.COPSReason.ReasonCode;
 import org.umu.cops.stack.COPSReportType.ReportType;
 
 import java.io.IOException;
@@ -13,22 +13,7 @@ import java.util.Set;
 /**
  * COPS message transceiver class for outsourcing connections at the PEP side.
  */
-public class COPSPepOSMsgSender {
-    /**
-     * Socket connection to PDP
-     */
-    protected Socket _sock;
-
-    /**
-     * COPS client-type that identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     * COPS client handle used to uniquely identify a particular
-     * PEP's request for a client-type
-     */
-    protected COPSHandle _handle;
+public class COPSPepOSMsgSender extends COPSPepMsgSender {
 
     /**
      * Creates a COPSPepMsgSender
@@ -37,28 +22,8 @@ public class COPSPepOSMsgSender {
      * @param clientHandle      Client handle
      * @param sock              Socket connected to the PDP
      */
-    public COPSPepOSMsgSender (final short clientType, final COPSHandle clientHandle, final Socket sock) {
-        // COPS Handle
-        _handle = clientHandle;
-        _clientType = clientType;
-
-        _sock = sock;
-    }
-
-    /**
-     * Gets the client handle
-     * @return  Client's <tt>COPSHandle</tt>
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Gets the client-type
-     * @return  Client-type value
-     */
-    public int getClientType() {
-        return _clientType;
+    public COPSPepOSMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock) {
+        super(clientType, clientHandle, sock);
     }
 
     /**
@@ -119,41 +84,6 @@ public class COPSPepOSMsgSender {
             msg.writeData(_sock);
         } catch (IOException e) {
             throw new COPSPepException("Failed to send the report, reason: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Sends a sync-complete message to the PDP. This indicates the
-     * end of a synchronization requested by the PDP.
-     * @throws   COPSPepException
-     */
-    public void sendSyncComplete() throws COPSPepException {
-        // Common Header with the same ClientType as the request
-        // Client Handle with the same clientHandle as the request
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(_clientType, _handle, null);
-        try {
-            msg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPepException("Failed to send the sync state request, reason: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Sends a delete request to the PDP.
-     * When sent from the PEP this message indicates to the remote PDP that
-     * the state identified by the client handle is no longer
-     * available/relevant.
-     * @throws   COPSPepException
-     */
-    public void sendDeleteRequest() throws COPSPepException {
-        // *** TODO: use real reason codes
-        COPSReason reason = new COPSReason(ReasonCode.UNSPECIFIED, ReasonCode.NA);
-
-        final COPSDeleteMsg msg = new COPSDeleteMsg(_clientType, _handle, reason, null);
-        try {
-            msg.writeData(_sock);
-        } catch (IOException e) {
-            throw new COPSPepException("Failed to send the delete request, reason: " + e.getMessage());
         }
     }
 

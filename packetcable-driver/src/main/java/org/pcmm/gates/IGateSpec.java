@@ -13,16 +13,12 @@ import org.pcmm.base.IPCMMBaseObject;
  * information regarding the treatment of other objects specified in the Gate
  * message.
  * </p>
- *
- *
- *
- *
  */
 public interface IGateSpec extends IPCMMBaseObject {
 
-    static final byte SNUM = 5;
-    static final byte STYPE = 1;
-    static final short LENGTH = 16;
+    byte SNUM = 5;
+    byte STYPE = 1;
+    short LENGTH = 16;
 
     /**
      * <p>
@@ -34,11 +30,11 @@ public interface IGateSpec extends IPCMMBaseObject {
      *
      *
      */
-    public enum Direction {
+    enum Direction {
 
         UPSTREAM((byte) 1), DOWNSTREAM((byte) 0);
 
-        private Direction(byte value) {
+        Direction(byte value) {
             this.value = value;
         }
 
@@ -69,16 +65,16 @@ public interface IGateSpec extends IPCMMBaseObject {
             }
         }
 
-    };
+    }
 
     /**
      *
      */
-    public enum DSCPTOS {
+    enum DSCPTOS {
 
-        ENABLE((byte) 1), OVERRIDE((byte) 0);
+        ENABLE((byte) 2), OVERRIDE((byte) 0);
 
-        private DSCPTOS(byte value) {
+        DSCPTOS(byte value) {
             this.value = value;
         }
 
@@ -109,7 +105,7 @@ public interface IGateSpec extends IPCMMBaseObject {
 
         private byte value;
 
-    };
+    }
 
     /**
      * <p>
@@ -221,9 +217,12 @@ public interface IGateSpec extends IPCMMBaseObject {
 
     /**
      *
-     * @param dscpTos
+     * @param dscpTos - the object used to overwrite
      */
     void setDSCP_TOSOverwrite(DSCPTOS dscpTos);
+
+    // set the DSCP_TOS value
+    void setDSCP_TOSOverwrite(byte dscpTos);
 
     /**
      *
@@ -233,7 +232,7 @@ public interface IGateSpec extends IPCMMBaseObject {
 
     /**
      *
-     * @return
+     * @return - the mask
      */
     byte getDSCP_TOSMask();
 

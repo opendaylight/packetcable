@@ -132,7 +132,7 @@ public class MessageFactory implements IMessageFactory {
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
-        final COPSDecisionMsg msg = new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, handle, decisionMap, null);
+        final COPSDecisionMsg msg = new COPSDecisionMsg(IPCMMClient.CLIENT_TYPE, handle, decisionMap, null, null);
 
         // TODO - determine why this block has been commented out
         // try {

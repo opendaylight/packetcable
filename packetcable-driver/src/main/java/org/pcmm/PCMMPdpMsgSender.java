@@ -10,12 +10,15 @@ import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.umu.cops.COPSMsgSender;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSClientSI.CSIType;
 import org.umu.cops.stack.COPSContext.RType;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
 import org.umu.cops.stack.COPSHeader.OPCode;
+import org.umu.cops.stack.COPSObjHeader.CNum;
 import org.umu.cops.stack.COPSObjHeader.CType;
 
 import java.io.IOException;
@@ -27,8 +30,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-//temp
-//pcmm
 /*
  * Example of an UNSOLICITED decision
  *
@@ -44,33 +45,15 @@ import java.util.Set;
 /**
  * COPS message transceiver class for provisioning connections at the PDP side.
  */
-public class PCMMPdpMsgSender {
+public class PCMMPdpMsgSender extends COPSMsgSender {
 
     public final static Logger logger = LoggerFactory.getLogger(PCMMPdpMsgSender.class);
 
-    /**
-     * Socket connected to PEP
-     */
-    protected Socket _sock;
-
-    /**
-     * COPS client-type that identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     * COPS client handle used to uniquely identify a particular PEP's request
-     * for a client-type
-     */
-    protected COPSHandle _handle;
-
-    /**
-     *
-     */
     protected short _transactionID;
-    protected short _classifierID;
+    protected final short _classifierID;
+
     // XXX - this does not need to be here
-    protected int _gateID;
+    protected IGateID _gateID;
 
     /**
      * Creates a PCMMPdpMsgSender
@@ -82,42 +65,16 @@ public class PCMMPdpMsgSender {
      * @param sock
      *            Socket to the PEP
      */
-    public PCMMPdpMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock) {
-        // COPS Handle
-        _handle = clientHandle;
-        _clientType = clientType;
-
-        _transactionID = 0;
-        _classifierID = 0;
-        _sock = sock;
+    public PCMMPdpMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock)
+            throws COPSPdpException {
+        this(clientType, (short)0, clientHandle, sock);
     }
 
     public PCMMPdpMsgSender(final short clientType, final short tID, final COPSHandle clientHandle,
-                            final Socket sock) {
-        // COPS Handle
-        _handle = clientHandle;
-        _clientType = clientType;
+                            final Socket sock) throws COPSPdpException {
+        super(clientType, clientHandle, sock);
         _transactionID = tID;
         _classifierID = 0;
-        _sock = sock;
-    }
-
-    /**
-     * Gets the client handle
-     *
-     * @return Client's <tt>COPSHandle</tt>
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Gets the client-type
-     *
-     * @return Client-type value
-     */
-    public short getClientType() {
-        return _clientType;
     }
 
     /**
@@ -129,6 +86,14 @@ public class PCMMPdpMsgSender {
         return _transactionID;
     }
 
+    /**
+     * Gets the gate-id
+     *
+     * @return the gate-id value
+     */
+    public IGateID getGateID() {
+        return _gateID;
+    }
 
     /**
      * Sends a PCMM GateSet COPS Decision message
@@ -144,7 +109,11 @@ public class PCMMPdpMsgSender {
         trID.setTransactionIdentifier(_transactionID);
 
         gate.setTransactionID(trID);
-
+        // retain the transactionId to gate request mapping for gateID recovery after response
+        // see PCMMPdpReqStateMan.processReport()
+        final Short trIDnum = trID.getTransactionIdentifier();
+        logger.info("Adding gate to cache - " + gate + " with key - " + trIDnum);
+        PCMMGlobalConfig.transactionGateMap.put(trIDnum, gate);
 
         // new pcmm specific clientsi
         final byte[] data = gate.getData();
@@ -152,17 +121,14 @@ public class PCMMPdpMsgSender {
         // Client Handle with the same clientHandle as the request
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR,
-                new COPSData(data, 0, data.length)));
+        decisionSet.add(new COPSDecision(CType.DEF, Command.INSTALL, DecisionFlag.REQERROR));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(getClientHandle().getId()),
-                decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null));
+        final COPSClientSI clientSD = new COPSClientSI(CNum.DEC, CType.CSI, new COPSData(data, 0, data.length));
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, _handle, decisionMap, null, clientSD);
+
         // ** Send the GateSet Decision
-        // **
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
@@ -256,7 +222,7 @@ public class PCMMPdpMsgSender {
         // TODO - Use some variable here or remove...
         if (true) {
             //eclassifier.setProtocol(IClassifier.Protocol.NONE);
-            eclassifier.setProtocol(IClassifier.Protocol.TCP);
+//            eclassifier.setProtocol(IClassifier.Protocol.TCP);
             try {
                 InetAddress subIP = InetAddress
                                     .getByName(PCMMGlobalConfig.SubscriberID);
@@ -293,7 +259,7 @@ public class PCMMPdpMsgSender {
             eclassifier.setPriority((byte) 65);
 
         } else {
-            classifier.setProtocol(IClassifier.Protocol.TCP);
+//            classifier.setProtocol(IClassifier.Protocol.TCP);
             try {
                 InetAddress subIP = InetAddress
                                     .getByName(PCMMGlobalConfig.SubscriberID);
@@ -321,17 +287,14 @@ public class PCMMPdpMsgSender {
         final byte[] data = gate.getData();
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR,
-                new COPSData(data, 0, data.length)));
+        decisionSet.add(new COPSDecision(CType.NA, Command.INSTALL, DecisionFlag.REQERROR));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
+        final COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
 
         // Common Header with the same ClientType as the request
         // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-                //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length))); TODO - what does the value of 4 mean here???
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, clientSD);
 
         // ** Send the GateSet Decision
         // **
@@ -418,7 +381,7 @@ public class PCMMPdpMsgSender {
         // XXX - if the version major is less than 4 we need to use Classifier
         if (true) {
             //eclassifier.setProtocol(IClassifier.Protocol.NONE);
-            eclassifier.setProtocol(IClassifier.Protocol.TCP);
+//            eclassifier.setProtocol(IClassifier.Protocol.TCP);
             try {
                 InetAddress subIP = InetAddress
                                     .getByName(PCMMGlobalConfig.SubscriberID);
@@ -455,7 +418,7 @@ public class PCMMPdpMsgSender {
             eclassifier.setPriority((byte) 65);
 
         } else {
-            classifier.setProtocol(IClassifier.Protocol.TCP);
+//            classifier.setProtocol(IClassifier.Protocol.TCP);
             try {
                 InetAddress subIP = InetAddress
                                     .getByName(PCMMGlobalConfig.SubscriberID);
@@ -483,16 +446,14 @@ public class PCMMPdpMsgSender {
         byte[] data = gate.getData();
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
+        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
+        final COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
 
         // Common Header with the same ClientType as the request
         // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, new COPSHandle(getClientHandle().getId()),
-                decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null)); TODO - what does the value of 4 mean here???
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(_clientType, _handle, decisionMap, null, clientSD);
 
         // ** Send the GateSet Decision
         // **
@@ -521,7 +482,7 @@ public class PCMMPdpMsgSender {
                     logger.info("the CMTS has sent a Gate-Set-Ack response");
                     // here CMTS responded that he acknowledged the Gate-Set
                     // TODO do further check of Gate-Set-Ack GateID etc...
-                    _gateID = responseGate.getGateID().getGateID();
+                    _gateID = responseGate.getGateID();
                     return true;
                 } else {
                     return false;
@@ -529,7 +490,7 @@ public class PCMMPdpMsgSender {
             }
             return false;
         } catch (Exception e) { // COPSException, IOException
-            throw new COPSPdpException("Error COPSTransceiver.receiveMsg");
+            throw new COPSPdpException("Error COPSTransceiver.receiveMsg", e);
         }
     }
 
@@ -561,10 +522,6 @@ public class PCMMPdpMsgSender {
         .setRequestTransmissionPolicy(
             PCMMGlobalConfig.BETransmissionPolicy);
 
-        // byte[] content = "1234".getBytes();
-
-        // handle.setId(new COPSData(content, 0, content.length));
-
         // set transaction ID to gate set
         trID.setGateCommandType(ITransactionID.GateSet);
         _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
@@ -584,7 +541,7 @@ public class PCMMPdpMsgSender {
          * .setServiceClassName("S_up");
          */
 
-        classifier.setProtocol(IClassifier.Protocol.TCP);
+//        classifier.setProtocol(IClassifier.Protocol.TCP);
         try {
             InetAddress subIP = InetAddress.getByName(PCMMGlobalConfig.SubscriberID);
             InetAddress srcIP = InetAddress.getByName(PCMMGlobalConfig.srcIP);
@@ -608,16 +565,14 @@ public class PCMMPdpMsgSender {
         final byte[] data = gate.getData();
 
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL,
-                DecisionFlag.REQERROR, new COPSData(data, 0, data.length)));
+        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
+        final COPSClientSI clientSD = new COPSClientSI(CSIType.NAMED, new COPSData(data, 0, data.length));
+
         // Client Handle with the same clientHandle as the request
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null));
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, clientSD);
 
         // ** Send the GateSet Decision
         // **
@@ -626,7 +581,6 @@ public class PCMMPdpMsgSender {
         } catch (IOException e) {
             logger.error("Failed to send the decision", e);
         }
-
     }
 
     /**
@@ -634,57 +588,34 @@ public class PCMMPdpMsgSender {
      *
      * @throws COPSPdpException
      */
-    public void sendGateDelete(int gID) throws COPSPdpException {
-        /*
-         * Example of an UNSOLICITED decision <Gate Control Command> = <COPS
-         * Common Header> <Client Handle> <Context> <Decision Flags> <ClientSI
-         * Data> <ClientSI Data> = <Gate-Set> | <Gate-Info> | <Gate-Delete> |
-         * <PDP-Config> | <Synch-Request> | <Msg-Receipt> <Gate-Delete> =
-         * <Decision Header> <TransactionID> <AMID> <SubscriberID> <GateID>
-         */
-        // Common Header with the same ClientType as the request
-        final IPCMMGate gate = new PCMMGateReq();
-        final ITransactionID trID = new TransactionID();
-
-        final IAMID amid = new AMID();
-        final ISubscriberID subscriberID = new SubscriberID();
-        final IGateSpec gateSpec = new GateSpec();
-        final IGateID gateID = new GateID();
-
+    public void sendGateDelete(final IPCMMGate gate) throws COPSPdpException {
         // set transaction ID to gate set
+        final ITransactionID trID = new TransactionID();
         trID.setGateCommandType(ITransactionID.GateDelete);
         _transactionID = (_transactionID == 0 ? (short) (Math.random() * hashCode()) : _transactionID);
         trID.setTransactionIdentifier(_transactionID);
-
-        amid.setApplicationType((short) 1);
-        amid.setApplicationMgrTag((short) 1);
-        gateID.setGateID(gID);
-
-        try {
-            InetAddress subIP = InetAddress.getByName(PCMMGlobalConfig.SubscriberID);
-            subscriberID.setSourceIPAddress(subIP);
-        } catch (UnknownHostException unae) {
-            logger.error("Error getByName", unae);
-        }
-
         gate.setTransactionID(trID);
-        gate.setAMID(amid);
-        gate.setSubscriberID(subscriberID);
-        gate.setGateID(gateID);
+
+        Short trIDnum = trID.getTransactionIdentifier();
+        PCMMGlobalConfig.transactionGateMap.put(trIDnum, gate);
+
+        // gateDelete only requires AMID, subscriberID, and gateID
+        // remove the gateSpec, traffic profile, and classifiers from original gate request
+        gate.setGateSpec(null);
+        gate.setTrafficProfile(null);
+        gate.setClassifier(null);
+        // clear the error object
+        gate.setError(null);
 
         // XXX - GateID
         final byte[] data = gate.getData();
-
         final Set<COPSDecision> decisionSet = new HashSet<>();
-        decisionSet.add(new COPSDecision(CType.CSI, Command.INSTALL, DecisionFlag.REQERROR,
-                new COPSData(data, 0, data.length)));
+        decisionSet.add(new COPSDecision(CType.DEF, Command.INSTALL, DecisionFlag.REQERROR));
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
-        decisionMap.put(new COPSContext(RType.CONFIG, (short) 0), decisionSet);
+        decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
+        final COPSClientSI clientSD = new COPSClientSI(CNum.DEC, CType.CSI, new COPSData(data, 0, data.length));
 
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(),
-                new COPSHandle(getClientHandle().getId()), decisionMap, null);
-//                new COPSClientSI(CSIType.SIGNALED, new COPSData(data, 0, data.length)), decisionMap);
-        //                new COPSClientSI(CNum.DEC, (byte) 4, new COPSData(data, 0, data.length), null));
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, clientSD);
 
         // ** Send the GateDelete Decision
         // **
@@ -713,15 +644,12 @@ public class PCMMPdpMsgSender {
         final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
         decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
 
-        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), new COPSHandle(_handle.getId()),
-                decisionMap, null);
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, null);
 
         try {
             decisionMsg.writeData(_sock);
         } catch (IOException e) {
-            throw new COPSPdpException(
-                "Failed to send the open new request state, reason: "
-                + e.getMessage());
+            throw new COPSPdpException("Failed to send the open new request state", e);
         }
     }
 
@@ -734,13 +662,11 @@ public class PCMMPdpMsgSender {
         /*
          * <Gate-Info> ::= <Common Header> [<Client Handle>] [<Integrity>]
          */
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(getClientType(), new COPSHandle(_handle.getId()), null);
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(getClientType(), _handle, null);
         try {
             msg.writeData(_sock);
         } catch (IOException e) {
-            throw new COPSPdpException(
-                "Failed to send the GateInfo request, reason: "
-                + e.getMessage());
+            throw new COPSPdpException("Failed to send the GateInfo request", e);
         }
     }
 
@@ -756,13 +682,11 @@ public class PCMMPdpMsgSender {
          */
 
         // Client Handle with the same clientHandle as the request
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(getClientType(), new COPSHandle(_handle.getId()), null);
+        final COPSSyncStateMsg msg = new COPSSyncStateMsg(getClientType(), _handle, null);
         try {
             msg.writeData(_sock);
         } catch (IOException e) {
-            throw new COPSPdpException(
-                "Failed to send the sync state request, reason: "
-                + e.getMessage());
+            throw new COPSPdpException("Failed to send the sync state request", e);
         }
     }
     // XXX - Temp

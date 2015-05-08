@@ -5,9 +5,9 @@
 
 package org.pcmm.gates;
 
-import java.net.InetAddress;
-
 import org.pcmm.base.IPCMMBaseObject;
+
+import java.net.InetAddress;
 
 /**
  *
@@ -16,11 +16,11 @@ import org.pcmm.base.IPCMMBaseObject;
  */
 public interface IClassifier extends IPCMMBaseObject {
 
-    static final short LENGTH = 24;
-    static final byte SNUM = 6;
-    static final byte STYPE = 1;
+    short LENGTH = 24;
+    byte SNUM = 6;
+    byte STYPE = 1;
 
-    static enum Protocol {
+    enum Protocol {
         /*ICMP((short) 1), IGMP((short) 2), */
         NONE((short)0), TCP((short) 6), UDP((short) 17);
 
@@ -87,14 +87,14 @@ public interface IClassifier extends IPCMMBaseObject {
      *
      * @return the protocol.
      */
-    Protocol getProtocol();
+    short getProtocol();
 
     /**
      * @see <a
      *      href="http://www.iana.org/assignments/protocol-numbers/protocol-numbers.txt">protocols</a>
-     * @param p
+     * @param p - the protocol value
      */
-    void setProtocol(Protocol p);
+    void setProtocol(short p);
 
     /**
      * Priority may be used to distinguish between multiple classifiers that

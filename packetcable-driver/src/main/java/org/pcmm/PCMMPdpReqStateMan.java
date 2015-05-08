@@ -4,10 +4,13 @@
 
 package org.pcmm;
 
+import org.pcmm.gates.IGateID;
+import org.pcmm.gates.IPCMMGate;
 import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.umu.cops.COPSStateMan;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.*;
 import org.umu.cops.stack.COPSReportType.ReportType;
@@ -20,159 +23,36 @@ import java.util.Map;
 /**
  * State manager class for provisioning requests, at the PDP side.
  */
-public class PCMMPdpReqStateMan {
+public class PCMMPdpReqStateMan extends COPSStateMan {
 
-    public final static Logger logger = LoggerFactory.getLogger(PCMMPdpReqStateMan.class);
-
-    /**
-     * Request State created
-     */
-    public final static short ST_CREATE = 1;
-    /**
-     * Request received
-     */
-    public final static short ST_INIT = 2;
-    /**
-     * Decisions sent
-     */
-    public final static short ST_DECS = 3;
-    /**
-     * Report received
-     */
-    public final static short ST_REPORT = 4;
-    /**
-     * Request State finalized
-     */
-    public final static short ST_FINAL = 5;
-    /**
-     * New Request State solicited
-     */
-    public final static short ST_NEW = 6;
-    /**
-     * Delete Request State solicited
-     */
-    public final static short ST_DEL = 7;
-    /**
-     * SYNC request sent
-     */
-    public final static short ST_SYNC = 8;
-    /**
-     * SYNC completed
-     */
-    public final static short ST_SYNCALL = 9;
-    /**
-     * Close connection received
-     */
-    public final static short ST_CCONN = 10;
-    /**
-     * Keep-alive timeout
-     */
-    public final static short ST_NOKA = 11;
-    /**
-     * Accounting timeout
-     */
-    public final static short ST_ACCT = 12;
-
-    /**
-     * COPS client-type that identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     *  COPS client handle used to uniquely identify a particular
-     *  PEP's request for a client-type
-     */
-    protected COPSHandle _handle;
+    private final static Logger logger = LoggerFactory.getLogger(PCMMPdpReqStateMan.class);
 
     /**
      * Object for performing policy data processing
      */
-    protected PCMMPdpDataProcess _process;
-
-    /**
-     *  Current state of the request being managed
-     */
-    protected short _status;
+    protected final PCMMPdpDataProcess _process;
 
     /** COPS message transceiver used to send COPS messages */
-    protected PCMMPdpMsgSender _sender;
+    protected transient PCMMPdpMsgSender _sender;
 
     /**
      * Creates a request state manager
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public PCMMPdpReqStateMan(final short clientType, final String clientHandle) {
-        _handle = new COPSHandle(new COPSData(clientHandle));
-        _clientType = clientType;
-        _status = ST_CREATE;
+    // TODO - consider sending in the COPSHandle object instead
+    public PCMMPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final PCMMPdpDataProcess process) {
+        super(clientType, clientHandle);
+        this._process = process;
     }
 
-    /**
-     * Gets the client handle
-     * @return   Client's <tt>COPSHandle</tt>
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Gets the client-type
-     * @return   Client-type value
-     */
-    public int getClientType() {
-        return _clientType;
-    }
-
-    /**
-     * Gets the status of the request
-     * @return      Request state value
-     */
-    public short getStatus() {
-        return _status;
-    }
-
-    /**
-     * Gets the policy data processing object
-     * @return   Policy data processing object
-     */
-    public PCMMPdpDataProcess getDataProcess() {
-        return _process;
-    }
-
-    /**
-     * Sets the policy data processing object
-     * @param   process Policy data processing object
-     */
-    public void setDataProcess(PCMMPdpDataProcess process) {
-        _process = process;
-    }
-
-    /**
-     * Called when COPS sync is completed
-     * @param    repMsg              COPS sync message
-     * @throws   COPSPdpException
-     */
-    protected void processSyncComplete(COPSSyncStateMsg repMsg)
-    throws COPSPdpException {
-
-        _status = ST_SYNCALL;
-
-        // maybe we should notifySyncComplete ...
-    }
-
-    /**
-     * Initializes a new request state over a socket
-     * @param sock  Socket to the PEP
-     * @throws COPSPdpException
-     */
-    protected void initRequestState(Socket sock)
-    throws COPSPdpException {
+    @Override
+    protected void initRequestState(final Socket sock) throws COPSException {
         // Inits an object for sending COPS messages to the PEP
         _sender = new PCMMPdpMsgSender(_clientType, _handle, sock);
 
         // Initial state
-        _status = ST_INIT;
+        _status = Status.ST_INIT;
     }
 
 
@@ -182,12 +62,12 @@ public class PCMMPdpReqStateMan {
      * @param msg   COPS request received from the PEP
      * @throws COPSPdpException
      */
-    protected void processRequest(COPSReqMsg msg)
-    throws COPSPdpException {
+    public void processRequest(final COPSReqMsg msg) throws COPSPdpException {
 
-        COPSHeader hdrmsg = msg.getHeader();
-        COPSHandle handlemsg = msg.getClientHandle();
-        COPSContext contextmsg = msg.getContext();
+        // TODO - Implement me
+//        COPSHeader hdrmsg = msg.getHeader();
+//        COPSHandle handlemsg = msg.getClientHandle();
+//        COPSContext contextmsg = msg.getContext();
 
         //** Analyze the request
         //**
@@ -250,8 +130,9 @@ public class PCMMPdpReqStateMan {
      * Processes a report
      * @param msg   Report message from the PEP
      * @throws COPSPdpException
+     * TODO - break apart this method
      */
-    protected void processReport(COPSReportMsg msg) throws COPSPdpException {
+    protected void processReport(final COPSReportMsg msg) throws COPSPdpException {
         // Report Type
         final COPSReportType rtypemsg = msg.getReport();
 
@@ -262,8 +143,9 @@ public class PCMMPdpReqStateMan {
 
             // PCMMUtils.WriteBinaryDump("COPSReportClientSI", data);
             logger.info("PCMMGateReq Parse Gate Message");
-            PCMMGateReq gateMsg = new PCMMGateReq(data);
+            final PCMMGateReq gateMsg = new PCMMGateReq(data);
 
+            // TODO FIXME - Why is this Map being filled but never used???
             final Map<String, String> repSIs = new HashMap<>();
             String strobjprid = "";
             final COPSPrObjBase obj = new COPSPrObjBase(clientSI.getData().getData());
@@ -275,8 +157,8 @@ public class PCMMPdpReqStateMan {
                 case COPSPrObjBase.PR_EPD:
                     logger.info("COPSPrObjBase.PR_EPD");
                     repSIs.put(strobjprid, obj.getData().str());
-                    // COPSDebug.out(getClass().getName(),"PRID: " + strobjprid);
-                    // COPSDebug.out(getClass().getName(),"EPD: " + obj.getData().str());
+                    logger.info("PRID: " + strobjprid);
+                    logger.info("EPD: " + obj.getData().str());
                     break;
                 default:
                     logger.error("Object s-num: " + obj.getSNum() + "stype " + obj.getSType());
@@ -288,42 +170,68 @@ public class PCMMPdpReqStateMan {
             logger.info("rtypemsg process");
             //** Here we must act in accordance with
             //** the report received
+
+            // retrieve and remove the transactionId to gate request map entry
+            // see PCMMPdpMsgSender.sendGateSet(IPCMMGate gate)
+            final ITransactionID trID = gateMsg.getTransactionID();
+            final Short trIDnum = trID.getTransactionIdentifier();
+
+            logger.info("Removing gate from cache with key - " + trIDnum);
+            final IPCMMGate gate = PCMMGlobalConfig.transactionGateMap.remove(trIDnum);
+            if (gate != null) {
+                // capture the "error" message if any
+                gate.setError(gateMsg.getError());
+                logger.info("Setting error on gate - " + gateMsg.getError());
+            }else {
+                logger.error("processReport(): gateReq not found for transactionID {}", trIDnum);
+                return;
+            }
+
             if (rtypemsg.getReportType().equals(ReportType.SUCCESS)) {
                 logger.info("rtypemsg success");
-                _status = ST_REPORT;
+                _status = Status.ST_REPORT;
+                final IGateID gateID = gateMsg.getGateID();
+                logger.info("Setting gate ID on gate object - " + gateID);
+                gate.setGateID(gateID);
                 if (_process != null)
                     _process.successReport(this, gateMsg);
             } else {
-                if (gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck) {
-                    logger.info("GateDeleteAck: GateID = " + gateMsg.getGateID().getGateID());
-                    if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID1())
-                        PCMMGlobalConfig.setGateID1(0);
-                    if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID2())
-                        PCMMGlobalConfig.setGateID2(0);
-
-                }
-                if (gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck) {
-                    logger.info("GateSetAck: GateID = " + gateMsg.getGateID().getGateID());
-                    if (0 == PCMMGlobalConfig.getGateID1())
-                        PCMMGlobalConfig.setGateID1(gateMsg.getGateID().getGateID());
-                    if (0 == PCMMGlobalConfig.getGateID2())
-                        PCMMGlobalConfig.setGateID2(gateMsg.getGateID().getGateID());
-                }
+                final String cmdType;
+                if ( trID.getGateCommandType() == ITransactionID.GateDeleteAck ) {
+                    cmdType = "GateDeleteAck";
+                } else if ( trID.getGateCommandType() == ITransactionID.GateSetAck ) {
+                    cmdType = "GateSetAck";
+                } else cmdType = null;
+                // capture the gateId from the response message
+                final IGateID gateID = gateMsg.getGateID();
+                logger.info("Setting gate ID on gate object - " + gateID);
+                gate.setGateID(gateID);
+                int gateIdInt = gateID.getGateID();
+                String gateIdHex = String.format("%08x", gateIdInt);
+                logger.info(getClass().getName() + ": " + cmdType + ": GateID = " + gateIdHex);
             }
             if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
                 logger.info("rtypemsg failure");
-                _status = ST_REPORT;
+                _status = Status.ST_REPORT;
                 if (_process != null)
                     _process.failReport(this, gateMsg);
                 else
                     logger.info("Gate message error - " + gateMsg.getError().toString());
-            } else
-                if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
+            } else if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
                     logger.info("rtypemsg account");
-                    _status = ST_ACCT;
+                    _status = Status.ST_ACCT;
                     if (_process != null)
                         _process.acctReport(this, gateMsg);
-                }
+            }
+
+            // let the waiting gateSet/gateDelete sender proceed
+            // TODO - see PCMMService#processReport() gate.notify(). Should determine a better means to
+            // TODO - handle this synchronization.
+            logger.info("Notify gate request has been updated with ID - " + gate.getGateID());
+            synchronized(gate) {
+                gate.notify();
+            }
+            logger.info("Out processReport");
         }
     }
 
@@ -332,54 +240,49 @@ public class PCMMPdpReqStateMan {
     * @param error  Reason
     * @throws COPSPdpException
     */
-    protected void processClosedConnection(COPSError error)
-    throws COPSPdpException {
+    protected void processClosedConnection(final COPSError error) throws COPSPdpException {
         if (_process != null)
             _process.notifyClosedConnection(this, error);
 
-        _status = ST_CCONN;
+        _status = Status.ST_CCONN;
     }
 
     /**
      * Called when no keep-alive is received
      * @throws COPSPdpException
      */
-    protected void processNoKAConnection()
-    throws COPSPdpException {
+    protected void processNoKAConnection() throws COPSPdpException {
         if (_process != null)
             _process.notifyNoKAliveReceived(this);
 
-        _status = ST_NOKA;
+        _status = Status.ST_NOKA;
     }
 
     /**
     * Deletes the request state
     * @throws COPSPdpException
     */
-    protected void finalizeRequestState()
-    throws COPSPdpException {
+    protected void finalizeRequestState() throws COPSPdpException {
         _sender.sendDeleteRequestState();
-        _status = ST_FINAL;
+        _status = Status.ST_FINAL;
     }
 
     /**
     * Asks for a COPS sync
     * @throws COPSPdpException
     */
-    protected void syncRequestState()
-    throws COPSPdpException {
+    protected void syncRequestState() throws COPSPdpException {
         _sender.sendSyncRequestState();
-        _status = ST_SYNC;
+        _status = Status.ST_SYNC;
     }
 
     /**
      * Opens a new request state
      * @throws COPSPdpException
      */
-    protected void openNewRequestState()
-    throws COPSPdpException {
+    protected void openNewRequestState() throws COPSPdpException {
         _sender.sendOpenNewRequestState();
-        _status = ST_NEW;
+        _status = Status.ST_NEW;
     }
 
     /**
@@ -387,12 +290,11 @@ public class PCMMPdpReqStateMan {
      * @param dMsg  <tt>COPSDeleteMsg</tt> received from the PEP
      * @throws COPSPdpException
      */
-    protected void processDeleteRequestState(COPSDeleteMsg dMsg)
-    throws COPSPdpException {
+    protected void processDeleteRequestState(COPSDeleteMsg dMsg) throws COPSPdpException {
         if (_process != null)
             _process.closeRequestState(this);
 
-        _status = ST_DEL;
+        _status = Status.ST_DEL;
     }
 
 }

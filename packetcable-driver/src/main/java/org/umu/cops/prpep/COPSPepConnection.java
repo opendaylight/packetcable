@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class COPSPepConnection implements Runnable {
 
-    public final static Logger logger = LoggerFactory.getLogger(COPSPepConnection.class);
+    private final static Logger logger = LoggerFactory.getLogger(COPSPepConnection.class);
 
     /** Socket connected to PDP */
     protected Socket _sock;
@@ -55,7 +55,7 @@ public class COPSPepConnection implements Runnable {
     /**
         Maps a COPS Client Handle to a Request State Manager
      */
-    protected final Map<String, COPSPepReqStateMan> _managerMap;
+    protected final Map<COPSHandle, COPSPepReqStateMan> _managerMap;
 
     /**
         COPS error returned by PDP
@@ -68,7 +68,6 @@ public class COPSPepConnection implements Runnable {
      * @param sock          Socket connected to PDP
      */
     public COPSPepConnection(final short clientType, final Socket sock) {
-
         _clientType = clientType;
         _sock = sock;
 
@@ -236,21 +235,21 @@ public class COPSPepConnection implements Runnable {
      * @throws COPSException
      * @throws IOException
      */
-    protected byte processMessage(final Socket conn) throws COPSPepException, COPSException, IOException {
+    protected byte processMessage(final Socket conn) throws COPSException, IOException {
         final COPSMsg msg = COPSTransceiver.receiveMsg(conn);
 
         switch (msg.getHeader().getOpCode()) {
             case CC:
-                handleClientCloseMsg(conn, msg);
+                handleClientCloseMsg(conn, (COPSClientCloseMsg)msg);
                 return (byte)OPCode.CC.ordinal();
             case DEC:
-                handleDecisionMsg(conn, msg);
+                handleDecisionMsg((COPSDecisionMsg)msg);
                 return (byte)OPCode.DEC.ordinal();
             case SSQ:
-                handleSyncStateReqMsg(conn, msg);
+                handleSyncStateReqMsg((COPSSyncStateMsg)msg);
                 return (byte)OPCode.SSQ.ordinal();
             case KA:
-                handleKeepAliveMsg(conn, msg);
+                handleKeepAliveMsg((COPSKAMsg)msg);
                 return (byte)OPCode.KA.ordinal();
             default:
                 throw new COPSPepException("Message not expected (" + msg.getHeader().getOpCode() + ").");
@@ -259,31 +258,18 @@ public class COPSPepConnection implements Runnable {
 
     /**
      * Handle Client Close Message, close the passed connection
-     *
      * @param    conn                a  Socket
-     * @param    msg                 a  COPSMsg
-     *
-     *
-     * <Client-Close> ::= <Common Header>
-     *                      <Error>
-     *                      [<Integrity>]
-     *
-     * Not support [<Integrity>]
-     *
+     * @param    cMsg                a  COPSClientCloseMsg
      */
-    private void handleClientCloseMsg(Socket conn, COPSMsg msg) {
-        COPSClientCloseMsg cMsg = (COPSClientCloseMsg) msg;
+    private void handleClientCloseMsg(final Socket conn, final COPSClientCloseMsg cMsg) {
         _error = cMsg.getError();
-
-        // COPSDebug.out(getClass().getName(),"Got close request, closing connection " +
-        //  conn.getInetAddress() + ":" + conn.getPort() + ":[Error " + _error.getDescription() + "]");
-
+        logger.info("Got close request, closing connection "
+                + conn.getInetAddress() + ":" + conn.getPort() + ":[Error " + _error.getDescription() + "]");
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
                 logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
             }
-
             conn.close();
         } catch (Exception unae) {
             logger.error("Unexpected exception closing connection", unae);
@@ -292,9 +278,7 @@ public class COPSPepConnection implements Runnable {
 
     /**
      * Method getError
-     *
      * @return   a COPSError
-     *
      */
     protected COPSError getError()  {
         return _error;
@@ -302,25 +286,14 @@ public class COPSPepConnection implements Runnable {
 
     /**
      * Handle Keep Alive Message
-     *
-     * <Keep-Alive> ::= <Common Header>
-     *                  [<Integrity>]
-     *
-     * Not support [<Integrity>]
-     *
-     * @param    conn                a  Socket
-     * @param    msg                 a  COPSMsg
-     *
+     * @param    cMsg                a  COPSKAMsg
      */
-    private void handleKeepAliveMsg(Socket conn, COPSMsg msg) {
-        COPSKAMsg cMsg = (COPSKAMsg) msg;
-
-        // COPSDebug.out(getClass().getName(),"Get KAlive Msg");
-
+    private void handleKeepAliveMsg(final COPSKAMsg cMsg) {
+        logger.info("Get KAlive Msg");
         try {
             // Support
             if (cMsg.getIntegrity() != null) {
-                logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+                logger.warn("Unsupported objects (Integrity)");
             }
 
             // should we do anything else?? ....
@@ -332,39 +305,20 @@ public class COPSPepConnection implements Runnable {
 
     /**
      * Method handleDecisionMsg
-     *
-     * <Decision Message> ::= <Common Header: Flag SOLICITED>
-     *                          <Client Handle>
-     *                          *(<Decision>) | <Error>
-     *                          [<Integrity>]
-     * <Decision> ::= <Context>
-     *                  <Decision: Flags>
-     *                  [<Named Decision Data: Provisioning>]
-     * <Decision: Flags> ::= <Command-Code> NULLFlag
-     * <Command-Code> ::= NULLDecision | Install | Remove
-     * <Named Decision Data> ::= <<Install Decision> | <Remove Decision>>
-     * <Install Decision> ::= *(<PRID> <EPD>)
-     * <Remove Decision> ::= *(<PRID> | <PPRID>)
-     *
-     * Very important, this is actually being treated like this:
-     * <Install Decision> ::= <PRID> | <EPD>
-     * <Remove Decision> ::= <PRID> | <PPRID>
-     *
-     * @param    conn                a  Socket
-     * @param    msg                 a  COPSMsg
-     *
+     * @param    dMsg                 a  COPSDecisionMsg
      */
-    private void handleDecisionMsg(final Socket conn, final COPSMsg msg) throws COPSPepException {
-        final COPSDecisionMsg dMsg = (COPSDecisionMsg) msg;
+    private void handleDecisionMsg(final COPSDecisionMsg dMsg) throws COPSException {
         final COPSHandle handle = dMsg.getClientHandle();
         final Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
 
         for (final Set<COPSDecision> copsDecisions: decisions.values()) {
             for (final COPSDecision decision : copsDecisions) {
                 // Get the associated manager
-                final COPSPepReqStateMan manager = _managerMap.get(handle.getId().str());
-                if (manager == null)
-                    logger.warn("Unable to find state manager with key - " + handle.getId().str());
+                final COPSPepReqStateMan manager = _managerMap.get(handle);
+                if (manager == null) {
+                    logger.warn("Unable to find state manager with key - " + handle);
+                    return;
+                }
 
                 // Check message type
                 // TODO FIXME - Use of manager object could result in a NPE
@@ -374,10 +328,10 @@ public class COPSPepConnection implements Runnable {
                         manager.processDeleteRequestState(dMsg);
                     else
                         // Open new Request State
-                        handleOpenNewRequestStateMsg(conn, handle);
+                        handleOpenNewRequestStateMsg(handle);
                 } else
                     // Decision
-                    manager.processDecision(dMsg);
+                    manager.processDecision(dMsg, _sock);
             }
         }
     }
@@ -385,82 +339,59 @@ public class COPSPepConnection implements Runnable {
 
     /**
      * Method handleOpenNewRequestStateMsg
-     *
-     * @param    conn                a  Socket
      * @param    handle              a  COPSHandle
-     *
      */
-    private void handleOpenNewRequestStateMsg(Socket conn, COPSHandle handle) throws COPSPepException {
-
-        COPSPepReqStateMan manager = _managerMap.get(handle.getId().str());
+    private void handleOpenNewRequestStateMsg(final COPSHandle handle) throws COPSPepException {
+        final COPSPepReqStateMan manager = _managerMap.get(handle);
         if (manager == null)
             logger.warn("Unable to find state manager with key - " + handle.getId().str());
-
-        // TODO FIXME - Use of manager object could result in a NPE
-        manager.processOpenNewRequestState();
+        else
+            manager.processOpenNewRequestState();
     }
 
     /**
      * Method handleSyncStateReqMsg
-     *
-     *              <Synchronize State> ::= <Common Header>
-     *                                      [<Client Handle>]
-     *                                      [<Integrity>]
-     *
-     * @param    conn                a  Socket
-     * @param    msg                 a  COPSMsg
-     *
+     * @param    cMsg                a  COPSSyncStateMsg
      */
-    private void handleSyncStateReqMsg(Socket conn, COPSMsg msg) throws COPSPepException {
-        COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
-
-        // Support
+    private void handleSyncStateReqMsg(final COPSSyncStateMsg cMsg) throws COPSPepException {
         if (cMsg.getIntegrity() != null) {
-            logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
+            logger.warn("Unsupported objects (Integrity)");
         }
 
-        COPSPepReqStateMan manager = _managerMap.get(cMsg.getClientHandle().getId().str());
-        if (manager == null) {
+        final COPSPepReqStateMan manager = _managerMap.get(cMsg.getClientHandle());
+        if (manager == null)
             logger.warn("Unable to find state manager with key - " + cMsg.getClientHandle().getId().str());
-        } else {
+        else
             manager.processSyncStateRequest(cMsg);
-        }
     }
 
     /**
      * Method createRequestState
-     *
      * @param    clientHandle             a  String
      * @param    process                  a  COPSPepDataProcess
-     *
      * @return   a COPSPepmanager
-     *
      * @throws   COPSException
      * @throws   COPSPepException
-     *
      */
-    protected COPSPepReqStateMan addRequestState(String clientHandle, COPSPepDataProcess process) throws COPSException,
-            COPSPepException {
-        COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle);
+    protected COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
+            throws COPSException {
+        final COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle, process);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);
 
-        manager.setDataProcess(process);
-        _managerMap.put(clientHandle,manager);
+        _managerMap.put(clientHandle, manager);
+        logger.info("Added state manager with key - " + clientHandle);
         manager.initRequestState(_sock);
         return manager;
     }
 
     /**
      * Method deleteRequestState
-     *
      * @param    manager             a  COPSPepReqStateMan
-     *
      * @throws   COPSException
      * @throws   COPSPepException
-     *
      */
-    protected void deleteRequestState(COPSPepReqStateMan manager) throws COPSException, COPSPepException {
+    protected void deleteRequestState(COPSPepReqStateMan manager) throws COPSException {
         manager.finalizeRequestState();
     }
 

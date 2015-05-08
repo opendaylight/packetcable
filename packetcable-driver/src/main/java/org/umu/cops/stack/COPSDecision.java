@@ -112,7 +112,7 @@ public class COPSDecision extends COPSObjBase {
      * @throws java.lang.IllegalArgumentException
      */
     public COPSDecision(final Command cmdCode) {
-        this(CType.DEF, cmdCode, DecisionFlag.NA, new COPSData());
+        this(CType.DEF, cmdCode, DecisionFlag.NA, null);
     }
 
     /**
@@ -132,7 +132,7 @@ public class COPSDecision extends COPSObjBase {
      * @throws java.lang.IllegalArgumentException
      */
     public COPSDecision(final Command cmdCode, final DecisionFlag flags) {
-        this(CType.DEF, cmdCode, flags, new COPSData());
+        this(CType.DEF, cmdCode, flags, null);
     }
 
     /**
@@ -143,7 +143,7 @@ public class COPSDecision extends COPSObjBase {
      * @throws java.lang.IllegalArgumentException
      */
     public COPSDecision(final CType cType, final Command cmdCode, final DecisionFlag flags) {
-        this(cType, cmdCode, flags, new COPSData());
+        this(cType, cmdCode, flags, null);
     }
 
     /**
@@ -178,11 +178,12 @@ public class COPSDecision extends COPSObjBase {
         if (hdr.getCType().equals(CType.NA)) throw new IllegalArgumentException("CType must not be " + CType.NA);
         if (cmdCode == null) throw new IllegalArgumentException("Command code must not be null");
         if (flags == null) throw new IllegalArgumentException("Flags must not be null");
-        if (data == null) throw new IllegalArgumentException("Data object must not be null");
 
         _cmdCode = cmdCode;
         _flags = flags;
-        _data = data;
+
+        if (data == null) _data = new COPSData();
+        else _data = data;
 
         if ((_data.length() % 4) != 0) {
             final int padLen = 4 - (_data.length() % 4);

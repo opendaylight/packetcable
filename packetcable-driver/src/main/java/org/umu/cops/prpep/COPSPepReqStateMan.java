@@ -6,12 +6,20 @@
 
 package org.umu.cops.prpep;
 
+import org.pcmm.gates.impl.GateID;
+import org.pcmm.gates.impl.PCMMGateReq;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.umu.cops.COPSStateMan;
 import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSObjHeader.CNum;
+import org.umu.cops.stack.COPSObjHeader.CType;
+import org.umu.cops.stack.COPSReportType.ReportType;
 
+import java.io.IOException;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * COPSPepReqStateMan manages Request State using Client Handle (RFC 2748 pag. 21)
@@ -35,87 +43,24 @@ import java.util.Set;
  * @version COPSPepReqStateMan.java, v 2.00 2004
  *
  */
-public class COPSPepReqStateMan {
+public class COPSPepReqStateMan extends COPSStateMan {
 
-    /**
-     * Request State created
-     */
-    public final static short ST_CREATE = 1;
-    /**
-     * Request sent
-     */
-    public final static short ST_INIT = 2;
-    /**
-     * Decisions received
-     */
-    public final static short ST_DECS = 3;
-    /**
-     * Report sent
-     */
-    public final static short ST_REPORT = 4;
-    /**
-     * Request State finalized
-     */
-    public final static short ST_FINAL = 5;
-    /**
-     * New Request State solicited
-     */
-    public final static short ST_NEW = 6;
-    /**
-     * Delete Request State solicited
-     */
-    public final static short ST_DEL = 7;
-    /**
-     * SYNC Request received
-     */
-    public final static short ST_SYNC = 8;
-    /**
-     * SYNC Completed
-     */
-    public final static short ST_SYNCALL = 9;
-    /**
-     * Close Connection received
-     */
-    public final static short ST_CCONN = 10;
-    /**
-     * KAlive Time out
-     */
-    public final static short ST_NOKA = 11;
-    /**
-     * ACCT Time out
-     */
-    public final static short ST_ACCT = 12;
-
-    /**
-     * The client-type identifies the policy client
-     */
-    protected short _clientType;
-
-    /**
-     *  The client handle is used to uniquely identify a particular
-     *  PEP's request for a client-type
-     */
-    protected COPSHandle _handle;
+    private final static Logger logger = LoggerFactory.getLogger(COPSPepReqStateMan.class);
 
     /**
         The PolicyDataProcess is used to process policy data in the PEP
      */
-    protected COPSPepDataProcess _process;
-
-    /**
-     *  State Request State
-     */
-    protected short _status;
+    protected final COPSPepDataProcess _process;
 
     /**
         The Msg Sender is used to send COPS messages
      */
-    protected COPSPepMsgSender _sender;
+    protected transient COPSPepMsgSender _sender;
 
     /**
      * Sync State
      */
-    protected boolean _syncState;
+    protected transient boolean _syncState;
 
     /**
      * Create a State Request Manager
@@ -123,60 +68,10 @@ public class COPSPepReqStateMan {
      * @param    clientHandle                a Client Handle
      *
      */
-    public COPSPepReqStateMan(final short clientType, final String clientHandle) {
-        _handle = new COPSHandle(new COPSData(clientHandle));
-        _clientType = clientType;
+    public COPSPepReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPepDataProcess process) {
+        super(clientType, clientHandle);
+        this._process = process;
         _syncState = true;
-        _status = ST_CREATE;
-    }
-
-    /**
-     * Return client handle
-     *
-     * @return   a COPSHandle
-     *
-     */
-    public COPSHandle getClientHandle() {
-        return _handle;
-    }
-
-    /**
-     * Return client-type
-     *
-     * @return   a short
-     *
-     */
-    public int getClientType() {
-        return _clientType;
-    }
-
-    /**
-     * Return Request State status
-     *
-     * @return      s short
-     */
-    public short getStatus() {
-        return _status;
-    }
-
-    /**
-     * Return the Policy Data Process
-     *
-     * @return   a PolicyConfigure
-     *
-     */
-    public COPSPepDataProcess getDataProcess() {
-        return _process;
-    }
-
-    /**
-     * Establish the Policy Data Process
-     *
-     * @param    process              a  PolicyConfigure
-     *
-     */
-    public void setDataProcess(COPSPepDataProcess process) {
-        _process = process;
     }
 
     /**
@@ -185,8 +80,7 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void initRequestState(Socket sock)
-    throws COPSPepException {
+    protected void initRequestState(final Socket sock) throws COPSException {
         // Inits an object for sending COPS messages to the PDP
         _sender = new COPSPepMsgSender(_clientType, _handle, sock);
 
@@ -203,7 +97,7 @@ public class COPSPepReqStateMan {
         _sender.sendRequest(clientSIs);
 
         // Initial state
-        _status = ST_INIT;
+        _status = Status.ST_INIT;
     }
 
     /**
@@ -212,10 +106,9 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void finalizeRequestState()
-    throws COPSPepException {
+    protected void finalizeRequestState() throws COPSException {
         _sender.sendDeleteRequest();
-        _status = ST_FINAL;
+        _status = Status.ST_FINAL;
     }
 
     /**
@@ -226,32 +119,80 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void processDecision(COPSDecisionMsg dMsg)
-    throws COPSPepException {
-        // COPSDebug.out(getClass().getName(), "ClientId:" + getClientHandle().getId().str());
-
-        // COPSHandle handle = dMsg.getClientHandle();
+    protected void processDecision(final COPSDecisionMsg dMsg, final Socket socket) throws COPSException {
+        logger.info("Processing decision message - " + dMsg);
         final Map<COPSContext, Set<COPSDecision>> decisions = dMsg.getDecisions();
 
         final Map<String, String> removeDecs = new HashMap<>();
         final Map<String, String> installDecs = new HashMap<>();
 
-        for (Set<COPSDecision> copsDecisions: decisions.values()) {
+        for (final Set<COPSDecision> copsDecisions: decisions.values()) {
             final COPSDecision cmddecision = copsDecisions.iterator().next();
             String prid = "";
             switch (cmddecision.getCommand()) {
                 case INSTALL:
+                    // TODO - break up this block
                     for (final COPSDecision decision : copsDecisions) {
-                        final COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
-                        switch (obj.getSNum()) {
-                            case COPSPrObjBase.PR_PRID:
-                                prid = obj.getData().str();
-                                break;
-                            case COPSPrObjBase.PR_EPD:
-                                installDecs.put(prid, obj.getData().str());
-                                break;
-                            default:
-                                break;
+                        if (decision.getData().getData().length != 0) {
+                            final COPSPrObjBase obj = new COPSPrObjBase(decision.getData().getData());
+                            switch (obj.getSNum()) {
+                                case COPSPrObjBase.PR_PRID:
+                                    prid = obj.getData().str();
+                                    break;
+                                case COPSPrObjBase.PR_EPD:
+                                    installDecs.put(prid, obj.getData().str());
+                                    break;
+                            }
+                        }
+                        if (decision.getFlag().equals(DecisionFlag.REQERROR)) {
+                            // This is assuming a gate set right or wrong
+                            if (dMsg.getDecisions().size() == 1 && dMsg.getDecSI() != null) {
+                                final PCMMGateReq gateReq = new PCMMGateReq(dMsg.getDecSI().getData().getData());
+                                // TODO - Check and/or Set state here
+                                // Gate ADD gateReq.getTrafficProfile() != null
+                                // Gate REMOVE gateReq.getTrafficProfile() == null
+//                                    final String gateName = trafficProfile.getData().str();
+//                                    final Direction gateDir = gateReq.getGateSpec().getDirection();
+                                final boolean success = true;
+
+                                // Set response
+                                final List<Byte> data = new ArrayList<>();
+                                for (final byte val : gateReq.getTransactionID().getAsBinaryArray())
+                                    data.add(val);
+                                for (final byte val : gateReq.getAMID().getAsBinaryArray())
+                                    data.add(val);
+                                for (final byte val : gateReq.getSubscriberID().getAsBinaryArray())
+                                    data.add(val);
+
+                                // Assign a gate ID
+                                final GateID gateID = new GateID();
+                                gateID.setGateID(UUID.randomUUID().hashCode());
+                                for (final byte val : gateID.getAsBinaryArray())
+                                    data.add(val);
+
+
+                                final byte[] csiArr = new byte[data.size()];
+                                for (int i = 0; i < data.size(); i++) {
+                                    csiArr[i] = data.get(i);
+                                }
+                                final COPSClientSI si = new COPSClientSI(CNum.CSI, CType.DEF, new COPSData(csiArr, 0, csiArr.length));
+
+                                final COPSReportMsg reportMsg;
+                                // TODO FIXME - success is always true
+                                if (success) {
+                                    reportMsg = new COPSReportMsg(_clientType, getClientHandle(),
+                                            new COPSReportType(ReportType.SUCCESS), si, null);
+                                } else {
+                                    reportMsg = new COPSReportMsg(_clientType, getClientHandle(),
+                                            new COPSReportType(ReportType.FAILURE), si, null);
+                                }
+
+                                try {
+                                    reportMsg.writeData(socket);
+                                } catch (IOException e) {
+                                    throw new COPSPepException("Error writing gate set SUCCESS Report", e);
+                                }
+                            }
                         }
                     }
                     break;
@@ -278,7 +219,7 @@ public class COPSPepReqStateMan {
         // TODO - why is this collection never getting populated???
         final Map<String, String> errorDecs = new HashMap<>();
         _process.setDecisions(this, removeDecs, installDecs, errorDecs);
-        _status = ST_DECS;
+        _status = Status.ST_DECS;
 
 
         if (_process.isFailReport(this)) {
@@ -288,12 +229,12 @@ public class COPSPepReqStateMan {
             // COPSDebug.out(getClass().getName(),"Sending SUCCESS Report\n");
             _sender.sendSuccessReport(_process.getReportData(this));
         }
-        _status = ST_REPORT;
+        _status = Status.ST_REPORT;
 
         if (!_syncState) {
             _sender.sendSyncComplete();
             _syncState = true;
-            _status = ST_SYNCALL;
+            _status = Status.ST_SYNCALL;
         }
     }
 
@@ -303,13 +244,12 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void processOpenNewRequestState()
-    throws COPSPepException {
+    protected void processOpenNewRequestState() throws COPSPepException {
 
         if (_process != null)
             _process.newRequestState(this);
 
-        _status = ST_NEW;
+        _status = Status.ST_NEW;
     }
 
     /**
@@ -320,12 +260,11 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void processDeleteRequestState(COPSDecisionMsg dMsg)
-    throws COPSPepException {
+    protected void processDeleteRequestState(final COPSDecisionMsg dMsg) throws COPSPepException {
         if (_process != null)
             _process.closeRequestState(this);
 
-        _status = ST_DEL;
+        _status = Status.ST_DEL;
     }
 
     /**
@@ -339,8 +278,7 @@ public class COPSPepReqStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void processSyncStateRequest(COPSSyncStateMsg ssMsg)
-    throws COPSPepException {
+    protected void processSyncStateRequest(final COPSSyncStateMsg ssMsg) throws COPSPepException {
         _syncState = false;
         // If an object for retrieving PEP features exists,
         // use it for retrieving them
@@ -354,28 +292,24 @@ public class COPSPepReqStateMan {
         // TODO - do we really want to send the request when the map is empty???
         _sender.sendRequest(clientSIs);
 
-        _status = ST_SYNC;
+        _status = Status.ST_SYNC;
     }
 
-    protected void processClosedConnection(COPSError error)
-    throws COPSPepException {
+    protected void processClosedConnection(final COPSError error) throws COPSPepException {
         if (_process != null)
             _process.notifyClosedConnection(this, error);
 
-        _status = ST_CCONN;
+        _status = Status.ST_CCONN;
     }
 
-    protected void processNoKAConnection()
-    throws COPSPepException {
+    protected void processNoKAConnection() throws COPSPepException {
         if (_process != null)
             _process.notifyNoKAliveReceived(this);
 
-        _status = ST_NOKA;
+        _status = Status.ST_NOKA;
     }
 
-    protected void processAcctReport()
-    throws COPSPepException {
-
+    protected void processAcctReport() throws COPSPepException {
         final Map<String, String> report;
         if (_process != null) report = _process.getAcctData(this);
         else report = new HashMap<>();
@@ -383,7 +317,7 @@ public class COPSPepReqStateMan {
         // TODO - do we really want to send when the map is empty???
         _sender.sendAcctReport(report);
 
-        _status = ST_ACCT;
+        _status = Status.ST_ACCT;
     }
 
 }

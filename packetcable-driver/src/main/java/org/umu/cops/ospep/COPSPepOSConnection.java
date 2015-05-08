@@ -228,7 +228,7 @@ public class COPSPepOSConnection implements Runnable {
      * @throws COPSException
      * @throws IOException
      */
-    protected void processMessage(Socket conn) throws COPSPepException, COPSException, IOException {
+    protected void processMessage(Socket conn) throws COPSException, IOException {
         COPSMsg msg = COPSTransceiver.receiveMsg(conn);
 
         if (msg.getHeader().getOpCode().equals(OPCode.CC)) {
@@ -327,10 +327,10 @@ public class COPSPepOSConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleDecisionMsg(/*OJO Socket conn, */COPSMsg msg) throws COPSPepException {
-        COPSDecisionMsg dMsg = (COPSDecisionMsg) msg;
-        COPSHandle handle = dMsg.getClientHandle();
-        COPSPepOSReqStateMan manager = _managerMap.get(handle.getId().str());
+    private void handleDecisionMsg(final COPSMsg msg) throws COPSException {
+        final COPSDecisionMsg dMsg = (COPSDecisionMsg) msg;
+        final COPSHandle handle = dMsg.getClientHandle();
+        final COPSPepOSReqStateMan manager = _managerMap.get(handle.getId().str());
         manager.processDecision(dMsg);
     }
 
@@ -345,8 +345,8 @@ public class COPSPepOSConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleSyncStateReqMsg(Socket conn, COPSMsg msg) throws COPSPepException {
-        COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
+    private void handleSyncStateReqMsg(final Socket conn, final COPSMsg msg) throws COPSException {
+        final COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
         // COPSHandle handle = cMsg.getClientHandle();
         // COPSHeader header = cMsg.getHeader();
 
@@ -354,7 +354,7 @@ public class COPSPepOSConnection implements Runnable {
         if (cMsg.getIntegrity() != null)
             logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
 
-        COPSPepOSReqStateMan manager = _managerMap.get(cMsg.getClientHandle().getId().str());
+        final COPSPepOSReqStateMan manager = _managerMap.get(cMsg.getClientHandle().getId().str());
 
         if (manager == null)
             logger.warn("Unable to find state manager with ID - " + cMsg.getClientHandle().getId().str());
@@ -369,17 +369,13 @@ public class COPSPepOSConnection implements Runnable {
      * @param clientSIs     Client data from the outsourcing event
      * @return              The newly created request state manager
      * @throws COPSException
-     * @throws COPSPepException
      */
     protected COPSPepOSReqStateMan addRequestState(final String clientHandle, final COPSPepOSDataProcess process,
-                                                   final List<COPSClientSI> clientSIs)
-            throws COPSException, COPSPepException {
-        COPSPepOSReqStateMan manager = new COPSPepOSReqStateMan(_clientType, clientHandle);
+                                                   final List<COPSClientSI> clientSIs) throws COPSException {
+        final COPSPepOSReqStateMan manager = new COPSPepOSReqStateMan(_clientType,
+                new COPSHandle(new COPSData(clientHandle)), process, clientSIs);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);
-
-        manager.setDataProcess(process);
-        manager.setClientSI(clientSIs);
         _managerMap.put(clientHandle, manager);
         manager.initRequestState(_sock);
         return manager;
@@ -388,10 +384,9 @@ public class COPSPepOSConnection implements Runnable {
     /**
      * Deletes a request state
      * @param manager   Request state manager
-     * @throws COPSException
      * @throws COPSPepException
      */
-    protected void deleteRequestState(COPSPepOSReqStateMan manager) throws COPSException, COPSPepException {
+    protected void deleteRequestState(COPSPepOSReqStateMan manager) throws COPSException {
         manager.finalizeRequestState();
     }
 

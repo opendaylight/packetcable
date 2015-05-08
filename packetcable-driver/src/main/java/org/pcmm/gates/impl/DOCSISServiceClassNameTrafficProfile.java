@@ -13,7 +13,7 @@ public class DOCSISServiceClassNameTrafficProfile extends PCMMBaseObject
             implements ITrafficProfile {
 
     public static final byte STYPE = 2;
-    public static final short LENGTH = 12;
+    public static final short LENGTH = 24;
 
     /**
      *
@@ -23,16 +23,16 @@ public class DOCSISServiceClassNameTrafficProfile extends PCMMBaseObject
     }
 
     /**
-     * @param data
+     * @param data - the data bytes to parse
      */
     public DOCSISServiceClassNameTrafficProfile(byte[] data) {
         super(data);
     }
 
     /**
-     * @param len
-     * @param sType
-     * @param sNum
+     * @param len - the classifier's length
+     * @param sType - the sType value
+     * @param sNum - the sNum value
      */
     public DOCSISServiceClassNameTrafficProfile(short len, byte sType, byte sNum) {
         super(len, sType, sNum);

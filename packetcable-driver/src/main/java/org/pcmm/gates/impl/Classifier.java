@@ -3,15 +3,15 @@
  */
 package org.pcmm.gates.impl;
 
+import org.pcmm.base.impl.PCMMBaseObject;
+import org.pcmm.gates.IClassifier;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.pcmm.base.impl.PCMMBaseObject;
-import org.pcmm.gates.IClassifier;
-
 /**
- *
+ * TODO - Cleanup this interface
  */
 public class Classifier extends PCMMBaseObject implements IClassifier {
 
@@ -23,16 +23,16 @@ public class Classifier extends PCMMBaseObject implements IClassifier {
     }
 
     /**
-     * @param data
+     * @param data - the data to add
      */
     public Classifier(byte[] data) {
         super(data);
     }
 
     /**
-     * @param len
-     * @param sType
-     * @param sNum
+     * @param len - the classifier's length
+     * @param sType - the sType value
+     * @param sNum - the sNum value
      */
     public Classifier(short len, byte sType, byte sNum) {
         super(len, sType, sNum);
@@ -134,8 +134,8 @@ public class Classifier extends PCMMBaseObject implements IClassifier {
      * @see org.pcmm.gates.IClassifier#getProtocol()
      */
     @Override
-    public Protocol getProtocol() {
-        return Protocol.valueOf(getShort((short) 0));
+    public short getProtocol() {
+        return getShort((short) 0);
     }
 
     /*
@@ -144,8 +144,8 @@ public class Classifier extends PCMMBaseObject implements IClassifier {
      * @see org.pcmm.gates.IClassifier#setProtocol(short)
      */
     @Override
-    public void setProtocol(Protocol p) {
-        setShort(p.getValue(), (short) 0);
+    public void setProtocol(short p) {
+        setShort(p, (short) 0);
     }
 
     /*

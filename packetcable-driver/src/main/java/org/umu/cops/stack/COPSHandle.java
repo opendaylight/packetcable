@@ -12,6 +12,8 @@ import org.umu.cops.stack.COPSObjHeader.CType;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * COPS Handle Object (RFC 2748 pag. 9)
@@ -130,8 +132,22 @@ public class COPSHandle extends COPSObjBase {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + _data.hashCode();
-        result = 31 * result + _padding.hashCode();
+
+        /*
+         Retrieve hash for the bytes contained in both COPSData members as equivalent objects may contain 0 value bytes
+         either trailing in the _data member or contained in the _padding. This generally will occur between an object
+         constructed via a public constructor vs. parsed from a byte[].
+
+         This is important as this object is known to be used as a key to Maps.
+          */
+        final List<Byte> allBytes = new ArrayList<>();
+        for (final byte val : _data.getData()) {
+            allBytes.add(val);
+        }
+        for (final byte val : _padding.getData()) {
+            allBytes.add(val);
+        }
+        result = 31 * allBytes.hashCode();
         return result;
     }
 

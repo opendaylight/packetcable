@@ -226,7 +226,7 @@ public class COPSPdpConnection implements Runnable {
      * Gets a COPS message from the socket and processes it
      * @param    conn Socket connected to the PEP
      */
-    private void processMessage(final Socket conn) throws COPSPdpException, COPSException, IOException {
+    private void processMessage(final Socket conn) throws COPSException, IOException {
         final COPSMsg msg = COPSTransceiver.receiveMsg(conn);
         switch (msg.getHeader().getOpCode()) {
             case CC:
@@ -384,9 +384,8 @@ public class COPSPdpConnection implements Runnable {
         COPSPdpReqStateMan man = _managerMap.get(reqMsg.getClientHandle().getId().str());
         if (man == null) {
 
-            man = new COPSPdpReqStateMan(cType, reqMsg.getClientHandle().getId().str());
-            _managerMap.put(reqMsg.getClientHandle().getId().str(),man);
-            man.setDataProcess(_process);
+            man = new COPSPdpReqStateMan(cType, reqMsg.getClientHandle(), _process);
+            _managerMap.put(reqMsg.getClientHandle().getId().str(), man);
             man.initRequestState(_sock);
 
             // COPSDebug.out(getClass().getName(),"createHandler called, clientType=" +
@@ -438,18 +437,15 @@ public class COPSPdpConnection implements Runnable {
      * @param    msg                 a  COPSMsg
      *
      */
-    private void handleSyncComplete(Socket conn, COPSMsg msg)
-    throws COPSPdpException {
-        COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
-        // COPSHandle handle = cMsg.getClientHandle();
-        // COPSHeader header = cMsg.getHeader();
+    private void handleSyncComplete(final Socket conn, final COPSMsg msg) throws COPSException {
+        final COPSSyncStateMsg cMsg = (COPSSyncStateMsg) msg;
 
         // Support
         if (cMsg.getIntegrity() != null) {
             logger.warn("Unsupported objects (Integrity) to connection " + conn.getInetAddress());
         }
 
-        COPSPdpReqStateMan man = (COPSPdpReqStateMan) _managerMap.get(cMsg.getClientHandle().getId().str());
+        final COPSPdpReqStateMan man = _managerMap.get(cMsg.getClientHandle().getId().str());
         if (man == null) {
             logger.warn("No state manager found with ID - " + cMsg.getClientHandle().getId().str());
         } else {
@@ -462,7 +458,7 @@ public class COPSPdpConnection implements Runnable {
      * @throws COPSException
      * @throws COPSPdpException
      */
-    protected void syncAllRequestState() throws COPSException, COPSPdpException {
+    protected void syncAllRequestState() throws COPSException {
         for (final COPSPdpReqStateMan man : _managerMap.values()) {
             man.syncRequestState();
         }

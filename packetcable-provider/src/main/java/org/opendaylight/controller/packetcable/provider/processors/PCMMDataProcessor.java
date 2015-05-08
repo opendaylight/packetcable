@@ -3,9 +3,6 @@
  */
 package org.opendaylight.controller.packetcable.provider.processors;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv6Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
@@ -16,11 +13,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.traffic.profile.best.effort.attributes.BeCommittedEnvelope;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.traffic.profile.rev140908.traffic.profile.best.effort.attributes.BeReservedEnvelope;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.SubscriberIdRpcAddFlow;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.TcpMatchRangesAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.TcpMatchRangesRpcAddFlow;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.UdpMatchRangesAttributes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.UdpMatchRangesRpcAddFlow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.tcp.match.ranges.attributes.TcpMatchRanges;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packetcable.match.types.rev140909.udp.match.ranges.attributes.UpdMatchRanges;
 import org.pcmm.gates.IClassifier;
@@ -32,6 +25,9 @@ import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.gates.impl.ExtendedClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * 
@@ -64,7 +60,7 @@ public class PCMMDataProcessor {
 
 	public IClassifier process(Match match) {
 		ExtendedClassifier classifier = new ExtendedClassifier();
-		classifier.setProtocol(IClassifier.Protocol.NONE);
+//		classifier.setProtocol(IClassifier.Protocol.NONE);
 		getUdpMatchRangeValues(match.getAugmentation(UdpMatchRangesRpcAddFlow.class), classifier);
 		getTcpMatchRangesValues(match.getAugmentation(TcpMatchRangesRpcAddFlow.class), classifier);
 		SubscriberIdRpcAddFlow subId = match.getAugmentation(SubscriberIdRpcAddFlow.class);
@@ -145,7 +141,7 @@ public class PCMMDataProcessor {
 		short srcPortStart, srcPortEnd, dstPortStart, dstPortEnd;
 		srcPortStart = srcPortEnd = dstPortStart = dstPortEnd = 0;
 		if (tcpRange != null) {
-			classifier.setProtocol(IClassifier.Protocol.TCP);
+//			classifier.setProtocol(IClassifier.Protocol.TCP);
 			TcpMatchRanges tcpMatchRanges = tcpRange.getTcpMatchRanges();
 			PortNumber tcpDestinationPortStart = tcpMatchRanges.getTcpDestinationPortStart();
 			if (tcpDestinationPortStart != null && tcpDestinationPortStart.getValue() != null)
@@ -170,7 +166,7 @@ public class PCMMDataProcessor {
 		short srcPortStart, srcPortEnd, dstPortStart, dstPortEnd;
 		srcPortStart = srcPortEnd = dstPortStart = dstPortEnd = 0;
 		if (updRange != null) {
-			classifier.setProtocol(IClassifier.Protocol.UDP);
+//			classifier.setProtocol(IClassifier.Protocol.UDP);
 			UpdMatchRanges updMatchRanges = updRange.getUpdMatchRanges();
 			PortNumber udpDestinationPortStart = updMatchRanges.getUdpDestinationPortStart();
 			if (udpDestinationPortStart != null && udpDestinationPortStart.getValue() != null)
