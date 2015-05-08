@@ -70,7 +70,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
     /**
      * Holds a PCMMService object for each CCAP being managed.
      */
-    private final Map<Ccaps, PCMMService> pcmmServiceMap = new ConcurrentHashMap<>();
+    private final Map<String, PCMMService> pcmmServiceMap = new ConcurrentHashMap<>();
 
     /**
      * Constructor
@@ -171,7 +171,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
             }
         }
 
-        final PCMMService service = pcmmServiceMap.remove(ccap);
+        final PCMMService service = pcmmServiceMap.remove(ccap.getCcapId());
         if (service != null) service.disconect();
     }
 
@@ -345,14 +345,14 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                 // get the CCAP node identity from the Instance Data
                 final String ccapId = thisCcap.getCcapId();
 
-                if (pcmmServiceMap.get(thisCcap) == null) {
+                if (pcmmServiceMap.get(thisCcap.getCcapId()) == null) {
                     final PCMMService pcmmService = new PCMMService(IPCMMClient.CLIENT_TYPE, thisCcap);
                     // TODO - may want to use the AMID but for the client type but probably not???
 /*
                             final PCMMService pcmmService = new PCMMService(
                                     thisCcap.getAmId().getAmType().shortValue(), thisCcap);
 */
-                    pcmmServiceMap.put(thisCcap, pcmmService);
+                    pcmmServiceMap.put(thisCcap.getCcapId(), pcmmService);
                     message = pcmmService.addCcap();
                     if (message.contains("200 OK")) {
                         ccapMap.put(ccapId, thisCcap);
@@ -387,8 +387,8 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                         if (scn != null) {
                             final ServiceFlowDirection scnDir = findScnOnCcap(scn, thisCcap);
                             if (scnDir != null) {
-                                if (pcmmServiceMap.get(thisCcap) != null) {
-                                    message = pcmmServiceMap.get(thisCcap).sendGateSet(gatePathStr, subId, gate, scnDir);
+                                if (pcmmServiceMap.get(thisCcap.getCcapId()) != null) {
+                                    message = pcmmServiceMap.get(thisCcap.getCcapId()).sendGateSet(gatePathStr, subId, gate, scnDir);
                                     if (message.contains("200 OK")) {
                                         gateMap.put(gatePathStr, gate);
                                         gateCcapMap.put(gatePathStr, thisCcap.getCcapId());
@@ -445,7 +445,7 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                 final String gateId = thisGate.getGateId();
                 final String ccapId = gateCcapMap.remove(gatePathStr);
                 final Ccaps thisCcap = ccapMap.get(ccapId);
-                final PCMMService service = pcmmServiceMap.get(thisCcap);
+                final PCMMService service = pcmmServiceMap.get(thisCcap.getCcapId());
                 if (service != null) {
                     service.sendGateDelete(gatePathStr);
                     logger.info("onDataChanged(): removed QoS gate {} for {}/{}/{}: ", gateId, ccapId, gatePathStr, thisGate);

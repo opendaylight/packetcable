@@ -106,7 +106,7 @@ public class COPSPepReqStateMan extends COPSStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void finalizeRequestState() throws COPSException {
+    public void finalizeRequestState() throws COPSException {
         _sender.sendDeleteRequest();
         _status = Status.ST_FINAL;
     }
@@ -278,7 +278,7 @@ public class COPSPepReqStateMan extends COPSStateMan {
      * @throws   COPSPepException
      *
      */
-    protected void processSyncStateRequest(final COPSSyncStateMsg ssMsg) throws COPSPepException {
+    protected void processSyncStateRequest(final COPSSyncStateMsg ssMsg) throws COPSException {
         _syncState = false;
         // If an object for retrieving PEP features exists,
         // use it for retrieving them
@@ -295,21 +295,21 @@ public class COPSPepReqStateMan extends COPSStateMan {
         _status = Status.ST_SYNC;
     }
 
-    protected void processClosedConnection(final COPSError error) throws COPSPepException {
+    public void processClosedConnection(final COPSError error) throws COPSPepException {
         if (_process != null)
             _process.notifyClosedConnection(this, error);
 
         _status = Status.ST_CCONN;
     }
 
-    protected void processNoKAConnection() throws COPSPepException {
+    public void processNoKAConnection() throws COPSException {
         if (_process != null)
             _process.notifyNoKAliveReceived(this);
 
         _status = Status.ST_NOKA;
     }
 
-    protected void processAcctReport() throws COPSPepException {
+    public void processAcctReport() throws COPSException {
         final Map<String, String> report;
         if (_process != null) report = _process.getAcctData(this);
         else report = new HashMap<>();
