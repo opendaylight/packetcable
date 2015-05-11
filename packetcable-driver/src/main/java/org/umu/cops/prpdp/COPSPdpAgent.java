@@ -250,7 +250,6 @@ public class COPSPdpAgent {
      * @param conn - the socket connection
      * @param errorType - the error type to send
      * @param msg - the error message to log
-     * @throws COPSException
      */
     private void sendCloseMessage(final Socket conn, final ErrorTypes errorType, final ErrorTypes errorSubType,
                                   final String msg) {
@@ -323,13 +322,8 @@ public class COPSPdpAgent {
 
         // XXX - handleRequestMsg
         // XXX - check handle is valid
-        final COPSPdpReqStateMan man = new COPSPdpReqStateMan(_clientType, handle, _process);
+        final COPSPdpReqStateMan man = new COPSPdpReqStateMan(_clientType, handle, _process, conn);
         pdpConn.addStateMan(handle, man);
-        try {
-            man.initRequestState(conn);
-        } catch (COPSException unae) {
-            logger.error("Unexpected error initializing state", unae);
-        }
         // XXX - End handleRequestMsg
 
         logger.info("Starting PDP connection thread to - " + _host);

@@ -17,7 +17,7 @@ public class COPSPdpOSReqStateMan extends COPSPdpReqStateMan {
     private final COPSPdpOSDataProcess _thisProcess;
 
     /** COPS message transceiver used to send COPS messages */
-    private transient COPSPdpOSMsgSender _sender;
+    private final COPSPdpOSMsgSender _sender;
 
     /**
      * Creates a request state manager
@@ -25,17 +25,11 @@ public class COPSPdpOSReqStateMan extends COPSPdpReqStateMan {
      * @param clientHandle  Client handle
      * @param process       The PDP OS Data Processor
      */
-    public COPSPdpOSReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPdpOSDataProcess process) {
-        super(clientType, clientHandle, process);
+    public COPSPdpOSReqStateMan(final short clientType, final COPSHandle clientHandle,
+                                final COPSPdpOSDataProcess process, final Socket socket) {
+        super(clientType, clientHandle, process, socket);
         this._thisProcess = process;
-    }
-
-    @Override
-    protected void initRequestState(final Socket sock) throws COPSException {
-        // Inits an object for sending COPS messages to the PDP
-        _sender = new COPSPdpOSMsgSender(_clientType, _handle, sock);
-
-        // Initial state
+        this._sender = new COPSPdpOSMsgSender(_clientType, _handle, _socket);
         _status = Status.ST_INIT;
     }
 

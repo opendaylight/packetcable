@@ -25,6 +25,11 @@ public abstract class COPSStateMan {
     protected final COPSHandle _handle;
 
     /**
+     * The socket connection. Value set when initRequestState is called
+     */
+    protected final Socket _socket;
+
+    /**
      *  Current state of the request being managed
      */
     protected transient Status _status;
@@ -34,9 +39,13 @@ public abstract class COPSStateMan {
      * @param clientType - the client type
      * @param clientHandle - the unique handle to the client
      */
-    public COPSStateMan(final short clientType, final COPSHandle clientHandle) {
+    protected COPSStateMan(final short clientType, final COPSHandle clientHandle, final Socket socket) {
+        if (clientHandle == null) throw new IllegalArgumentException("Client handle must not be null");
+        if (socket == null) throw new IllegalArgumentException("Socket connection must not be null");
+        if (!socket.isConnected()) throw new IllegalArgumentException("Socket connection must be connected");
         this._clientType = clientType;
         this._handle = clientHandle;
+        this._socket = socket;
         this._status = Status.ST_CREATE;
     }
 
@@ -73,13 +82,6 @@ public abstract class COPSStateMan {
         _status = Status.ST_SYNCALL;
         // TODO - maybe we should notifySyncComplete ...
     }
-
-    /**
-     * Initializes a new request state over a socket
-     * @param sock  Socket to the PEP
-     * @throws COPSPdpException
-     */
-    protected abstract void initRequestState(final Socket sock) throws COPSException;
 
     /**
      * The different state manager statuses

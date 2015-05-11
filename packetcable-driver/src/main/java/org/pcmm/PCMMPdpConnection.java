@@ -42,7 +42,8 @@ public class PCMMPdpConnection extends COPSPdpConnection {
      * @return - the state manager
      */
     protected COPSPdpReqStateMan createStateManager(final COPSReqMsg reqMsg) {
-        return new PCMMPdpReqStateMan(reqMsg.getHeader().getClientType(), reqMsg.getClientHandle(), _thisProcess);
+        return new PCMMPdpReqStateMan(reqMsg.getHeader().getClientType(), reqMsg.getClientHandle(), _thisProcess,
+                _sock);
     }
 
 }

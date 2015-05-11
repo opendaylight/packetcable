@@ -202,7 +202,7 @@ public class COPSPepConnection extends COPSConnection {
                         handleOpenNewRequestStateMsg(handle);
                 } else
                     // Decision
-                    manager.processDecision(dMsg, _sock);
+                    manager.processDecision(dMsg);
             }
         }
     }
@@ -246,13 +246,13 @@ public class COPSPepConnection extends COPSConnection {
      */
     public COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
             throws COPSException {
-        final COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle, process);
+        final COPSPepReqStateMan manager = new COPSPepReqStateMan(_clientType, clientHandle, process, _sock);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);
 
         _managerMap.put(clientHandle, manager);
         logger.info("Added state manager with key - " + clientHandle);
-        manager.initRequestState(_sock);
+        manager.initRequestState();
         return manager;
     }
 

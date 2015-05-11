@@ -7,6 +7,7 @@ package org.pcmm;
 import org.pcmm.gates.IGateID;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.gates.ITransactionID;
+import org.pcmm.gates.impl.PCMMError;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
     protected final PCMMPdpDataProcess _thisProcess;
 
     /** COPS message transceiver used to send COPS messages */
-    protected transient PCMMPdpMsgSender _sender;
+    protected final PCMMPdpMsgSender _sender;
 
     /**
      * Creates a request state manager
@@ -41,35 +42,22 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
      * @param clientHandle  Client handle
      */
     // TODO - consider sending in the COPSHandle object instead
-    public PCMMPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final PCMMPdpDataProcess process) {
-        super(clientType, clientHandle, process);
+    public PCMMPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final PCMMPdpDataProcess process,
+                              final Socket socket) {
+        super(clientType, clientHandle, process, socket);
         this._thisProcess = process;
-    }
-
-    @Override
-    protected void initRequestState(final Socket sock) throws COPSPdpException {
-        // Inits an object for sending COPS messages to the PEP
-        _sender = new PCMMPdpMsgSender(_clientType, _handle, sock);
-
+        _sender = new PCMMPdpMsgSender(_clientType, _handle, _socket);
         // Initial state
         _status = Status.ST_INIT;
     }
 
-    /**
-     * Processes a COPS request
-     * @param msg   COPS request received from the PEP
-     * @throws COPSPdpException
-     */
+    @Override
     public void processRequest(final COPSReqMsg msg) throws COPSPdpException {
         // TODO - Implement me - see commented out code from history prior to May 4, 2015...
     }
 
-    /**
-     * Processes a report
-     * @param msg   Report message from the PEP
-     * @throws COPSPdpException
-     * TODO - break apart this method
-     */
+     // TODO - break apart this method
+    @Override
     protected void processReport(final COPSReportMsg msg) throws COPSPdpException {
         // Report Type
         final COPSReportType rtypemsg = msg.getReport();
@@ -146,9 +134,14 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                 final IGateID gateID = gateMsg.getGateID();
                 logger.info("Setting gate ID on gate object - " + gateID);
                 gate.setGateID(gateID);
-                int gateIdInt = gateID.getGateID();
-                String gateIdHex = String.format("%08x", gateIdInt);
-                logger.info(getClass().getName() + ": " + cmdType + ": GateID = " + gateIdHex);
+
+                if (gateID != null) {
+                    int gateIdInt = gateID.getGateID();
+                    String gateIdHex = String.format("%08x", gateIdInt);
+                    logger.info(getClass().getName() + ": " + cmdType + ": GateID = " + gateIdHex);
+                } else {
+                    logger.warn("Gate ID is null");
+                }
             }
             if (rtypemsg.getReportType().equals(ReportType.FAILURE)) {
                 logger.info("rtypemsg failure");
@@ -156,7 +149,15 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                 if (_thisProcess != null)
                     _thisProcess.failReport(this, gateMsg);
                 else
-                    logger.info("Gate message error - " + gateMsg.getError().toString());
+                    if (gateMsg.getError() != null)
+                        logger.info("Gate message error - " + gateMsg.getError().toString());
+                    else {
+                        final PCMMError error = new PCMMError();
+                        // TODO - figure out correct error code
+                        error.setErrorCode((short)19);
+                        gate.setError(error);
+                        logger.warn("Gate request failed without an error, setting one - " + error);
+                    }
             } else if (rtypemsg.getReportType().equals(ReportType.ACCOUNTING)) {
                     logger.info("rtypemsg account");
                     _status = Status.ST_ACCT;

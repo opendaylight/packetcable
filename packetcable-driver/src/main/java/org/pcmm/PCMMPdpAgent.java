@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpAgent;
 import org.umu.cops.prpdp.COPSPdpConnection;
-import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.COPSHandle;
 
 import java.net.Socket;
@@ -46,13 +45,8 @@ public class PCMMPdpAgent extends COPSPdpAgent {
     protected COPSPdpConnection setputPdpConnection(final Socket conn, final COPSHandle handle) {
         logger.debug("PDPCOPSConnection");
         final PCMMPdpConnection pdpConn = new PCMMPdpConnection(_pepId, conn, _thisProcess, _kaTimer, _acctTimer);
-        final PCMMPdpReqStateMan man = new PCMMPdpReqStateMan(_clientType, handle, _thisProcess);
+        final PCMMPdpReqStateMan man = new PCMMPdpReqStateMan(_clientType, handle, _thisProcess, conn);
         pdpConn.addStateMan(handle, man);
-        try {
-            man.initRequestState(conn);
-        } catch (COPSPdpException unae) {
-            logger.error("Unexpected error initializing state", unae);
-        }
         // XXX - End handleRequestMsg
 
         logger.info("Starting PDP connection thread to - " + _host);

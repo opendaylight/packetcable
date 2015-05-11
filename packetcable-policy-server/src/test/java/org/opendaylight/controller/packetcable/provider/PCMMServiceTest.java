@@ -92,7 +92,7 @@ public class PCMMServiceTest {
         service.disconect();
     }
 
-    @Test
+//    @Test
     public void testAddAndRemoveUpGate() throws Exception {
 
         // TODO - Use this block to test against a real CMTS
