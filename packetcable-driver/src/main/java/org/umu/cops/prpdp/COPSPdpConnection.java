@@ -230,7 +230,6 @@ public class COPSPdpConnection extends COPSConnection {
 
             man = createStateManager(reqMsg);
             _managerMap.put(reqMsg.getClientHandle(), man);
-            man.initRequestState(_sock);
 
             logger.info("createHandler called, clientType=" + header.getClientType() + " msgType=" + ", connId=" +
                     conn.toString());
@@ -246,7 +245,7 @@ public class COPSPdpConnection extends COPSConnection {
      * @return - the state manager
      */
     protected COPSPdpReqStateMan createStateManager(final COPSReqMsg reqMsg) {
-        return new COPSPdpReqStateMan(reqMsg.getHeader().getClientType(), reqMsg.getClientHandle(), _process);
+        return new COPSPdpReqStateMan(reqMsg.getHeader().getClientType(), reqMsg.getClientHandle(), _process, _sock);
     }
 
     /**

@@ -16,11 +16,6 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
     private final static Logger logger = LoggerFactory.getLogger(COPSPepOSReqStateMan.class);
 
     /**
-     * ClientSI data from signaling.
-     */
-    protected final Set<COPSClientSI> _clientSIs;
-
-    /**
         Object for performing policy data processing
      */
     protected final COPSPepOSDataProcess _thisProcess;
@@ -28,38 +23,45 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
     /**
         COPS message transceiver used to send COPS messages
      */
-    protected transient COPSPepOSMsgSender _thisSender;
+    protected final COPSPepOSMsgSender _thisSender;
 
     /**
-     * Creates a state request manager
-     * @param    clientType Client-type
-     * @param   clientHandle    Client's <tt>COPSHandle</tt>
+     * ClientSI data populated when initRequestState() is called.
      */
-    public COPSPepOSReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPepOSDataProcess process,
-                                final Collection<COPSClientSI> clientSIs) {
-        super(clientType, clientHandle, process);
+    protected transient Set<COPSClientSI> _clientSIs;
+
+    /**
+     * Constructor
+     * @param clientType - the PEP client type
+     * @param clientHandle - the client-handle
+     * @param process - the data processor
+     * @param clientSIs - the known client SI objects
+     * @param socket - the socket connection
+     */
+    public COPSPepOSReqStateMan(final short clientType, final COPSHandle clientHandle,
+                                final COPSPepOSDataProcess process, final Collection<COPSClientSI> clientSIs,
+                                final Socket socket) {
+        super(clientType, clientHandle, process, socket, new COPSPepOSMsgSender(clientType, clientHandle, socket));
         this._thisProcess = process;
-        this._clientSIs = new HashSet<>(clientSIs);
+        if (clientSIs == null)
+            this._clientSIs = new HashSet<>();
+        else this._clientSIs = new HashSet<>(clientSIs);
+
+        // Inits an object for sending COPS messages to the PDP
+        _thisSender = new COPSPepOSMsgSender(_clientType, _handle, _socket);
     }
 
     @Override
-    protected void initRequestState(final Socket sock) throws COPSException {
-        // Inits an object for sending COPS messages to the PDP
-        _thisSender = new COPSPepOSMsgSender(_clientType, _handle, sock);
-        _sender = _thisSender;
-
+    public void initRequestState() throws COPSException {
+        _clientSIs.addAll(_thisProcess.getClientData(this));
         // Send the request
-        _thisSender.sendRequest(_clientSIs);
+        _thisSender.sendRequest(new HashSet<>(_clientSIs));
 
         // Initial state
         _status = Status.ST_INIT;
     }
 
-    /**
-     * Processes the decision message
-     * @param    dMsg Decision message from the PDP
-     * @throws   COPSPepException
-     */
+    @Override
     protected void processDecision(final COPSDecisionMsg dMsg) throws COPSException {
         //** Applies decisions to the configuration
         //_thisProcess.setDecisions(this, removeDecs, installDecs, errorDecs);
@@ -78,7 +80,7 @@ public class COPSPepOSReqStateMan extends COPSPepReqStateMan {
         _status = Status.ST_REPORT;
 
         if (!_syncState) {
-            _sender.sendSyncComplete();
+            _thisSender.sendSyncComplete();
             _syncState = true;
             _status = Status.ST_SYNCALL;
         }

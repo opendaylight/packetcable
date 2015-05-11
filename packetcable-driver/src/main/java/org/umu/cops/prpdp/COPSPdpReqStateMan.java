@@ -35,17 +35,11 @@ public class COPSPdpReqStateMan extends COPSStateMan {
      * @param clientType    Client-type
      * @param clientHandle  Client handle
      */
-    public COPSPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPdpDataProcess process) {
-        super(clientType, clientHandle);
+    public COPSPdpReqStateMan(final short clientType, final COPSHandle clientHandle, final COPSPdpDataProcess process,
+                              final Socket socket) {
+        super(clientType, clientHandle, socket);
         this._process = process;
-    }
-
-    @Override
-    protected void initRequestState(final Socket sock) throws COPSException {
-        // Inits an object for sending COPS messages to the PEP
-        _sender = new COPSPdpMsgSender(_clientType, _handle, sock);
-
-        // Initial state
+        _sender = new COPSPdpMsgSender(_clientType, _handle, _socket);
         _status = Status.ST_INIT;
     }
 

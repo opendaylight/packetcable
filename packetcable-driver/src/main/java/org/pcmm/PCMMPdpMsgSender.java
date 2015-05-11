@@ -65,13 +65,12 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
      * @param sock
      *            Socket to the PEP
      */
-    public PCMMPdpMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock)
-            throws COPSPdpException {
+    public PCMMPdpMsgSender(final short clientType, final COPSHandle clientHandle, final Socket sock) {
         this(clientType, (short)0, clientHandle, sock);
     }
 
     public PCMMPdpMsgSender(final short clientType, final short tID, final COPSHandle clientHandle,
-                            final Socket sock) throws COPSPdpException {
+                            final Socket sock) {
         super(clientType, clientHandle, sock);
         _transactionID = tID;
         _classifierID = 0;

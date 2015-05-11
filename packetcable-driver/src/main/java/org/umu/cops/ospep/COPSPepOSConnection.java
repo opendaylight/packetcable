@@ -7,7 +7,7 @@ import org.umu.cops.stack.COPSException;
 import org.umu.cops.stack.COPSHandle;
 
 import java.net.Socket;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * COPSPepConnection represents a PEP-PDP Connection Manager.
@@ -39,12 +39,12 @@ public class COPSPepOSConnection extends COPSPepConnection {
      * @throws COPSException
      */
     protected COPSPepOSReqStateMan addRequestState(final COPSHandle handle, final COPSPepOSDataProcess process,
-                                                   final List<COPSClientSI> clientSIs) throws COPSException {
-        final COPSPepOSReqStateMan manager = new COPSPepOSReqStateMan(_clientType, handle, process, clientSIs);
+                                                   final Collection<COPSClientSI> clientSIs) throws COPSException {
+        final COPSPepOSReqStateMan manager = new COPSPepOSReqStateMan(_clientType, handle, process, clientSIs, _sock);
         if (_managerMap.get(handle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + handle.getId().str());
         _managerMap.put(handle, manager);
-        manager.initRequestState(_sock);
+        manager.initRequestState();
         return manager;
     }
 

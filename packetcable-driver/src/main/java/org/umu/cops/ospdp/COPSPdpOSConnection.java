@@ -33,7 +33,8 @@ public class COPSPdpOSConnection extends COPSPdpConnection {
 
     @Override
     protected COPSPdpReqStateMan createStateManager(final COPSReqMsg reqMsg) {
-        return new COPSPdpOSReqStateMan(reqMsg.getHeader().getClientType(), reqMsg.getClientHandle(), _thisProcess);
+        return new COPSPdpOSReqStateMan(reqMsg.getHeader().getClientType(), reqMsg.getClientHandle(), _thisProcess,
+                _sock);
     }
 
 }
