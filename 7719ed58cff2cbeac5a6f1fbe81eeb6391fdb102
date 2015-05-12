@@ -1,0 +1,276 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3aa0d159_4d84c55d",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/PCMMPdpAgent.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take this revision.",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_6d874162",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/PCMMPdpConnection.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_0d7ebd6b",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/PCMMPdpMsgSender.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_cd97758f",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/PCMMPdpReqStateMan.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_ad8c6980",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/rcd/impl/CMTS.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_2df859e4",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/COPSStateMan.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_cdde956d",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/ospdp/COPSPdpOSConnection.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take only this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_edd91184",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/ospdp/COPSPdpOSReqStateMan.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_6dd50142",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/ospep/COPSPepOSConnection.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_6d3c2194",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/ospep/COPSPepOSReqStateMan.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_6d63c1b1",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/prpdp/COPSPdpAgent.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_0d5a3df3",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/prpdp/COPSPdpConnection.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_2d5db9e9",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/prpdp/COPSPdpReqStateMan.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_8d6ded9a",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/prpep/COPSPepConnection.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_4d07e5ca",
+        "filename": "packetcable-driver/src/main/java/org/umu/cops/prpep/COPSPepReqStateMan.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Take all of this revision",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aa0d159_6d0ae1d3",
+        "filename": "packetcable-policy-server/src/test/java/org/opendaylight/controller/packetcable/provider/PCMMServiceTest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:53Z",
+      "side": 1,
+      "message": "Ok to disable test for this patch",
+      "revId": "7719ed58cff2cbeac5a6f1fbe81eeb6391fdb102",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
