@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3aa0d159_8dbacd21",
+        "filename": "packetcable-driver/src/test/java/org/pcmm/test/Main.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-05-12T14:12:25Z",
+      "side": 0,
+      "message": "File has been removed",
+      "revId": "31c614f242022ca4eb6a1cf02a0cd1ebb8c86e92",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
