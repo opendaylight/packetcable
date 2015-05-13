@@ -2,3 +2,5 @@
 host=git.opendaylight.org
 port=29418
 project=packetcable.git
+defaultbranch=stable/lithium
+
