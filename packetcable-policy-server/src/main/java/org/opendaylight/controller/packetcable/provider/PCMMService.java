@@ -1,3 +1,7 @@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
+ */
+
 package org.opendaylight.controller.packetcable.provider;
 
 import com.google.common.collect.Maps;
@@ -42,7 +46,8 @@ public class PCMMService {
 		ipAddr = ccap.getConnection().getIpAddress();
 		portNum = ccap.getConnection().getPort();
 		ccapClient = new CcapClient(ipAddr, portNum);
-		logger.info("Attempting to add CCAP with ID {} @ {}:{}", ccap.getCcapId(), ipAddr.getIpv4Address().getValue(), portNum.getValue());
+		logger.info("Attempting to add CCAP with ID {} @ {}:{}", ccap.getCcapId(), ipAddr.getIpv4Address().getValue(),
+				portNum.getValue());
 	}
 
 	public void disconect() {
@@ -64,7 +69,6 @@ public class PCMMService {
 	}
 
 	// TODO - Consider creating an object to return that contains a success flag, message, and gate ID or gate object
-	// TODO FIXME - the gate appears to be getting set as per restconf but I am not seeing the proper logging occurring
 	public String sendGateSet(final String gatePathStr, final InetAddress subId, final Gates qosGate,
 							  final ServiceFlowDirection scnDir) {
 		logger.info("Sending gate to CCAP with ID - " + ccap.getCcapId());
@@ -93,43 +97,49 @@ public class PCMMService {
 		// assemble the final gate request
 		final PCMMGateReq gateReq = gateBuilder.getGateReq();
 
-		// and remember it
-		gateRequests.put(gatePathStr, gateReq);
-		// and send it to the CCAP
-		ccapClient.sendGateSet(gateReq);
-		// and wait for the COPS response to complete processing gate request
-		try {
-			// TODO - see PCMMPdpReqStateMan#processReport() gate.notify(). Should determine a better means to
-			// TODO - handle this synchronization.
-			// TODO - if not changing this, may want to make this timeout configurable
-			synchronized(gateReq) {
-				logger.info("Waiting 1000ms for gate request to be updated");
-				gateReq.wait(1000);
-				logger.debug("Gate request error - " + gateReq.getError());
-				logger.debug("Gate request ID - " + gateReq.getGateID());
-			}
-		} catch (Exception e) {
-			logger.error("PCMMService: sendGateSet(): gate response timeout exceeded for "
-					+ gatePathStr + '/' + gateReq, e);
-			return String.format("408 Request Timeout - gate response timeout exceeded for %s/%s",
-					ccap.getCcapId(), gatePathStr);
-		}
-		if (gateReq.getError() != null) {
-			logger.error("PCMMService: sendGateSet(): returned error: {}",
-					gateReq.getError().toString());
-			return String.format("404 Not Found - sendGateSet for %s/%s returned error - %s",
-					ccap.getCcapId(), gatePathStr, gateReq.getError().toString());
-		} else {
-			if (gateReq.getGateID() != null) {
-				logger.info(String.format("PCMMService: sendGateSet(): returned GateId %08x: ",
-						gateReq.getGateID().getGateID()));
-				return String.format("200 OK - sendGateSet for %s/%s returned GateId %08x",
-						ccap.getCcapId(), gatePathStr, gateReq.getGateID().getGateID());
-			} else {
-				logger.info("PCMMService: sendGateSet(): no gateId returned:");
-				return String.format("404 Not Found - sendGateSet for %s/%s no gateId returned",
+		if (gateRequests.get(gatePathStr) == null) {
+			// and remember it
+			gateRequests.put(gatePathStr, gateReq);
+			// and send it to the CCAP
+			ccapClient.sendGateSet(gateReq);
+			// and wait for the COPS response to complete processing gate request
+			try {
+				// TODO - see PCMMPdpReqStateMan#processReport() gate.notify(). Should determine a better means to
+				// TODO - handle this synchronization.
+				// TODO - if not changing this, may want to make this timeout configurable
+				synchronized(gateReq) {
+					logger.info("Waiting 5000ms for gate request to be updated");
+					gateReq.wait(5000);
+					logger.debug("Gate request error - " + gateReq.getError());
+					logger.debug("Gate request ID - " + gateReq.getGateID());
+				}
+			} catch (Exception e) {
+				logger.error("PCMMService: sendGateSet(): gate response timeout exceeded for "
+						+ gatePathStr + '/' + gateReq, e);
+				return String.format("408 Request Timeout - gate response timeout exceeded for %s/%s",
 						ccap.getCcapId(), gatePathStr);
 			}
+			if (gateReq.getError() != null) {
+				logger.error("PCMMService: sendGateSet(): returned error: {}",
+						gateReq.getError().toString());
+				return String.format("404 Not Found - sendGateSet for %s/%s returned error - %s",
+						ccap.getCcapId(), gatePathStr, gateReq.getError().toString());
+			} else {
+				if (gateReq.getGateID() != null) {
+					logger.info(String.format("PCMMService: sendGateSet(): returned GateId %08x: ",
+							gateReq.getGateID().getGateID()));
+					return String.format("200 OK - sendGateSet for %s/%s returned GateId %08x",
+							ccap.getCcapId(), gatePathStr, gateReq.getGateID().getGateID());
+				} else {
+					logger.info("PCMMService: sendGateSet(): no gateId returned:");
+					return String.format("404 Not Found - sendGateSet for %s/%s no gateId returned",
+							ccap.getCcapId(), gatePathStr);
+				}
+			}
+		} else {
+			logger.info("PCMMService: sendGateSet(): no gateId returned:");
+			return String.format("404 Not Found - sendGateSet for %s/%s already exists",
+					ccap.getCcapId(), gatePathStr);
 		}
 	}
 
@@ -162,6 +172,7 @@ public class PCMMService {
 				return true;
 			}
 		} else {
+			logger.warn("Attempt to delete non-existent gate with path - " + gatePathStr);
 			return false;
 		}
 	}

@@ -15,6 +15,7 @@ import org.umu.cops.stack.COPSHeader.OPCode;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
@@ -131,8 +132,8 @@ public class COPSPdpAgent {
      */
     public void connect() throws IOException, COPSException {
         // Create Socket and send OPN
-        final InetAddress addr = InetAddress.getByName(_host);
-        _socket = new Socket(addr, _serverPort);
+        _socket = new Socket();
+        _socket.connect(new InetSocketAddress(InetAddress.getByName(_host), _serverPort));
         logger.info("PDP Socket Opened. Waiting to receive client-open message");
         final COPSMsg msg = COPSTransceiver.receiveMsg(_socket);
         logger.debug("Message received of type - " + msg.getHeader().getOpCode());
@@ -161,7 +162,7 @@ public class COPSPdpAgent {
         if (_thread != null) _thread.interrupt();
         else logger.warn("Unable to locate PDP connection thread. Cannot stop it.");
 
-        if (_socket.isConnected())
+        if (_socket != null && _socket.isConnected())
             try {
                 _socket.close();
             } catch (IOException e) {

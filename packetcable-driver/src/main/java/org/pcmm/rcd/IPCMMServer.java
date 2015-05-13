@@ -1,12 +1,13 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
-
 
 package org.pcmm.rcd;
 
 import org.pcmm.concurrent.IWorker;
 import org.pcmm.state.IStateful;
+
+import java.io.IOException;
 
 /**
  * <p>
@@ -64,28 +65,27 @@ import org.pcmm.state.IStateful;
  * with scalability and fault-tolerance.
  * </p>
  * </p>
- *
- *
  */
 public interface IPCMMServer extends IStateful {
 
     /**
-     *
+     * Starts all connections and threads
      */
-    void startServer();
+    void startServer() throws IOException;
 
     /**
-     *
+     * Stops all connections and threads
      */
     void stopServer();
 
     /**
      * When a client connects to the server, a handler is needed to manage the
      * exchange of the messages between this client and the server.
-     *
-     *
      */
-    public static interface IPCMMClientHandler extends IWorker, IPCMMClient {
-
+    interface IPCMMClientHandler extends IWorker, IPCMMClient {
+        /**
+         * Responsible for closing resources such as server connections or threads
+         */
+        void stop();
     }
 }

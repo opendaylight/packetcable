@@ -1,6 +1,7 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates;
 
 import org.pcmm.base.IPCMMBaseObject;
@@ -9,10 +10,10 @@ import org.pcmm.base.IPCMMBaseObject;
  *
  */
 public interface IPCMMError extends IPCMMBaseObject {
-	static final short LENGTH = 8;
-	static final byte SNUM = 14;
-	static final byte STYPE = 1;
-	final String[] errors = { "Insufficient Resources", "Unknown GateID",
+	short LENGTH = 8;
+	byte SNUM = 14;
+	byte STYPE = 1;
+	String[] errors = { "Insufficient Resources", "Unknown GateID",
 			"Missing Required Object", "Invalid Object",
 			"Volume Based Usage Limit Exceeded",
 			"Time Based Usage Limit Exceeded", "Session Class Limit Exceeded",
@@ -32,7 +33,7 @@ public interface IPCMMError extends IPCMMBaseObject {
 			"Multicast Downstream Resequencing mismatch",
 			"Other, Unspecified Error" };
 
-	static enum Description {
+	enum Description {
 		ERROR_01((short) 1, errors[0]), ERROR_02((short) 2, errors[1]), ERROR_06(
 				(short) 6, errors[2]), ERROR_07((short) 7, errors[3]), ERROR_08(
 				(short) 8, errors[4]), ERROR_09((short) 9, errors[5]), ERROR_10(
@@ -54,7 +55,7 @@ public interface IPCMMError extends IPCMMBaseObject {
 		private final short code;
 		private final String description;
 
-		private Description(short code, String description) {
+		Description(short code, String description) {
 			this.code = code;
 			this.description = description;
 		}
@@ -71,6 +72,7 @@ public interface IPCMMError extends IPCMMBaseObject {
 			switch (errCode) {
 			case 1:
 			case 2:
+			case 4:
 				return errors[errCode - 1];
 			case 127:
 				return errors[32];

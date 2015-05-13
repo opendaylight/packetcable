@@ -1,12 +1,13 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
 
 package org.pcmm.rcd;
 
+import org.umu.cops.stack.COPSHandle;
 import org.umu.cops.stack.COPSMsg;
 
-import java.net.InetAddress;
+import java.io.IOException;
 
 /**
  * <p>
@@ -26,7 +27,7 @@ public interface IPCMMClient {
 	/**
 	 * PCMM client-type
 	 */
-	static final short CLIENT_TYPE = (short) 0x800A;
+	short CLIENT_TYPE = (short) 0x800A;
 
 	/**
 	 * sends a message to the server.
@@ -45,25 +46,9 @@ public interface IPCMMClient {
 
 	/**
 	 * tries to connect to the server.
-	 * 
-	 * @param address
-	 *            server address
-	 * @param port
-	 *            server port
-	 * @return connection state
+	 * @throws IOException
 	 */
-	boolean tryConnect(String address, int port);
-
-	/**
-	 * tries to connect to the server.
-	 * 
-	 * @param address
-	 *            server address
-	 * @param port
-	 *            server port
-	 * @return connection state
-	 */
-	boolean tryConnect(InetAddress address, int port);
+	void connect() throws IOException;
 
 	/**
 	 * disconnects from server.
@@ -83,15 +68,8 @@ public interface IPCMMClient {
 	 * 
 	 * @return client handle
 	 */
-	String getClientHandle();
+	COPSHandle getClientHandle();
 
-	/**
-	 * 
-	 * sets the client handle
-	 * 
-	 * @param handle
-	 *            cleint hanlde
-	 */
-	void setClientHandle(String handle);
+	void setClientHandle(COPSHandle handle);
 
 }

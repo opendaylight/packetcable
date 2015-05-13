@@ -1,24 +1,18 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.rcd.impl;
 
-import org.pcmm.gates.IPCMMGate;
-import org.pcmm.gates.ITransactionID;
-import org.pcmm.gates.impl.PCMMGateReq;
-import org.pcmm.messages.impl.MessageFactory;
+import org.pcmm.PCMMConstants;
+import org.pcmm.PCMMProperties;
+import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.rcd.ICMTS;
-import org.umu.cops.COPSStateMan;
-import org.umu.cops.prpep.COPSPepConnection;
-import org.umu.cops.prpep.COPSPepDataProcess;
-import org.umu.cops.prpep.COPSPepException;
-import org.umu.cops.prpep.COPSPepReqStateMan;
-import org.umu.cops.stack.*;
-import org.umu.cops.stack.COPSHeader.OPCode;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class starts a mock CMTS that can be used for testing.
@@ -26,238 +20,68 @@ import java.util.concurrent.Callable;
 public class CMTS extends AbstractPCMMServer implements ICMTS {
 
 	/**
+	 * Receives messages from the COPS client
+	 */
+	private final Map<String, IPCMMClientHandler> handlerMap;
+
+	/**
+	 * The configured gates
+	 */
+	private final Map<Direction, Set<String>> gateConfig;
+
+	/**
+	 * The connected CMTSs and whether or not they are up
+	 */
+	private final Map<String, Boolean> cmStatus;
+
+	/**
 	 * Constructor for having the server port automatically assigned
 	 * Call getPort() after startServer() is called to determine the port number of the server
 	 */
-	public CMTS() {
-		this(0);
+	public CMTS(final Map<Direction, Set<String>> gateConfig, final Map<String, Boolean> cmStatus) {
+		this(0, gateConfig, cmStatus);
 	}
 
 	/**
 	 * Constructor for starting the server to a pre-defined port number
 	 * @param port - the port number on which to start the server.
 	 */
-	public CMTS(final int port) {
+	public CMTS(final int port, final Map<Direction, Set<String>> gateConfig, final Map<String, Boolean> cmStatus) {
 		super(port);
+		if (gateConfig == null || cmStatus == null) throw new IllegalArgumentException("Config must not be null");
+		this.gateConfig = Collections.unmodifiableMap(gateConfig);
+		this.cmStatus = Collections.unmodifiableMap(cmStatus);
+		handlerMap = new ConcurrentHashMap<>();
 	}
 
 	@Override
-	protected IPCMMClientHandler getPCMMClientHandler(final Socket socket) {
-
-		return new AbstractPCMMClientHandler(socket) {
-
-			private COPSHandle handle;
-
-			public void run() {
-				try {
-					// send OPN message
-					// set the major version info and minor version info to
-					// default (5,0)
-					logger.info("Send OPN message to the PS");
-					sendRequest(MessageFactory.getInstance().create(OPCode.OPN, new Properties()));
-					// wait for CAT
-					COPSMsg recvMsg = readMessage();
-
-					if (recvMsg.getHeader().getOpCode().equals(OPCode.CC)) {
-						COPSClientCloseMsg cMsg = (COPSClientCloseMsg) recvMsg;
-						logger.info("PS requested Client-Close" + cMsg.getError().getDescription());
-						// send a CC message and close the socket
-						disconnect();
-						return;
-					}
-					if (recvMsg.getHeader().getOpCode().equals(OPCode.CAT)) {
-						logger.info("received Client-Accept from PS");
-						COPSClientAcceptMsg cMsg = (COPSClientAcceptMsg) recvMsg;
-						// Support
-						if (cMsg.getIntegrity() != null) {
-							throw new COPSPepException("Unsupported object (Integrity)");
-						}
-
-						// Mandatory KATimer
-						COPSKATimer kt = cMsg.getKATimer();
-						if (kt == null)
-							throw new COPSPepException("Mandatory COPS object missing (KA Timer)");
-						short kaTimeVal = kt.getTimerVal();
-
-						// ACTimer
-						COPSAcctTimer at = cMsg.getAcctTimer();
-						short acctTimer = 0;
-						if (at != null)
-							acctTimer = at.getTimerVal();
-
-						logger.info("Send a REQ message to the PS");
-						{
-							Properties prop = new Properties();
-							COPSMsg reqMsg = MessageFactory.getInstance().create(OPCode.REQ, prop);
-							handle = ((COPSReqMsg) reqMsg).getClientHandle();
-							sendRequest(reqMsg);
-						}
-						// Create the connection manager
-						final PCMMCmtsConnection conn = new PCMMCmtsConnection(CLIENT_TYPE, socket);
-						// pcmm specific handler
-						// conn.addReqStateMgr(handle, new
-						// PCMMPSReqStateMan(CLIENT_TYPE, handle));
-						conn.addRequestState(handle, new CmtsDataProcessor());
-						conn.setKaTimer(kaTimeVal);
-						conn.setAcctTimer(acctTimer);
-						logger.info(getClass().getName() + " Thread(conn).start");
-						new Thread(conn).start();
-					} else {
-						// messages of other types are not expected
-						throw new COPSPepException("Message not expected. Closing connection for " + socket.toString());
-					}
-				} catch (Exception e) {
-					logger.error(e.getMessage());
-				}
-			}
-
-			@Override
-			public void task(Callable<?> c) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void shouldWait(int t) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void done() {
-				// TODO Auto-generated method stub
-
-			}
-
-		};
+	public void stopServer() {
+		for (final IPCMMClientHandler handler : handlerMap.values()) {
+			handler.stop();
+		}
+		super.stopServer();
 	}
 
-	class PCMMCmtsConnection extends COPSPepConnection {
-
-		public PCMMCmtsConnection(final short clientType, final Socket sock) {
-			super(clientType, sock);
-		}
-
-		public COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
-				throws COPSException {
-			return super.addRequestState(clientHandle, process);
-		}
+	@Override
+	protected IPCMMClientHandler getPCMMClientHandler(final Socket socket) throws IOException {
+		final String key = socket.getLocalAddress().getHostName() + ':' + socket.getPort();
+		if (handlerMap.get(key) == null) {
+			final IPCMMClientHandler handler = new CmtsPcmmClientHandler(socket, gateConfig, cmStatus);
+			handler.connect();
+			handlerMap.put(key, handler);
+			return handler;
+		} else return handlerMap.get(key);
 	}
 
-	class CmtsDataProcessor implements COPSPepDataProcess {
-
-		private Map<String, String> removeDecs;
-		private Map<String, String> installDecs;
-		private Map<String, String> errorDecs;
-		private COPSPepReqStateMan stateManager;
-
-		public CmtsDataProcessor() {
-			setRemoveDecs(new HashMap<String, String>());
-			setInstallDecs(new HashMap<String, String>());
-			setErrorDecs(new HashMap<String, String>());
-		}
-
-		@Override
-		public void setDecisions(final COPSPepReqStateMan man, final Map<String, String> removeDecs,
-                                 final Map<String, String> installDecs, final Map<String, String> errorDecs) {
-			setRemoveDecs(removeDecs);
-			setInstallDecs(installDecs);
-			setErrorDecs(errorDecs);
-			setStateManager(man);
-		}
-
-		@Override
-		public boolean isFailReport(final COPSPepReqStateMan man) {
-			return (errorDecs != null && errorDecs.size() > 0);
-		}
-
-		@Override
-		public Map<String, String> getReportData(final COPSPepReqStateMan man) {
-			if (isFailReport(man)) {
-				return errorDecs;
-			} else {
-				final Map<String, String> siDataHashTable = new HashMap<>();
-				if (installDecs.size() > 0) {
-					String data = "";
-					for (String k : installDecs.keySet()) {
-						data = installDecs.get(k);
-						break;
-					}
-					final ITransactionID transactionID = new PCMMGateReq(new COPSData(data).getData()).getTransactionID();
-					final IPCMMGate responseGate = new PCMMGateReq();
-					responseGate.setTransactionID(transactionID);
-
-                    // TODO FIXME - Why is the key always null??? What value should be used here???
-                    final String key = null;
-					siDataHashTable.put(key, new String(responseGate.getData()));
-				}
-				return siDataHashTable;
-			}
-		}
-
-		@Override
-		public Map<String, String> getClientData(COPSPepReqStateMan man) {
-			// TODO Auto-generated method stub
-			return new HashMap<>();
-		}
-
-		@Override
-		public Map<String, String> getAcctData(COPSPepReqStateMan man) {
-			// TODO Auto-generated method stub
-			return new HashMap<>();
-		}
-
-		@Override
-		public void notifyClosedConnection(final COPSStateMan man, final COPSError error) {
-			// TODO Auto-generated method stub
-		}
-
-		@Override
-		public void notifyNoKAliveReceived(final COPSStateMan man) {
-			// TODO Auto-generated method stub
-		}
-
-		@Override
-		public void closeRequestState(final COPSStateMan man) {
-			// TODO Auto-generated method stub
-		}
-
-		@Override
-		public void newRequestState(final COPSPepReqStateMan man) {
-			// TODO Auto-generated method stub
-		}
-
-		public Map<String, String> getRemoveDecs() {
-			return new HashMap<>(removeDecs);
-		}
-
-		public void setRemoveDecs(final Map<String, String> removeDecs) {
-			this.removeDecs = new HashMap<>(removeDecs);
-		}
-
-		public Map<String, String> getInstallDecs() {
-			return new HashMap<>(installDecs);
-		}
-
-		public void setInstallDecs(final Map<String, String> installDecs) {
-			this.installDecs = new HashMap<>(installDecs);
-		}
-
-		public Map<String, String> getErrorDecs() {
-			return errorDecs;
-		}
-
-		public void setErrorDecs(final Map<String, String> errorDecs) {
-			this.errorDecs = new HashMap<>(errorDecs);
-		}
-
-		public COPSPepReqStateMan getStateManager() {
-			return stateManager;
-		}
-
-		public void setStateManager(COPSPepReqStateMan stateManager) {
-			this.stateManager = stateManager;
-		}
-
+	/**
+	 * To start a CMTS
+	 * @param args - the arguments which will contain configuration information
+	 * @throws IOException - should the server fail to start for reasons such as port contention.
+	 */
+	public static void main(final String[] args) throws IOException {
+		final CMTS cmts = new CMTS(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class),
+				new HashMap<Direction, Set<String>>(), new HashMap<String, Boolean>());
+		cmts.startServer();
 	}
+
 }

@@ -50,7 +50,7 @@ public class COPSPepReqStateMan extends COPSStateMan {
     /**
         The Msg Sender is used to send COPS messages
      */
-    private final COPSPepMsgSender _sender;
+    protected final COPSPepMsgSender _sender;
 
     /**
      * Sync State
