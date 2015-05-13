@@ -14,12 +14,12 @@
     -->
     <!--
     Add repo entries for the repositories of features you refer to in this feature file but do not define here.
-    <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/0.1.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/0.2.0-SNAPSHOT/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-adsal/${feature.adsal.version}/xml/features</repository>	
-    <repository>mvn:org.opendaylight.controller/features-adsal-compatibility/1.5.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-adsal-compatibility/1.6.0-SNAPSHOT/xml/features</repository>
     -->
-    <repository>mvn:org.opendaylight.yangtools/features-yangtools/0.7.0-SNAPSHOT/xml/features</repository>
-    <repository>mvn:org.opendaylight.controller/features-mdsal/1.2.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/0.8.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/1.3.0-SNAPSHOT/xml/features</repository>
     <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/${openflowplugin.version}/xml/features</repository>
 
     <feature name='odl-packetcable-policy-server-all' version='${project.version}' description='OpenDaylight :: packetcable :: policy :: All'>
@@ -31,21 +31,21 @@
     <!--
         Define your features.  It is useful to list then in order of dependency.  So if A depends on B, list A first.
         It's also nice to list inside a feature, first the features it needs, then the bundles it needs, then the configfiles.
-            <feature version='0.1.0-SNAPSHOT'>odl-openflowplugin-flow-services</feature>
+            <feature version='0.2.0-SNAPSHOT'>odl-openflowplugin-flow-services</feature>
 	    <bundle>mvn:com.google.common.collect/collect/14.0</bundle>
 
     -->
         <!--- * Basic MD-SAL Consumer -->
         <!--- * Basic MD-SAL Model feature -->
         <feature name='odl-packetcable-policy-model' version='${project.version}' description='OpenDaylight :: packetcable :: policy :: Model'>
-            <feature version='0.7.0-SNAPSHOT'>odl-yangtools-binding</feature>
-            <feature version='0.7.0-SNAPSHOT'>odl-yangtools-models</feature>
+            <feature version='0.8.0-SNAPSHOT'>odl-yangtools-binding</feature>
+            <feature version='0.8.0-SNAPSHOT'>odl-yangtools-models</feature>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-model/${project.version}</bundle>
         </feature>
 
         <!--- * Basic MD-SAL Provider -->
         <feature name='odl-packetcable-policy-server' version='${project.version}' description='OpenDaylight :: packetcable :: policy :: Provider'>
-            <feature version='1.2.0-SNAPSHOT'>odl-mdsal-broker</feature>
+            <feature version='1.3.0-SNAPSHOT'>odl-mdsal-broker</feature>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-server/${project.version}</bundle>
             <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
             <feature version='${project.version}'>odl-packetcable-policy-model</feature>
@@ -55,7 +55,7 @@
 
         <!--- * * -->
         <feature name='odl-packetcable-driver' version='${project.version}' description='OpenDaylight :: packetcable :: Driver'>
-            <feature version='1.2.0-SNAPSHOT'>odl-mdsal-broker</feature>
+            <feature version='1.3.0-SNAPSHOT'>odl-mdsal-broker</feature>
 	</feature>
 
 </features>
