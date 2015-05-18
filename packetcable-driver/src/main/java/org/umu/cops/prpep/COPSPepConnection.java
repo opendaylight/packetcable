@@ -60,57 +60,63 @@ public class COPSPepConnection extends COPSConnection {
         Date lastSendKa = new Date();
         Date lastSendAcc = new Date();
         Date lastRecKa = new Date();
-        try {
             while (!_sock.isClosed()) {
-                if (_sock.getInputStream().available() != 0) {
-                    processMessage(_sock);
-                    lastRecKa = new Date();
-                }
-
-                // Keep Alive
-                if (_kaTimer > 0) {
-                    // Timeout at PDP
-                    int _startTime = (int) (lastRecKa.getTime());
-                    int cTime = (int) (new Date().getTime());
-
-                    if ((cTime - _startTime) > _kaTimer*1000) {
-                        _sock.close();
-                        // Notify all Request State Managers
-                        notifyNoKAAllReqStateMan();
-                    }
-
-                    // Send to PEP
-                    _startTime = (int) (lastSendKa.getTime());
-                    cTime = (int) (new Date().getTime());
-
-                    if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
-                        final COPSKAMsg msg = new COPSKAMsg(null);
-                        COPSTransceiver.sendMsg(msg, _sock);
-                        lastSendKa = new Date();
-                    }
-                }
-
-                // Accounting
-                if (_acctTimer > 0) {
-                    int _startTime = (int) (lastSendAcc.getTime());
-                    int cTime = (int) (new Date().getTime());
-
-                    if ((cTime - _startTime) > ((_acctTimer*3/4)*1000)) {
-                        // Notify all Request State Managers
-                        notifyAcctAllReqStateMan();
-                        lastSendAcc = new Date();
-                    }
-                }
-
                 try {
-                    Thread.sleep(500);
+                    if (_sock.getInputStream().available() != 0) {
+                        processMessage(_sock);
+                        lastRecKa = new Date();
+                    }
+
+                    // Keep Alive
+                    if (_kaTimer > 0) {
+                        // Timeout at PDP
+                        int _startTime = (int) (lastRecKa.getTime());
+                        int cTime = (int) (new Date().getTime());
+
+                        if ((cTime - _startTime) > _kaTimer*1000) {
+                            _sock.close();
+                            // Notify all Request State Managers
+                            notifyNoKAAllReqStateMan();
+                        }
+
+                        // Send to PEP
+                        _startTime = (int) (lastSendKa.getTime());
+                        cTime = (int) (new Date().getTime());
+
+                        if ((cTime - _startTime) > ((_kaTimer*3/4) * 1000)) {
+                            final COPSKAMsg msg = new COPSKAMsg(null);
+                            COPSTransceiver.sendMsg(msg, _sock);
+                            lastSendKa = new Date();
+                        }
+                    }
+
+                    // Accounting
+                    if (_acctTimer > 0) {
+                        int _startTime = (int) (lastSendAcc.getTime());
+                        int cTime = (int) (new Date().getTime());
+
+                        if ((cTime - _startTime) > ((_acctTimer*3/4)*1000)) {
+                            // Notify all Request State Managers
+                            notifyAcctAllReqStateMan();
+                            lastSendAcc = new Date();
+                        }
+                    }
+
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        logger.error("Closing connection");
+                        break;
+                    } catch (Exception e) {
+                        logger.error("Unexpected exception while sleeping. Continue processing messages", e);
+                    }
                 } catch (Exception e) {
-                    logger.error("Exception thrown while sleeping", e);
+                    logger.error("Unexpected error while processing socket messages. Continue processing", e);
+                } catch (Throwable e) {
+                    logger.error("Unexpected fatal error while processing COPS messages. Stopping thread", e);
+                    break;
                 }
             }
-        } catch (Exception e) {
-            logger.error("Error while processing socket messages", e);
-        }
 
         // connection closed by server
         // COPSDebug.out(getClass().getName(),"Connection closed by server");
