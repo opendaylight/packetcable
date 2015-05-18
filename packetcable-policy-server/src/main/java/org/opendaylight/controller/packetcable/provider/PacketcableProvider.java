@@ -357,11 +357,11 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                     if (message.contains("200 OK")) {
                         ccapMap.put(ccapId, thisCcap);
                         updateCcapMaps(thisCcap);
-                        logger.info("onDataChanged(): created CCAP: {}/{} : {}", thisData.gatePath, thisCcap, message);
-                        logger.info("onDataChanged(): created CCAP: {} : {}", thisData.gatePath, message);
+                        logger.info("Created CCAP: {}/{} : {}", thisData.gatePath, thisCcap, message);
+                        logger.info("Created CCAP: {} : {}", thisData.gatePath, message);
                     } else {
                         // TODO - when a connection cannot be made, need to remove CCAP from ODL cache.
-                        logger.error("onDataChanged(): create CCAP Failed: {} : {}", thisData.gatePath, message);
+                        logger.error("Create CCAP Failed: {} : {}", thisData.gatePath, message);
                     }
                     // set the response string in the config ccap object using a new thread
                     executor.execute(new Response(dataBroker, entry.getKey(), thisCcap, message));
@@ -389,17 +389,18 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                             if (scnDir != null) {
                                 if (pcmmServiceMap.get(thisCcap.getCcapId()) != null) {
                                     message = pcmmServiceMap.get(thisCcap.getCcapId()).sendGateSet(gatePathStr, subId, gate, scnDir);
+                                    gateMap.put(gatePathStr, gate);
+                                    gateCcapMap.put(gatePathStr, thisCcap.getCcapId());
+
                                     if (message.contains("200 OK")) {
-                                        gateMap.put(gatePathStr, gate);
-                                        gateCcapMap.put(gatePathStr, thisCcap.getCcapId());
-                                        logger.info("onDataChanged(): created QoS gate {} for {}/{}/{} - {}",
+                                        logger.info("Created QoS gate {} for {}/{}/{} - {}",
                                                 gateId, ccapId, gatePathStr, gate, message);
-                                        logger.info("onDataChanged(): created QoS gate {} for {}/{} - {}",
+                                        logger.info("Created QoS gate {} for {}/{} - {}",
                                                 gateId, ccapId, gatePathStr, message);
                                     } else {
-                                        logger.info("onDataChanged(): Unable to create QoS gate {} for {}/{}/{} - {}",
+                                        logger.info("Unable to create QoS gate {} for {}/{}/{} - {}",
                                                 gateId, ccapId, gatePathStr, gate, message);
-                                        logger.error("onDataChanged(): Unable to create QoS gate {} for {}/{} - {}",
+                                        logger.error("Unable to create QoS gate {} for {}/{} - {}",
                                                 gateId, ccapId, gatePathStr, message);
                                     }
                                 } else {
@@ -417,18 +418,18 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
                         final String subIdStr = thisData.subId;
                         message = String.format("404 Not Found - no CCAP found for subscriber %s in %s",
                                 subIdStr, gatePathStr);
-                        logger.info("onDataChanged(): create QoS gate {} FAILED: no CCAP found for subscriber {}: @ {}/{}",
+                        logger.info("Create QoS gate {} FAILED: no CCAP found for subscriber {}: @ {}/{}",
                                 gateId, subIdStr, gatePathStr, gate);
-                        logger.error("onDataChanged(): create QoS gate {} FAILED: no CCAP found for subscriber {}: @ {}",
+                        logger.error("Create QoS gate {} FAILED: no CCAP found for subscriber {}: @ {}",
                                 gateId, subIdStr, gatePathStr);
                     }
                 } else {
                     final String subIdStr = thisData.subId;
                     message = String.format("400 Bad Request - subId must be a valid IP address for subscriber %s in %s",
                             subIdStr, gatePathStr);
-                    logger.info("onDataChanged(): create QoS gate {} FAILED: subId must be a valid IP address for subscriber {}: @ {}/{}",
+                    logger.info("Create QoS gate {} FAILED: subId must be a valid IP address for subscriber {}: @ {}/{}",
                             gateId, subIdStr, gatePathStr, gate);
-                    logger.error("onDataChanged(): create QoS gate {} FAILED: subId must be a valid IP address for subscriber {}: @ {}",
+                    logger.error("Create QoS gate {} FAILED: subId must be a valid IP address for subscriber {}: @ {}",
                             gateId, subIdStr, gatePathStr);
                 }
                 // set the response message in the config gate object using a new thread
