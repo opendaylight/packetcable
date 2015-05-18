@@ -90,13 +90,13 @@ public class GateSpec extends PCMMBaseObject implements IGateSpec {
     @Override
     public void setDSCP_TOSOverwrite(DSCPTOS dscpTos) {
         // OR in the DSCPTOS enable flag with the Direction flag
-        flags |= dscpTos.getValue();
-        setByte(flags, (short) 0);
+        setDSCP_TOSOverwrite(dscpTos.getValue());
     }
 
     @Override
     public void setDSCP_TOSOverwrite(byte dscpTos) {
-        setByte(dscpTos, (short) 1);
+        flags |= dscpTos;
+        setByte(flags, (short) 1);
     }
 
 
