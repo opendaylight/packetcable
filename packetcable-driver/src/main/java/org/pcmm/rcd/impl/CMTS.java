@@ -10,6 +10,7 @@ import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.rcd.ICMTS;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,8 +80,22 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 	 * @throws IOException - should the server fail to start for reasons such as port contention.
 	 */
 	public static void main(final String[] args) throws IOException {
-		final CMTS cmts = new CMTS(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class),
-				new HashMap<Direction, Set<String>>(), new HashMap<String, Boolean>());
+		final Set<String> upGates = new HashSet<>();
+		upGates.add("extrm_up");
+		final Set<String> dnGates = new HashSet<>();
+		dnGates.add("extrm_dn");
+		final Map<Direction, Set<String>> gates = new HashMap<>();
+		gates.put(Direction.UPSTREAM, upGates);
+		gates.put(Direction.DOWNSTREAM, dnGates);
+
+		final Map<String, Boolean> cmStatus = new HashMap<>();
+		final InetAddress invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
+		cmStatus.put(InetAddress.getByAddress(new byte[]{10, 32, 110, (byte) 180}).getHostAddress(), true);
+		cmStatus.put(InetAddress.getByAddress(new byte[]{10, 32, 110, (byte) 179}).getHostAddress(), true);
+		cmStatus.put(InetAddress.getByAddress(new byte[]{10, 32, 110, (byte) 178}).getHostAddress(), true);
+		cmStatus.put(invalidCmAddrInet.getHostAddress(), false);
+
+		final CMTS cmts = new CMTS(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class), gates, cmStatus);
 		cmts.startServer();
 	}
 
