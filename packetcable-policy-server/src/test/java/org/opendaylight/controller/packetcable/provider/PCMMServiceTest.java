@@ -100,14 +100,6 @@ public class PCMMServiceTest {
 
     @Before
     public void setup() throws IOException {
-        final Set<String> upGates = new HashSet<>();
-        upGates.add("extrm_up");
-        final Set<String> dnGates = new HashSet<>();
-        dnGates.add("extrm_dn");
-        final Map<Direction, Set<String>> gates = new HashMap<>();
-        gates.put(Direction.UPSTREAM, upGates);
-        gates.put(Direction.DOWNSTREAM, dnGates);
-
         srcAddr = new Ipv4Address("10.10.10.0");
         dstAddr = new Ipv4Address("10.32.99.99");
 
@@ -124,6 +116,14 @@ public class PCMMServiceTest {
 
             // Use me for automated testing and the CMTS emulator running in the same JVM
             cmtsAddr = new Ipv4Address("127.0.0.1");
+
+            final Set<String> upGates = new HashSet<>();
+            upGates.add("extrm_up");
+            final Set<String> dnGates = new HashSet<>();
+            dnGates.add("extrm_dn");
+            final Map<Direction, Set<String>> gates = new HashMap<>();
+            gates.put(Direction.UPSTREAM, upGates);
+            gates.put(Direction.DOWNSTREAM, dnGates);
 
             final Map<String, Boolean> cmStatus = new HashMap<>();
             cmStatus.put(cmAddrInet.getHostAddress(), true);
@@ -149,26 +149,14 @@ public class PCMMServiceTest {
     }
 
     @Test
-    public void testAddInvalidCcapBadHost() {
-        cmtsAddr = new Ipv4Address("0.0.0.0");
-        ccap = makeCcapsObj(PCMMPdpAgent.WELL_KNOWN_PDP_PORT, cmtsAddr, ccapId);
-        service = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
-        final String message = service.addCcap();
-        Assert.assertNotNull(message);
-        final String expectedMsg = "404 Not Found - CCAP " + ccapId + " failed to connect @ " + cmtsAddr.getValue()
-                + ':' + PCMMPdpAgent.WELL_KNOWN_PDP_PORT + " - Connection refused";
-        Assert.assertEquals(expectedMsg, message);
-    }
-
-    @Test
     public void testAddInvalidCcapBadPort() {
-        ccap = makeCcapsObj(1234, cmtsAddr, ccapId);
+        ccap = makeCcapsObj((icmts.getPort() + 1), cmtsAddr, ccapId);
         service = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
         final String message = service.addCcap();
         Assert.assertNotNull(message);
         final String expectedMsg = "404 Not Found - CCAP " + ccapId + " failed to connect @ " + cmtsAddr.getValue()
-                + ":1234 - Connection refused";
-        Assert.assertEquals(expectedMsg, message);
+                + ':' + (icmts.getPort() + 1) + " - ";
+        Assert.assertTrue(expectedMsg, message.startsWith(expectedMsg));
     }
 
     @Test
