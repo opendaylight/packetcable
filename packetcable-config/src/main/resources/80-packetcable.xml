@@ -10,6 +10,9 @@
     <required-capabilities>
         <capability>urn:opendaylight:params:xml:ns:yang:packetcable:packetcable-provider:impl?module=packetcable-provider-impl&amp;revision=2014-01-31</capability>
         <capability>urn:opendaylight:params:xml:ns:yang:packetcable:packetcable-provider?module=packetcable-provider&amp;revision=2014-01-31</capability>
+        <capability>urn:opendaylight:node:cmts:broker?module=packetcable-broker&amp;revision=2014-09-09</capability>
+        <capability>urn:opendaylight:packetcable:match:types?module=packetcable-match-types&amp;revision=2014-09-09</capability>
+        <capability>urn:opendaylight:flow:traffic-profile?module=packetcable-traffic-profile&amp;revision=2014-09-08</capability>
     </required-capabilities>
     <configuration>
 
