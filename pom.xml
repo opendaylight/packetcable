@@ -46,6 +46,9 @@
 		<module>features-packetcable-policy</module>
 		<module>packetcable-policy-config</module>
 		<module>packetcable-policy-karaf</module>
+
+		<!-- Jar module CMTS emulator for testing -->
+		<module>packetcable-emulator</module>
 	</modules>
 	<scm>
 		<connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
