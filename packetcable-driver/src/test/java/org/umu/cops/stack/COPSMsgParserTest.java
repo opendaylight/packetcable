@@ -1,8 +1,14 @@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
+ */
+
 package org.umu.cops.stack;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.pcmm.rcd.IPCMMClient;
+
+import java.util.Random;
 
 /**
  * Tests the public static COPSMsgParser methods
@@ -55,6 +61,51 @@ public class COPSMsgParserTest {
         final byte[] outBytes = COPSMsgParser.shortToBytes(val);
         Assert.assertEquals(byte1, outBytes[0]);
         Assert.assertEquals(byte2, outBytes[1]);
+    }
+
+    @Test
+    public void bytesToShortAndBack() {
+        final Random rnd = new Random();
+        final short val = (short)rnd.nextInt();
+        final byte[] bytes = COPSMsgParser.shortToBytes(val);
+        final short parsed = COPSMsgParser.bytesToShort(bytes[0], bytes[1]);
+        Assert.assertEquals(val, parsed);
+    }
+
+    @Test
+    public void testBytesToIntMin() {
+        final byte byte1 = (byte)0;
+        final byte byte2 = (byte)0;
+        final byte byte3 = (byte)0;
+        final byte byte4 = (byte)0;
+        final int val = COPSMsgParser.bytesToInt(byte1, byte2, byte3, byte4);
+        final byte[] outBytes = COPSMsgParser.intToBytes(val);
+        Assert.assertEquals(byte1, outBytes[0]);
+        Assert.assertEquals(byte2, outBytes[1]);
+        Assert.assertEquals(byte3, outBytes[2]);
+        Assert.assertEquals(byte4, outBytes[3]);
+        Assert.assertEquals(0, val);
+    }
+
+    @Test
+    public void intToBytesAndBack() {
+        final int val = 100001;
+        final byte[] bytes = COPSMsgParser.intToBytes(val);
+        final int parsed = COPSMsgParser.bytesToInt(bytes[0], bytes[1], bytes[2], bytes[3]);
+        Assert.assertEquals(val, parsed);
+        System.out.println("Sucessfully converted value - " + val);
+    }
+
+    @Test
+    public void randomIntToBytesAndBack() {
+        for (int i = 0; i < 5; i++) {
+            final Random rnd = new Random();
+            final int val = rnd.nextInt();
+            final byte[] bytes = COPSMsgParser.intToBytes(val);
+            final int parsed = COPSMsgParser.bytesToInt(bytes[0], bytes[1], bytes[2], bytes[3]);
+            Assert.assertEquals(val, parsed);
+            System.out.println("Sucessfully converted value - " + val);
+        }
     }
 
     @Test
