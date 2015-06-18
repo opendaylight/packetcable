@@ -4,19 +4,20 @@
 
 package org.pcmm.rcd.impl;
 
-import org.pcmm.PCMMConstants;
-import org.pcmm.PCMMProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.rcd.ICMTS;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This class starts a mock CMTS that can be used for testing.
+ * Mock CMTS that can be used for testing. startServer() is called to start required threads after instantiation.
  */
 public class CMTS extends AbstractPCMMServer implements ICMTS {
 
@@ -80,23 +81,83 @@ public class CMTS extends AbstractPCMMServer implements ICMTS {
 	 * @throws IOException - should the server fail to start for reasons such as port contention.
 	 */
 	public static void main(final String[] args) throws IOException {
-		final Set<String> upGates = new HashSet<>();
-		upGates.add("extrm_up");
-		final Set<String> dnGates = new HashSet<>();
-		dnGates.add("extrm_dn");
-		final Map<Direction, Set<String>> gates = new HashMap<>();
-		gates.put(Direction.UPSTREAM, upGates);
-		gates.put(Direction.DOWNSTREAM, dnGates);
-
-		final Map<String, Boolean> cmStatus = new HashMap<>();
-		final InetAddress invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
-		cmStatus.put(InetAddress.getByAddress(new byte[]{10, 32, 110, (byte) 180}).getHostAddress(), true);
-		cmStatus.put(InetAddress.getByAddress(new byte[]{10, 32, 110, (byte) 179}).getHostAddress(), true);
-		cmStatus.put(InetAddress.getByAddress(new byte[]{10, 32, 110, (byte) 178}).getHostAddress(), true);
-		cmStatus.put(invalidCmAddrInet.getHostAddress(), false);
-
-		final CMTS cmts = new CMTS(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class), gates, cmStatus);
+		final CmtsYaml config = getConfig(args[0]);
+		final CMTS cmts = new CMTS(config.port, config.getGates(), config.getCmStatus());
 		cmts.startServer();
+	}
+
+	/**
+	 * Returns the object that represents the YAML file
+	 * @param uri - the location of the YAML file
+	 * @return - the config object
+	 * @throws IOException - when the URI does not contain the proper YAML file
+	 */
+	private static CmtsYaml getConfig(final String uri) throws IOException {
+		final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+		return mapper.readValue(new FileInputStream(uri), CmtsYaml.class);
+	}
+
+	/**
+	 * Class to hold configuration settings in a YAML file
+	 */
+	public static class CmtsYaml {
+		@JsonProperty("port")
+		private int port;
+
+		@JsonProperty("gates")
+		private Collection<GateConfigYaml> gateConfigs;
+
+		@JsonProperty("cmStatuses")
+		private Collection<CmStatusYaml> cmStatuses;
+
+		public Map<Direction, Set<String>> getGates() {
+			final Map<Direction, Set<String>> out = new HashMap<>();
+
+			for (final GateConfigYaml gateConfig : gateConfigs) {
+				final Direction direction;
+				if (gateConfig.gateType.equalsIgnoreCase("UPSTREAM")) {
+					direction = Direction.UPSTREAM;
+				} else if (gateConfig.gateType.equalsIgnoreCase("DOWNSTREAM")) {
+					direction = Direction.DOWNSTREAM;
+				} else direction = null;
+
+				if (direction != null) {
+					out.put(direction, gateConfig.gateNames);
+				}
+			}
+			return out;
+		}
+
+		public Map<String, Boolean> getCmStatus() {
+			final Map<String, Boolean> out = new HashMap<>();
+
+			for (final CmStatusYaml cmStatus : cmStatuses) {
+				out.put(cmStatus.hostIp, cmStatus.status);
+			}
+			return out;
+		}
+	}
+
+	/**
+	 * Class to hold the YAML gate configuration values
+	 */
+	public static class GateConfigYaml {
+		@JsonProperty("type")
+		private String gateType;
+
+		@JsonProperty("names")
+		private Set<String> gateNames;
+	}
+
+	/**
+	 * Class to hold the YAML Cable Modem configuration values
+	 */
+	public static class CmStatusYaml {
+		@JsonProperty("host")
+		private String hostIp;
+
+		@JsonProperty("status")
+		private boolean status;
 	}
 
 }

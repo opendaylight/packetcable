@@ -1,0 +1,24 @@
+# The CMTS Emulator's communications port number
+port: 3918
+
+# The configured gates
+gates:
+  - type: UPSTREAM
+    names:
+      - extrm_up
+      - foo_up
+  - type: DOWNSTREAM
+    names:
+      - extrm_dn
+      - foo_dn
+
+# The connected cable modem info
+cmStatuses:
+  - host: 10.32.110.180
+    status: true
+  - host: 10.32.110.179
+    status: true
+  - host: 10.32.110.178
+    status: true
+  - host: 99.99.99.99
+    status: false
