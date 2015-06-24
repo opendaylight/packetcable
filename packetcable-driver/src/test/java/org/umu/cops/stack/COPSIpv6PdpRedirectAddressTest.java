@@ -52,7 +52,7 @@ public class COPSIpv6PdpRedirectAddressTest {
         Assert.assertEquals("C-num: PDP_REDIR", lines[1]);
         Assert.assertEquals("C-type: STATELESS", lines[2]);
         Assert.assertEquals("Ipv6PdpRedirectAddress", lines[3]);
-        Assert.assertEquals("Address: localhost", lines[4]);
+        Assert.assertTrue(lines[4].equals("Address: localhost") || lines[4].equals("Address: 0:0:0:0:0:0:0:1"));
         Assert.assertEquals("Port: 1234", lines[5]);
     }
 
@@ -112,7 +112,7 @@ public class COPSIpv6PdpRedirectAddressTest {
         Assert.assertEquals("C-num: PDP_REDIR", lines[1]);
         Assert.assertEquals("C-type: STATELESS", lines[2]);
         Assert.assertEquals("Ipv6PdpRedirectAddress", lines[3]);
-        Assert.assertEquals("Address: localhost", lines[4]);
+        Assert.assertTrue(lines[4].equals("Address: localhost") || lines[4].equals("Address: 0:0:0:0:0:0:0:1"));
         Assert.assertEquals("Port: 1234", lines[5]);
     }
 

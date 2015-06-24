@@ -58,7 +58,7 @@ public class COPSIpv6InInterfaceTest {
         Assert.assertEquals("**In-Interface**", lines[0]);
         Assert.assertEquals("C-num: ININTF", lines[1]);
         Assert.assertEquals("C-type: STATELESS", lines[2]);
-        Assert.assertEquals("Address: localhost", lines[3]);
+        Assert.assertTrue(lines[3].equals("Address: localhost") || lines[3].equals("Address: 0:0:0:0:0:0:0:1"));
         Assert.assertEquals("ifindex: 5", lines[4]);
     }
 

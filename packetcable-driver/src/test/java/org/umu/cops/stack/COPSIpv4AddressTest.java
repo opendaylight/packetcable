@@ -21,7 +21,7 @@ public class COPSIpv4AddressTest {
         final COPSIpv4Address address = new COPSIpv4Address("localhost");
         Assert.assertEquals(4, address.getDataLength());
         Assert.assertArrayEquals(InetAddress.getByName("localhost").getAddress(), address.getAddressBytes());
-        Assert.assertEquals("localhost", address.getIpName());
+        Assert.assertTrue(address.getIpName().equals("localhost") || address.getIpName().equals("127.0.0.1"));
     }
 
     @Test
@@ -30,7 +30,7 @@ public class COPSIpv4AddressTest {
         final COPSIpv4Address address = new COPSIpv4Address(addr);
         Assert.assertEquals(4, address.getDataLength());
         Assert.assertArrayEquals(addr, address.getAddressBytes());
-        Assert.assertEquals("localhost", address.getIpName());
+        Assert.assertTrue(address.getIpName().equals("localhost") || address.getIpName().equals("127.0.0.1"));
     }
 
 }
