@@ -6,6 +6,8 @@
 
 package org.umu.cops.stack;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Shorts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.umu.cops.stack.COPSHeader.Flag;
@@ -74,10 +76,7 @@ public class COPSMsgParser {
      * @return - a 2 byte array
      */
     public static byte[] shortToBytes(final short val) {
-        final byte[] out = new byte[2];
-        out[0] = (byte) (val >> 8);
-        out[1] = (byte) val;
-        return out;
+        return Shorts.toByteArray(val);
     }
 
     /**
@@ -87,10 +86,15 @@ public class COPSMsgParser {
      * @return - the short value
      */
     public static short bytesToShort(final byte byte1, final byte byte2) {
-        short out = 0;
-        out |= ((short) byte1) << 8;
-        out |= ((short) byte2) & 0xFF;
-        return out;
+        return Shorts.fromBytes(byte1, byte2);
+    }
+
+    public static byte[] intToBytes(final int value) {
+        return Ints.toByteArray(value);
+    }
+
+    public static int bytesToInt(final byte byte1, final byte byte2, final byte byte3, final byte byte4) {
+        return Ints.fromBytes(byte1, byte2, byte3, byte4);
     }
 
     private static COPSMsg readBody(final Socket socket, final COPSHeaderData hdrData) throws IOException, COPSException {
@@ -98,7 +102,6 @@ public class COPSMsgParser {
         final int expectedBytes = hdrData.msgByteCount - hdrData.header.getHdrLength();
         final byte[] buffer = new byte[expectedBytes];
         final int nread = readData(socket, buffer, expectedBytes);
-//        buffer[expectedBytes] = (byte) '\0';
         if (nread != expectedBytes) {
             throw new COPSException("Bad COPS message");
         }
