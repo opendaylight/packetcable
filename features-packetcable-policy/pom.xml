@@ -8,7 +8,7 @@
    <parent>
     <artifactId>packetcable</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.2.0-Lithium</version>
   </parent>
    <!--
     Necessary TODO: Hookup your parent pom here, else you will not get necessary versions,
@@ -19,16 +19,16 @@
    <artifactId>features-packetcable-policy</artifactId>
    <groupId>org.opendaylight.packetcable</groupId>
    <!-- Optional Uncomment version if you are not using a parent pom.xml
-   <version>1.2.0-SNAPSHOT</version>
+   <version>1.2.0-Lithium</version>
    -->
    <packaging>jar</packaging>
    <properties>
       <features.file>features.xml</features.file>
       <!-- Optional: Move these properties to your parent pom and possibly
             DependencyManagement section of your parent pom -->
-      <branding.version>1.1.0-SNAPSHOT</branding.version>
-      <karaf.resources.version>1.5.0-SNAPSHOT</karaf.resources.version>
-      <karaf.empty.version>1.5.0-SNAPSHOT</karaf.empty.version>
+      <branding.version>1.1.0-Lithium</branding.version>
+      <karaf.resources.version>1.5.0-Lithium</karaf.resources.version>
+      <karaf.empty.version>1.5.0-Lithium</karaf.empty.version>
       <surefire.version>2.16</surefire.version>
    </properties>
    <dependencies>
@@ -47,14 +47,14 @@
         <dependency>
           <groupId>org.opendaylight.yangtools</groupId>
           <artifactId>features-yangtools</artifactId>
-          <version>0.7.0-SNAPSHOT</version>
+          <version>0.7.0-Lithium</version>
           <classifier>features</classifier>
           <type>xml</type>
         </dependency>
         <dependency>
           <groupId>org.opendaylight.controller</groupId>
           <artifactId>features-mdsal</artifactId>
-          <version>1.2.0-SNAPSHOT</version>
+          <version>1.2.0-Lithium</version>
           <classifier>features</classifier>
           <type>xml</type>
         </dependency>
