@@ -105,22 +105,8 @@ public class OpendaylightPacketcableProvider implements DataChangeListener,
 	public void close() throws ExecutionException, InterruptedException {
         logger.info("Closing");
 		executor.shutdown();
-		if (dataProvider != null) {
-			for (Iterator<InstanceIdentifier<?>> iter = cmtsInstances.iterator(); iter.hasNext();) {
-				WriteTransaction tx = dataProvider.newWriteOnlyTransaction();
-				tx.delete(LogicalDatastoreType.OPERATIONAL, iter.next());
-				Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
-					@Override
-					public void onSuccess(final Void result) {
-						logger.debug("Delete commit result: " + result);
-					}
-
-					@Override
-					public void onFailure(final Throwable t) {
-						logger.error("Delete operation failed", t);
-					}
-				});
-			}
+		if (listenerRegistration != null) {
+		    listenerRegistration.close();
 		}
 	}
 
