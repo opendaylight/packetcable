@@ -87,14 +87,6 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
     @Override
     public void close() throws ExecutionException, InterruptedException {
         executor.shutdown();
-        if (dataBroker != null) {
-            // remove our config datastore instances
-            final AsyncReadWriteTransaction<InstanceIdentifier<?>, ?> tx = dataBroker.newReadWriteTransaction();
-            tx.delete(LogicalDatastoreType.CONFIGURATION, ccapIID);
-            tx.delete(LogicalDatastoreType.CONFIGURATION, qosIID);
-            // TODO - commit() below has been deprecated
-            tx.commit().get();
-        }
     }
 
     public InetAddress getInetAddress(final String subId){

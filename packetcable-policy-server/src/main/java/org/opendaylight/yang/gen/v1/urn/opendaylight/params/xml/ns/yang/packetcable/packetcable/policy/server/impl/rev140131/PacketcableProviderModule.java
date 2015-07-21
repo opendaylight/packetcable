@@ -39,9 +39,25 @@ public class PacketcableProviderModule extends org.opendaylight.yang.gen.v1.urn.
                 dataBrokerService.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
                         PacketcableProvider.qosIID, provider, DataBroker.DataChangeScope.SUBTREE );
 
-
         logger.info("PacketCableProvider Registered with DataBroker");
-        return provider;
+
+        AutoCloseable close = new AutoCloseable() {
+
+            @Override
+            public void close() throws Exception {
+                if (ccapDataChangeListenerRegistration != null) {
+                    ccapDataChangeListenerRegistration.close();
+                }
+                if (qosDataChangeListenerRegistration != null) {
+                    qosDataChangeListenerRegistration.close();
+                }
+                if (provider != null) {
+                    provider.close();
+                }
+            }
+        };
+
+        return close;
     }
 
 }
