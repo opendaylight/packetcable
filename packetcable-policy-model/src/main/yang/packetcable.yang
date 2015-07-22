@@ -95,10 +95,6 @@ module packetcable
 		leaf-list downstream-scns {
 			type service-class-name;
 		}
-        leaf response {
-            type string;
-            description "HTTP response from the PUT operation provided by the API";
-        }
 	}
 
 	// PCMM QoS Gates
@@ -151,10 +147,6 @@ module packetcable
   		uses pcmm-qos-classifier;
  		uses pcmm-qos-ext-classifier;
  		uses pcmm-qos-ipv6-classifier;
- 		leaf response {
-            type string;
-            description "HTTP response from the PUT operation provided by the API";
-        }
     }
 
     grouping pcmm-qos-gate-spec {
