@@ -14,6 +14,7 @@ package org.opendaylight.controller.packetcable.provider;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.Ccaps;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.CcapsBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.Gates;
@@ -22,93 +23,103 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Response implements Runnable {
+import com.google.common.util.concurrent.CheckedFuture;
 
-	private Logger logger = LoggerFactory.getLogger(Response.class);
-	private DataBroker dataBroker;
-	private String message = null;
-	private InstanceIdentifier<Ccaps> ccapIID = null;
-	private Ccaps ccapBase = null;
-	private InstanceIdentifier<Gates> gateIID = null;
-	private Gates gateBase = null;
+public class Response {
 
-	public Response(DataBroker dataBroker, InstanceIdentifier<Ccaps> ccapIID, Ccaps ccapBase, String message) {
-		this.dataBroker = dataBroker;
-		this.ccapIID = ccapIID;
-		this.ccapBase = ccapBase;
-		this.message = message;
-	}
-	public Response(DataBroker dataBroker, InstanceIdentifier<Gates> gateIID, Gates gateBase, String message) {
-		this.dataBroker = dataBroker;
-		this.gateIID = gateIID;
-		this.gateBase = gateBase;
-		this.message = message;
-	}
+    private Logger logger = LoggerFactory.getLogger(Response.class);
+    private DataBroker dataBroker;
+    private String message = null;
+    private InstanceIdentifier<Ccaps> ccapIID = null;
+    private Ccaps ccapBase = null;
+    private InstanceIdentifier<Gates> gateIID = null;
+    private Gates gateBase = null;
 
-	public String getMessage() {
-		return message;
-	}
-	public void setMessage(String message) {
-		this.message = message;
-	}
-	public void addMessage(String message) {
-		this.message += message;
-	}
-	public InstanceIdentifier<Ccaps> getCcapIID() {
-		return ccapIID;
-	}
-	public void setCcapIID(InstanceIdentifier<Ccaps> ccapIID) {
-		this.ccapIID = ccapIID;
-	}
-	public Ccaps getCcapBase() {
-		return ccapBase;
-	}
-	public void setCcapBase(Ccaps ccapBase) {
-		this.ccapBase = ccapBase;
-	}
-	public InstanceIdentifier<Gates> getGateIID() {
-		return gateIID;
-	}
-	public void setGateIID(InstanceIdentifier<Gates> gateIID) {
-		this.gateIID = gateIID;
-	}
-	public Gates getGateBase() {
-		return gateBase;
-	}
-	public void setGateBase(Gates gateBase) {
-		this.gateBase = gateBase;
-	}
+    public Response(DataBroker dataBroker, InstanceIdentifier<Ccaps> ccapIID, Ccaps ccapBase, String message) {
+        this.dataBroker = dataBroker;
+        this.ccapIID = ccapIID;
+        this.ccapBase = ccapBase;
+        this.message = message;
+    }
+    public Response(DataBroker dataBroker, InstanceIdentifier<Gates> gateIID, Gates gateBase, String message) {
+        this.dataBroker = dataBroker;
+        this.gateIID = gateIID;
+        this.gateBase = gateBase;
+        this.message = message;
+    }
 
-	@SuppressWarnings("deprecation")
-	public void setResponse(InstanceIdentifier<Ccaps> ccapIID, Ccaps ccapBase, String message) {
-		CcapsBuilder ccapBuilder = new CcapsBuilder(ccapBase);
-		ccapBuilder.setResponse(message);
-		Ccaps ccap = ccapBuilder.build();
+    public String getMessage() {
+        return message;
+    }
+    public void setMessage(String message) {
+        this.message = message;
+    }
+    public void addMessage(String message) {
+        this.message += message;
+    }
+    public InstanceIdentifier<Ccaps> getCcapIID() {
+        return ccapIID;
+    }
+    public void setCcapIID(InstanceIdentifier<Ccaps> ccapIID) {
+        this.ccapIID = ccapIID;
+    }
+    public Ccaps getCcapBase() {
+        return ccapBase;
+    }
+    public void setCcapBase(Ccaps ccapBase) {
+        this.ccapBase = ccapBase;
+    }
+    public InstanceIdentifier<Gates> getGateIID() {
+        return gateIID;
+    }
+    public void setGateIID(InstanceIdentifier<Gates> gateIID) {
+        this.gateIID = gateIID;
+    }
+    public Gates getGateBase() {
+        return gateBase;
+    }
+    public void setGateBase(Gates gateBase) {
+        this.gateBase = gateBase;
+    }
+
+    private void setResponse(InstanceIdentifier<Ccaps> ccapIID, Ccaps ccapBase, String message) {
+        CcapsBuilder ccapBuilder = new CcapsBuilder(ccapBase);
+        ccapBuilder.setResponse(message);
+        Ccaps ccap = ccapBuilder.build();
         WriteTransaction writeTx = dataBroker.newWriteOnlyTransaction();
         writeTx.merge(LogicalDatastoreType.CONFIGURATION, ccapIID, ccap, true);
-        writeTx.commit();
+        CheckedFuture<Void, TransactionCommitFailedException> status = writeTx.submit();
+        try {
+            status.checkedGet();
+        } catch (TransactionCommitFailedException e) {
+            logger.error("Transaction failed", e);
+        }
         logger.debug("Response.setResponse(ccap) complete {} {} {}", message, ccap, ccapIID);
-	}
-	@SuppressWarnings("deprecation")
-	public void setResponse(InstanceIdentifier<Gates> gateIID, Gates gateBase, String message) {
-		GatesBuilder gateBuilder = new GatesBuilder(gateBase);
-		gateBuilder.setResponse(message);
-		Gates gate = gateBuilder.build();
+    }
+
+    private void setResponse(InstanceIdentifier<Gates> gateIID, Gates gateBase, String message) {
+        GatesBuilder gateBuilder = new GatesBuilder(gateBase);
+        gateBuilder.setResponse(message);
+        Gates gate = gateBuilder.build();
         WriteTransaction writeTx = dataBroker.newWriteOnlyTransaction();
         writeTx.merge(LogicalDatastoreType.CONFIGURATION, gateIID, gate, true);
-        writeTx.commit();
+        CheckedFuture<Void, TransactionCommitFailedException> status =  writeTx.submit();
+        try {
+            status.checkedGet();
+        } catch (TransactionCommitFailedException e) {
+            logger.error("Transaction failed", e);
+        }
         logger.debug("Response.setResponse(gate) complete: {} {} {}", message, gate, gateIID);
-	}
+    }
 
-	@Override
-	public void run() {
-		if (ccapIID != null) {
-			setResponse(ccapIID, ccapBase, message);
-		} else if (gateIID != null) {
-			setResponse(gateIID, gateBase, message);
-		} else {
-			logger.error("Unknown Response: must be for a CCAP or Gate instance");
-		}
-	}
+    public void execute() {
+        if (ccapIID != null) {
+            setResponse(ccapIID, ccapBase, message);
+        } else if (gateIID != null) {
+            setResponse(gateIID, gateBase, message);
+        } else {
+            logger.error("Unknown Response: must be for a CCAP or Gate instance");
+        }
+    }
 }
 
