@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -62,13 +60,10 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
      */
     private DataBroker dataBroker;
 
+    private MdsalUtils mdsalUtils;
+
     private ListenerRegistration<DataChangeListener> ccapDataChangeListenerRegistration;
     private ListenerRegistration<DataChangeListener> qosDataChangeListenerRegistration;
-
-    /**
-     * The thread pool executor
-     */
-    private final ExecutorService executor;
 
     // TODO - Revisit these maps and remove the ones no longer necessary
     private final Map<String, Ccaps> ccapMap = new ConcurrentHashMap<>();
@@ -88,7 +83,6 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
      */
     public PacketcableProvider() {
         logger.info("Starting provider");
-        executor = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -96,6 +90,8 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         logger.info("Packetcable Session Initiated");
 
         dataBroker =  session.getSALService(DataBroker.class);
+
+        mdsalUtils = new MdsalUtils(dataBroker);
 
         ccapDataChangeListenerRegistration =
                 dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
@@ -110,7 +106,6 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
      */
     @Override
     public void close() throws ExecutionException, InterruptedException {
-        executor.shutdown();
         if (ccapDataChangeListenerRegistration != null) {
             ccapDataChangeListenerRegistration.close();
         }
@@ -312,7 +307,18 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
             for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
                 if (entry.getValue() instanceof Ccaps) {
                     // TODO FIXME - Potential ClassCastException thrown here!!!
-                    ccapIidMap.put((InstanceIdentifier<Ccaps>)entry.getKey(), (Ccaps)entry.getValue());
+                    if (!ccapIidMap.containsKey(entry.getKey())) {
+                        ccapIidMap.put((InstanceIdentifier<Ccaps>)entry.getKey(), (Ccaps)entry.getValue());
+                    }
+                }
+                if (entry.getValue() instanceof Ccap) {
+                    Ccap ccap = ((Ccap) entry.getValue());
+                    for (Ccaps ccaps: ccap.getCcaps()) {
+                        InstanceIdentifier<Ccaps> ccapsIid = InstanceIdentifier.builder(Ccap.class).child(Ccaps.class, new CcapsKey(ccaps.getCcapId())).build();
+                        if (!ccapIidMap.containsKey(ccapsIid)) {
+                            ccapIidMap.put(ccapsIid, ccaps);
+                        }
+                    }
                 }
             }
         }
@@ -338,7 +344,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         // Determine what change action took place by looking at the change object's InstanceIdentifier sets
         // and validate all instance data
         if (!change.getCreatedData().isEmpty()) {
-            if (!new ValidateInstanceData(dataBroker, change.getCreatedData()).validateYang()) {
+            if (!new ValidateInstanceData(mdsalUtils, change.getCreatedData()).validateYang()) {
                 // leave now -- a bad yang object has been detected and a response object has been inserted
                 return;
             }
@@ -346,10 +352,6 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         } else if (!change.getRemovedPaths().isEmpty()) {
             onRemove(new InstanceData(change.getRemovedPaths()));
         } else if (!change.getUpdatedData().isEmpty()) {
-            if (new ValidateInstanceData(dataBroker, change.getUpdatedData()).isResponseEcho()) {
-                // leave now -- this is an echo of the inserted response object
-                return;
-            }
             onUpdate(new InstanceData(change.getUpdatedData()));
         } else {
             // we should not be here -- complain bitterly and return
@@ -363,11 +365,14 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         // get the CCAP parameters
         String message;
         if (! thisData.ccapIidMap.isEmpty()) {
+            logger.info("here1");
             for (Map.Entry<InstanceIdentifier<Ccaps>, Ccaps> entry : thisData.ccapIidMap.entrySet()) {
+                logger.info("here2");
                 final Ccaps thisCcap = entry.getValue();
                 // get the CCAP node identity from the Instance Data
                 final String ccapId = thisCcap.getCcapId();
 
+                logger.info("here3 {} ", pcmmServiceMap);
                 if (pcmmServiceMap.get(thisCcap.getCcapId()) == null) {
                     final PCMMService pcmmService = new PCMMService(IPCMMClient.CLIENT_TYPE, thisCcap);
                     // TODO - may want to use the AMID but for the client type but probably not???
@@ -383,19 +388,20 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                         logger.info("Created CCAP: {}/{} : {}", thisData.gatePath, thisCcap, message);
                         logger.info("Created CCAP: {} : {}", thisData.gatePath, message);
                     } else {
-                        // TODO - when a connection cannot be made, need to remove CCAP from ODL cache.
                         logger.error("Create CCAP Failed: {} : {}", thisData.gatePath, message);
+                        mdsalUtils.delete(LogicalDatastoreType.CONFIGURATION, entry.getKey());
+                        ccapMap.remove(ccapId);
                     }
-                    // set the response string in the config ccap object using a new thread
-                    executor.execute(new Response(dataBroker, entry.getKey(), thisCcap, message));
                 } else {
                     logger.error("Already monitoring CCAP - " + thisCcap);
                     break;
                 }
             }
         } else {
+            logger.info("here4");
             // get the PCMM gate parameters from the ccapId/appId/subId/gateId path in the Maps entry (if new gate)
             for (final Map.Entry<InstanceIdentifier<Gates>, Gates> entry : thisData.gateIidMap.entrySet()) {
+                logger.info("here5");
                 message = null;
                 final Gates gate = entry.getValue();
                 final String gateId = gate.getGateId();
@@ -438,6 +444,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                             }
                         }
                     } else {
+                        logger.info("here6");
                         final String subIdStr = thisData.subId;
                         message = String.format("404 Not Found - no CCAP found for subscriber %s in %s",
                                 subIdStr, gatePathStr);
@@ -447,6 +454,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                                 gateId, subIdStr, gatePathStr);
                     }
                 } else {
+                    logger.info("here7");
                     final String subIdStr = thisData.subId;
                     message = String.format("400 Bad Request - subId must be a valid IP address for subscriber %s in %s",
                             subIdStr, gatePathStr);
@@ -455,8 +463,9 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                     logger.error("Create QoS gate {} FAILED: subId must be a valid IP address for subscriber {}: @ {}",
                             gateId, subIdStr, gatePathStr);
                 }
-                // set the response message in the config gate object using a new thread
-                executor.execute(new Response(dataBroker, entry.getKey(), gate, message));
+                if (!message.contains("200 OK")) {
+                    mdsalUtils.delete(LogicalDatastoreType.CONFIGURATION, entry.getKey());
+                }
             }
         }
     }
@@ -494,23 +503,16 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
             for (final Map.Entry<InstanceIdentifier<Ccaps>, Ccaps> entry : oldData.ccapIidMap.entrySet()) {
                 final Ccaps ccap = entry.getValue();
                 final String ccapId = ccap.getCcapId();
-                String message = String.format("405 Method Not Allowed - %s: CCAP update not permitted (use delete); ",
-                        ccapId);
-                // push new error message onto existing response
-                message += ccap.getResponse();
-                // set the response message in the config object using a new thread -- also restores the original data
-                executor.execute(new Response(dataBroker, entry.getKey(), ccap, message));
+                // restores the original data - although I don't think this is what is done here! I think the update data is put into the DS/config
+                mdsalUtils.merge(LogicalDatastoreType.CONFIGURATION, entry.getKey(), ccap);
                 logger.error("onDataChanged(): CCAP update not permitted {}/{}", ccapId, ccap);
             }
         } else {
             for (final Map.Entry<InstanceIdentifier<Gates>, Gates> entry : oldData.gateIidMap.entrySet()) {
                 final Gates gate = entry.getValue();
                 final String gatePathStr = oldData.gatePath + "/" + gate.getGateId() ;
-                String message = String.format("405 Method Not Allowed - %s: QoS Gate update not permitted (use delete); ", gatePathStr);
-                // push new error message onto existing response
-                message += gate.getResponse();
-                // set the response message in the config object using a new thread -- also restores the original data
-                executor.execute(new Response(dataBroker, entry.getKey(), gate, message));
+             // restores the original data - although I don't think this is what is done here! I think the update data is put into the DS/config
+                mdsalUtils.merge(LogicalDatastoreType.CONFIGURATION, entry.getKey(), gate);
                 logger.error("onDataChanged(): QoS Gate update not permitted: {}/{}", gatePathStr, gate);
             }
         }
