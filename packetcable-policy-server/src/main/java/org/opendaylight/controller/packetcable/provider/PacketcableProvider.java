@@ -68,7 +68,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
     /**
      * The thread pool executor
      */
-    private final ExecutorService executor;
+//    private final ExecutorService executor;
 
     // TODO - Revisit these maps and remove the ones no longer necessary
     private final Map<String, Ccaps> ccapMap = new ConcurrentHashMap<>();
@@ -88,7 +88,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
      */
     public PacketcableProvider() {
         logger.info("Starting provider");
-        executor = Executors.newCachedThreadPool();
+//        executor = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -110,7 +110,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
      */
     @Override
     public void close() throws ExecutionException, InterruptedException {
-        executor.shutdown();
+//        executor.shutdown();
         if (ccapDataChangeListenerRegistration != null) {
             ccapDataChangeListenerRegistration.close();
         }
@@ -387,7 +387,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                         logger.error("Create CCAP Failed: {} : {}", thisData.gatePath, message);
                     }
                     // set the response string in the config ccap object using a new thread
-                    executor.execute(new Response(dataBroker, entry.getKey(), thisCcap, message));
+//                    executor.execute(new Response(dataBroker, entry.getKey(), thisCcap, message));
                 } else {
                     logger.error("Already monitoring CCAP - " + thisCcap);
                     break;
@@ -456,7 +456,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                             gateId, subIdStr, gatePathStr);
                 }
                 // set the response message in the config gate object using a new thread
-                executor.execute(new Response(dataBroker, entry.getKey(), gate, message));
+//                executor.execute(new Response(dataBroker, entry.getKey(), gate, message));
             }
         }
     }
@@ -499,7 +499,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                 // push new error message onto existing response
                 message += ccap.getResponse();
                 // set the response message in the config object using a new thread -- also restores the original data
-                executor.execute(new Response(dataBroker, entry.getKey(), ccap, message));
+//                executor.execute(new Response(dataBroker, entry.getKey(), ccap, message));
                 logger.error("onDataChanged(): CCAP update not permitted {}/{}", ccapId, ccap);
             }
         } else {
@@ -510,7 +510,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
                 // push new error message onto existing response
                 message += gate.getResponse();
                 // set the response message in the config object using a new thread -- also restores the original data
-                executor.execute(new Response(dataBroker, entry.getKey(), gate, message));
+//                executor.execute(new Response(dataBroker, entry.getKey(), gate, message));
                 logger.error("onDataChanged(): QoS Gate update not permitted: {}/{}", gatePathStr, gate);
             }
         }
