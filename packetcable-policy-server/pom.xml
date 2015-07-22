@@ -3,18 +3,20 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.opendaylight.packetcable</groupId>
-        <artifactId>packetcable</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
+        <groupId>org.opendaylight.controller</groupId>
+        <artifactId>config-parent</artifactId>
+        <version>0.4.0-SNAPSHOT</version>
+        <relativePath />
     </parent>
     <artifactId>packetcable-policy-server</artifactId>
+    <groupId>org.opendaylight.packetcable</groupId>
+    <name>${project.artifactId}</name>
+    <version>1.3.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
-
     <properties>
         <sal-binding-api.version>1.3.0-SNAPSHOT</sal-binding-api.version>
         <powermock.version>1.5.1</powermock.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -27,14 +29,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.yangtools.model</groupId>
-            <artifactId>ietf-inet-types</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.yangtools.model</groupId>
-            <artifactId>ietf-yang-types</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>config-api</artifactId>
         </dependency>
@@ -45,14 +39,6 @@
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>sal-binding-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>sal-common-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -81,7 +67,7 @@
             <artifactId>powermock-module-junit4</artifactId>
             <version>${powermock.version}</version>
             <scope>test</scope>
-           </dependency>
+        </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
@@ -89,7 +75,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -98,51 +83,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <configuration>
-                    <instructions>
-                        <Export-Package>org.opendaylight.controller.config.yang.toaster_provider,</Export-Package>
-                        <Import-Package>*</Import-Package>
-                    </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.opendaylight.yangtools</groupId>
-                <artifactId>yang-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>config</id>
-                        <goals>
-                            <goal>generate-sources</goal>
-                        </goals>
-                        <configuration>
-                            <codeGenerators>
-                                <generator>
-                                    <codeGeneratorClass>org.opendaylight.controller.config.yangjmxgenerator.plugin.JMXGenerator</codeGeneratorClass>
-                                    <outputBaseDir>${jmxGeneratorPath}</outputBaseDir>
-                                    <additionalConfiguration>
-                                        <namespaceToPackage1>urn:opendaylight:params:xml:ns:yang:controller==org.opendaylight.controller.config.yang</namespaceToPackage1>
-                                    </additionalConfiguration>
-                                </generator>
-                                <generator>
-                                    <codeGeneratorClass>org.opendaylight.yangtools.maven.sal.api.gen.plugin.CodeGeneratorImpl</codeGeneratorClass>
-                                    <outputBaseDir>${salGeneratorPath}</outputBaseDir>
-                                </generator>
-                            </codeGenerators>
-                            <inspectDependencies>true</inspectDependencies>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
-    <scm>
-        <connection>scm:git:ssh://git.opendaylight.org:29418/controller.git</connection>
-        <developerConnection>scm:git:ssh://git.opendaylight.org:29418/controller.git</developerConnection>
-        <tag>HEAD</tag>
-        <url>https://wiki.opendaylight.org/view/OpenDaylight_Controller:MD-SAL</url>
-    </scm>
 </project>

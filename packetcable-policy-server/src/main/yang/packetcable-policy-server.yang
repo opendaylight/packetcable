@@ -34,7 +34,7 @@ module packetcable-policy-server-impl {
 		        uses config:service-ref {
 		          refine type {
 		              mandatory true;
-		              config:required-identity mdsal:binding-async-data-broker;
+		              config:required-identity mdsal:binding-broker-osgi-registry;
 		          }
 		        }
 		      }

@@ -9,6 +9,7 @@
 <snapshot>
     <required-capabilities>
         <capability>urn:opendaylight:params:xml:ns:yang:packetcable:packetcable-policy-server:impl?module=packetcable-policy-server-impl&amp;revision=2014-01-31</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
     </required-capabilities>
     <configuration>
 
@@ -20,8 +21,8 @@
                     </type>
                     <name>packetcable-policy-server-default-impl</name>
                     <data-broker>
-                       <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
-                       <name>binding-data-broker</name>
+                       <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-broker-osgi-registry</type>
+                       <name>binding-osgi-broker</name>
                     </data-broker>
                     <rpc-registry>
                         <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-rpc-registry</type>
