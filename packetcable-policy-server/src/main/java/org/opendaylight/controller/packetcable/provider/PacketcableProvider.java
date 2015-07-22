@@ -38,9 +38,6 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.app
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +61,6 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
      * The ODL object used to broker messages throughout the framework
      */
     private DataBroker dataBroker;
-
-    private ServiceRegistration<PacketcableProvider> packetcableProviderRegistration;
 
     private ListenerRegistration<DataChangeListener> ccapDataChangeListenerRegistration;
     private ListenerRegistration<DataChangeListener> qosDataChangeListenerRegistration;
@@ -102,9 +97,6 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
 
         dataBroker =  session.getSALService(DataBroker.class);
 
-        BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-        packetcableProviderRegistration = context.registerService(PacketcableProvider.class, this, null);
-
         ccapDataChangeListenerRegistration =
                 dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
                         PacketcableProvider.ccapIID, this, DataBroker.DataChangeScope.SUBTREE );
@@ -119,9 +111,6 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
     @Override
     public void close() throws ExecutionException, InterruptedException {
         executor.shutdown();
-        if (packetcableProviderRegistration != null) {
-            packetcableProviderRegistration.unregister();
-        }
         if (ccapDataChangeListenerRegistration != null) {
             ccapDataChangeListenerRegistration.close();
         }
