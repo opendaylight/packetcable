@@ -1,182 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+ Copyright (c) 2015 CableLabs, Inc. and others.  All rights reserved.
+
  This program and the accompanying materials are made available under the
  terms of the Eclipse Public License v1.0 which accompanies this distribution,
  and is available at http://www.eclipse.org/legal/epl-v10.html
---><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-   <modelVersion>4.0.0</modelVersion>
-   <parent>
-    <artifactId>packetcable</artifactId>
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.opendaylight.odlparent</groupId>
+        <artifactId>features-parent</artifactId>
+        <version>1.6.0-SNAPSHOT</version>
+        <relativePath />
+    </parent>
+    <artifactId>features-packetcable-policy</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
+    <name>${project.artifactId}</name>
     <version>1.3.0-SNAPSHOT</version>
-  </parent>
-   <!--
-    Necessary TODO: Hookup your parent pom here, else you will not get necessary versions,
-    maven repos etc.  If you run this archetype in a subdirectory of your project, it
-    will pick the pom.xml from the parent directory as the parent pom, which may or may
-    not be correct.
-  -->
-   <artifactId>features-packetcable-policy</artifactId>
-   <groupId>org.opendaylight.packetcable</groupId>
-   <!-- Optional Uncomment version if you are not using a parent pom.xml
-   <version>1.3.0-SNAPSHOT</version>
-   -->
-   <packaging>jar</packaging>
-   <properties>
-      <features.file>features.xml</features.file>
-      <!-- Optional: Move these properties to your parent pom and possibly
-            DependencyManagement section of your parent pom -->
-      <branding.version>1.2.0-SNAPSHOT</branding.version>
-      <karaf.resources.version>1.6.0-SNAPSHOT</karaf.resources.version>
-      <karaf.empty.version>1.6.0-SNAPSHOT</karaf.empty.version>
-      <surefire.version>2.16</surefire.version>
-   </properties>
-   <dependencies>
-    <!--
-      Necessary: Put dependencies on any feature repos
-      you use in your features.xml file.
-
-      Note: they will need to be <type>xml</xml>
-      and <classifier>features</classifier>.
-      One other thing to watch for is to make sure they are
-      <scope>compile</compile>, which they should be by default,
-      but be cautious lest they be at a different scope in a parent pom.
-
-      Examples:
-    -->
+    <properties>
+        <yangtools.version>0.8.0-SNAPSHOT</yangtools.version>
+        <mdsal.version>1.3.0-SNAPSHOT</mdsal.version>
+        <feature.test.version>1.6.0-SNAPSHOT</feature.test.version>
+    </properties>
+    <dependencies>
         <dependency>
-          <groupId>org.opendaylight.yangtools</groupId>
-          <artifactId>features-yangtools</artifactId>
-          <version>0.8.0-SNAPSHOT</version>
-          <classifier>features</classifier>
-          <type>xml</type>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>features-yangtools</artifactId>
+            <version>${yangtools.version}</version>
+            <classifier>features</classifier>
+            <type>xml</type>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
-          <groupId>org.opendaylight.controller</groupId>
-          <artifactId>features-mdsal</artifactId>
-          <version>1.3.0-SNAPSHOT</version>
-          <classifier>features</classifier>
-          <type>xml</type>
+            <groupId>org.opendaylight.controller</groupId>
+            <artifactId>features-mdsal</artifactId>
+            <version>${mdsal.version}</version>
+            <classifier>features</classifier>
+            <type>xml</type>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
-          <groupId>org.opendaylight.packetcable</groupId>
-          <artifactId>packetcable-policy-config</artifactId>
-          <version>${project.version}</version>
-          <classifier>config</classifier>
-          <type>xml</type>
+            <groupId>org.opendaylight.controller</groupId>
+            <artifactId>features-restconf</artifactId>
+            <classifier>features</classifier>
+            <version>${mdsal.version}</version>
+            <type>xml</type>
+            <scope>runtime</scope>
         </dependency>
-
-
-
-
-    <!--
-      Necessary TODO: Put dependencies for bundles directly referenced
-      in your features.xml file.  For every <bundle> reference in your
-      features.xml file, you need a corresponding dependency here.
-
-      Examples:
-    -->
-      <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
-        <artifactId>packetcable-policy-server</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
-        <artifactId>packetcable-policy-model</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opendaylight.packetcable</groupId>
-        <artifactId>packetcable-driver</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-    <!-- test to validate features.xml -->
-    <dependency>
-      <groupId>org.opendaylight.odlparent</groupId>
-      <artifactId>features-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <!-- dependency for opendaylight-karaf-empty for use by testing -->
-    <dependency>
-      <groupId>org.opendaylight.controller</groupId>
-      <artifactId>opendaylight-karaf-empty</artifactId>
-      <version>${karaf.empty.version}</version>
-      <type>zip</type>
-    </dependency>
-    <!-- Uncomment this if you get an error : java.lang.NoSuchMethodError: org.slf4j.helpers.MessageFormatter.format(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Lorg/slf4j/helpers/FormattingTuple;
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.7.2</version>
-    </dependency>
-    -->
-
-   </dependencies>
-   <build>
-      <resources>
-         <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-         </resource>
-      </resources>
-      <plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-               <execution>
-                  <id>filter</id>
-                  <phase>generate-resources</phase>
-                  <goals>
-                     <goal>resources</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-               <execution>
-                  <id>attach-artifacts</id>
-                  <phase>package</phase>
-                  <goals>
-                     <goal>attach-artifact</goal>
-                  </goals>
-                  <configuration>
-                     <artifacts>
-                        <artifact>
-                           <file>${project.build.directory}/classes/${features.file}</file>
-                           <type>xml</type>
-                           <classifier>features</classifier>
-                        </artifact>
-                     </artifacts>
-                  </configuration>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.version}</version>
-            <configuration>
-              <systemPropertyVariables>
-                <karaf.distro.groupId>org.opendaylight.controller</karaf.distro.groupId>
-                <karaf.distro.artifactId>opendaylight-karaf-empty</karaf.distro.artifactId>
-                <karaf.distro.version>${karaf.empty.version}</karaf.distro.version>
-              </systemPropertyVariables>
-              <dependenciesToScan>
-               <dependency>org.opendaylight.odlparent:features-test</dependency>
-              </dependenciesToScan>
-            </configuration>
-          </plugin>
-      </plugins>
-   </build>
-   <scm>
-      <connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
-      <developerConnection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</developerConnection>
-      <tag>HEAD</tag>
-      <url>https://git.opendaylight.org/gerrit/gitweb?p=packetcable.git;a=summary</url>
-   </scm>
+        <dependency>
+            <groupId>org.opendaylight.packetcable</groupId>
+            <artifactId>packetcable-policy-config</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.packetcable</groupId>
+            <artifactId>packetcable-policy-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.packetcable</groupId>
+            <artifactId>packetcable-policy-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.packetcable</groupId>
+            <artifactId>packetcable-driver</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.odlparent</groupId>
+            <artifactId>features-test</artifactId>
+            <version>${feature.test.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

@@ -1,10 +1,26 @@
 package org.opendaylight.controller.packetcable.provider;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.annotation.concurrent.ThreadSafe;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
-import org.opendaylight.controller.md.sal.common.api.data.AsyncReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
+import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.Ccap;
@@ -19,20 +35,15 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.app
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.SubsKey;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.Gates;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.GatesKey;
+import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.concurrent.ThreadSafe;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Called by ODL framework to start this bundle.
@@ -41,7 +52,7 @@ import java.util.concurrent.Executors;
  * TODO - Remove some of these state maps and move some of this into the PCMMService
  */
 @ThreadSafe
-public class PacketcableProvider implements DataChangeListener, AutoCloseable {
+public class PacketcableProvider implements BindingAwareProvider, DataChangeListener, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(PacketcableProvider.class);
 
@@ -52,7 +63,12 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
     /**
      * The ODL object used to broker messages throughout the framework
      */
-    private final DataBroker dataBroker;
+    private DataBroker dataBroker;
+
+    private ServiceRegistration<PacketcableProvider> packetcableProviderRegistration;
+
+    private ListenerRegistration<DataChangeListener> ccapDataChangeListenerRegistration;
+    private ListenerRegistration<DataChangeListener> qosDataChangeListenerRegistration;
 
     /**
      * The thread pool executor
@@ -75,18 +91,44 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
     /**
      * Constructor
      */
-    public PacketcableProvider(final DataBroker dataBroker) {
+    public PacketcableProvider() {
         logger.info("Starting provider");
-        this.dataBroker = dataBroker;
         executor = Executors.newCachedThreadPool();
     }
 
+    @Override
+    public void onSessionInitiated(ProviderContext session) {
+        logger.info("Packetcable Session Initiated");
+
+        dataBroker =  session.getSALService(DataBroker.class);
+
+        BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+        packetcableProviderRegistration = context.registerService(PacketcableProvider.class, this, null);
+
+        ccapDataChangeListenerRegistration =
+                dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
+                        PacketcableProvider.ccapIID, this, DataBroker.DataChangeScope.SUBTREE );
+
+        qosDataChangeListenerRegistration =
+                dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
+                        PacketcableProvider.qosIID, this, DataBroker.DataChangeScope.SUBTREE );
+    }
     /**
      * Implemented from the AutoCloseable interface.
      */
     @Override
     public void close() throws ExecutionException, InterruptedException {
         executor.shutdown();
+        if (packetcableProviderRegistration != null) {
+            packetcableProviderRegistration.unregister();
+        }
+        if (ccapDataChangeListenerRegistration != null) {
+            ccapDataChangeListenerRegistration.close();
+        }
+
+        if (qosDataChangeListenerRegistration != null) {
+            qosDataChangeListenerRegistration.close();
+        }
     }
 
     public InetAddress getInetAddress(final String subId){
@@ -484,5 +526,4 @@ public class PacketcableProvider implements DataChangeListener, AutoCloseable {
             }
         }
     }
-
 }
