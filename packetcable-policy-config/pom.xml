@@ -33,7 +33,7 @@
   <packaging>jar</packaging>
   <properties>
       <!-- Optional TODO: Rename your configfile to taste -->
-      <configfile>80-packetcable.xml</configfile>
+      <configfile>default-config.xml</configfile>
   </properties>
   <build>
     <plugins>

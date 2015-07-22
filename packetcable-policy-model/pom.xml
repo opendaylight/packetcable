@@ -2,13 +2,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.opendaylight.packetcable</groupId>
-        <artifactId>packetcable</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
-    </parent>
-    <artifactId>packetcable-policy-model</artifactId>
-    <packaging>bundle</packaging>
+ <parent>
+  <groupId>org.opendaylight.yangtools</groupId>
+  <artifactId>binding-parent</artifactId>
+  <version>0.8.0-SNAPSHOT</version>
+  <relativePath />
+ </parent>
+ 
+   <artifactId>packetcable-policy-model</artifactId>
+   <groupId>org.opendaylight.packetcable</groupId>
+   <name>${project.artifactId}</name>
+   <version>1.3.0-SNAPSHOT</version>
+   <packaging>bundle</packaging>
+
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.yangtools.model</groupId>
@@ -28,43 +34,43 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.opendaylight.yangtools</groupId>
-                <artifactId>yang-maven-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.opendaylight.yangtools</groupId>
-                        <artifactId>maven-sal-api-gen-plugin</artifactId>
-                        <version>${yangtools.version}</version>
-                        <type>jar</type>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-sources</goal>
-                        </goals>
-                        <configuration>
-                            <yangFilesRootDir>src/main/yang</yangFilesRootDir>
-                            <codeGenerators>
-                                <generator>
-                                    <codeGeneratorClass>org.opendaylight.yangtools.maven.sal.api.gen.plugin.CodeGeneratorImpl</codeGeneratorClass>
-                                    <outputBaseDir>${salGeneratorPath}</outputBaseDir>
-                                </generator>
-                            </codeGenerators>
-                            <inspectDependencies>true</inspectDependencies>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-    <scm>
-        <connection>scm:git:ssh://git.opendaylight.org:29418/controller.git</connection>
-        <developerConnection>scm:git:ssh://git.opendaylight.org:29418/controller.git</developerConnection>
-        <tag>HEAD</tag>
-        <url>https://wiki.opendaylight.org/view/OpenDaylight_Controller:MD-SAL</url>
-    </scm>
+<!--     <build> -->
+<!--         <plugins> -->
+<!--             <plugin> -->
+<!--                 <groupId>org.opendaylight.yangtools</groupId> -->
+<!--                 <artifactId>yang-maven-plugin</artifactId> -->
+<!--                 <dependencies> -->
+<!--                     <dependency> -->
+<!--                         <groupId>org.opendaylight.yangtools</groupId> -->
+<!--                         <artifactId>maven-sal-api-gen-plugin</artifactId> -->
+<!--                         <version>${yangtools.version}</version> -->
+<!--                         <type>jar</type> -->
+<!--                     </dependency> -->
+<!--                 </dependencies> -->
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <goals> -->
+<!--                             <goal>generate-sources</goal> -->
+<!--                         </goals> -->
+<!--                         <configuration> -->
+<!--                             <yangFilesRootDir>src/main/yang</yangFilesRootDir> -->
+<!--                             <codeGenerators> -->
+<!--                                 <generator> -->
+<!--                                     <codeGeneratorClass>org.opendaylight.yangtools.maven.sal.api.gen.plugin.CodeGeneratorImpl</codeGeneratorClass> -->
+<!--                                     <outputBaseDir>${salGeneratorPath}</outputBaseDir> -->
+<!--                                 </generator> -->
+<!--                             </codeGenerators> -->
+<!--                             <inspectDependencies>true</inspectDependencies> -->
+<!--                         </configuration> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
+<!--             </plugin> -->
+<!--         </plugins> -->
+<!--     </build> -->
+<!--     <scm> -->
+<!--         <connection>scm:git:ssh://git.opendaylight.org:29418/controller.git</connection> -->
+<!--         <developerConnection>scm:git:ssh://git.opendaylight.org:29418/controller.git</developerConnection> -->
+<!--         <tag>HEAD</tag> -->
+<!--         <url>https://wiki.opendaylight.org/view/OpenDaylight_Controller:MD-SAL</url> -->
+<!--     </scm> -->
 </project>
