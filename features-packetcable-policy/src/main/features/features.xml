@@ -29,6 +29,6 @@
         <feature version='${project.version}'>odl-packetcable-policy-model</feature>
         <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-server/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
-        <configfile finalname="etc/opendaylight/karaf/80-packetcable.xml">mvn:org.opendaylight.packetcable/packetcable-policy-config/${project.version}/xml/config</configfile>
+        <configfile finalname="etc/opendaylight/karaf/80-packetcable.xml">mvn:org.opendaylight.packetcable/packetcable-policy-server/${project.version}/xml/config</configfile>
     </feature>
 </features>
