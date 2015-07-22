@@ -8,6 +8,7 @@
 .externalToolBuilders
 maven-eclipse.xml
 workspace
+.checkstyle
 
 ## Compilation Files ##
 *.class
@@ -15,6 +16,7 @@ workspace
 target
 target-ide
 MANIFEST.MF
+maven-metadata-local.xml
 
 ## Misc Ignores (OS specific etc) ##
 bin/

@@ -33,12 +33,12 @@
 
 	<modules>
 		<module>packetcable-driver</module>
-		<module>packetcable-model</module>
-		<module>packetcable-provider</module>
-		<module>packetcable-consumer</module>
-		<module>features-packetcable</module>
-		<module>packetcable-config</module>
-		<module>packetcable-karaf</module>
+<!-- 		<module>packetcable-model</module> -->
+<!-- 		<module>packetcable-provider</module> -->
+<!-- 		<module>packetcable-consumer</module> -->
+<!-- 		<module>features-packetcable</module> -->
+<!-- 		<module>packetcable-config</module> -->
+<!-- 		<module>packetcable-karaf</module> -->
 
 		<!-- New modules for the new Arris API -->
 		<module>packetcable-policy-model</module>
