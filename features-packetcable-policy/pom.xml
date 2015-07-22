@@ -73,7 +73,7 @@
         </dependency>
         <dependency>
           <groupId>org.opendaylight.packetcable</groupId>
-          <artifactId>packetcable-policy-config</artifactId>
+          <artifactId>packetcable-policy-server</artifactId>
           <version>${project.version}</version>
           <classifier>config</classifier>
           <type>xml</type>
