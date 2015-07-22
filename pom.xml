@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.opendaylight.controller</groupId>
-		<artifactId>sal-parent</artifactId>
-		<version>1.3.0-SNAPSHOT</version>
-        <relativePath/>
-	</parent>
-
-	<groupId>org.opendaylight.packetcable</groupId>
-	<artifactId>packetcable</artifactId>
-	<name>packetcable</name> <!-- Used by Sonar to set project name -->
-	<packaging>pom</packaging>
-
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.opendaylight.controller</groupId>
+        <artifactId>sal-parent</artifactId>
+        <version>1.3.0-SNAPSHOT</version>
+        <relativePath />
+    </parent>
+    <groupId>org.opendaylight.packetcable</groupId>
+    <artifactId>packetcable</artifactId>
+    <name>packetcable</name> <!-- Used by Sonar to set project name -->
+    <packaging>pom</packaging>
     <properties>
-      <openflowplugin.version>0.2.0-SNAPSHOT</openflowplugin.version>
+        <openflowplugin.version>0.2.0-SNAPSHOT</openflowplugin.version>
     </properties>
-
-   <distributionManagement>
+    <distributionManagement>
         <!-- OpenDayLight Released artifact -->
         <repository>
             <id>opendaylight-release</id>
@@ -30,85 +27,63 @@
             <url>${nexusproxy}/repositories/opendaylight.snapshot</url>
         </snapshotRepository>
     </distributionManagement>
-
-	<modules>
-		<module>packetcable-driver</module>
-		<module>packetcable-model</module>
-		<module>packetcable-provider</module>
-		<module>packetcable-consumer</module>
-		<module>features-packetcable</module>
-		<module>packetcable-config</module>
-		<module>packetcable-karaf</module>
-
-		<!-- New modules for the new Arris API -->
-		<module>packetcable-policy-model</module>
-		<module>packetcable-policy-server</module>
-		<module>features-packetcable-policy</module>
-		<module>packetcable-policy-karaf</module>
-
-		<!-- Jar module CMTS emulator for testing -->
-		<module>packetcable-emulator</module>
-	</modules>
-	<scm>
-		<connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
-		<developerConnection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://wiki.opendaylight.org/view/PacketCablePCMM:Main</url>
-	</scm>
-	<dependencies>
-		<dependency>
-			<groupId>org.opendaylight.openflowplugin.model</groupId>
-			<artifactId>model-flow-base</artifactId>
+    <modules>
+        <module>packetcable-driver</module>
+        <!-- New modules for the new Arris API -->
+        <module>packetcable-policy-model</module>
+        <module>packetcable-policy-server</module>
+        <module>features-packetcable-policy</module>
+        <module>packetcable-policy-karaf</module>
+        <!-- Jar module CMTS emulator for testing -->
+        <module>packetcable-emulator</module>
+    </modules>
+    <scm>
+        <connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
+        <developerConnection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://wiki.opendaylight.org/view/PacketCablePCMM:Main</url>
+    </scm>
+    <dependencies>
+        <dependency>
+            <groupId>org.opendaylight.openflowplugin.model</groupId>
+            <artifactId>model-flow-base</artifactId>
             <version>${openflowplugin.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.opendaylight.openflowplugin.model</groupId>
-			<artifactId>model-flow-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.openflowplugin.model</groupId>
+            <artifactId>model-flow-service</artifactId>
             <version>${openflowplugin.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.opendaylight.yangtools.model</groupId>
-			<artifactId>ietf-inet-types</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.opendaylight.yangtools.model</groupId>
-			<artifactId>ietf-yang-types</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.opendaylight.controller.model</groupId>
-			<artifactId>model-inventory</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.opendaylight.yangtools.model</groupId>
-			<artifactId>opendaylight-l2-types</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.opendaylight.openflowplugin.model</groupId>
-			<artifactId>model-flow-statistics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.yangtools.model</groupId>
+            <artifactId>ietf-inet-types</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.yangtools.model</groupId>
+            <artifactId>ietf-yang-types</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.controller.model</groupId>
+            <artifactId>model-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.yangtools.model</groupId>
+            <artifactId>opendaylight-l2-types</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.openflowplugin.model</groupId>
+            <artifactId>model-flow-statistics</artifactId>
             <version>${openflowplugin.version}</version>
-		</dependency>
-	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
-
-	<!-- <profiles> -->
-	<!-- <profile> -->
-	<!-- <id>integrationtests</id> -->
-	<!-- <activation> -->
-	<!-- <activeByDefault>false</activeByDefault> -->
-	<!-- </activation> -->
-	<!-- <modules> -->
-	<!-- <module>packetcable-it</module> -->
-	<!-- </modules> -->
-	<!-- </profile> -->
-	<!-- </profiles> -->
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
