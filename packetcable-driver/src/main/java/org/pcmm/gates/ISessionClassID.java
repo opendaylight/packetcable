@@ -1,6 +1,7 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates;
 
 /**
@@ -16,27 +17,11 @@ public interface ISessionClassID {
     byte getPriority();
 
     /**
-     * sets the priority value (0-7)
-     *
-     * @param value
-     *            priority
-     */
-    void setPriority(byte value);
-
-    /**
      * gets the preemption value;
      *
      * @return peemption
      */
     byte getPreemption();
-
-    /**
-     * * sets the preemption
-     *
-     * @param value
-     *            preemption
-     */
-    void setPreemption(byte value);
 
     /**
      * compress the priority and preemption to a single byte value;

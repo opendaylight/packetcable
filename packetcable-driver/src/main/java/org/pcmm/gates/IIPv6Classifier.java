@@ -1,86 +1,77 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
-
 
 package org.pcmm.gates;
 
-import java.net.InetAddress;
-
+/**
+ * The IPv6 Classifier object also specifies the packet matching rules associated with a Gate, when IPv6 Addresses are
+ * used. As defined in Sections 6.4.3.1 and 6.4.3.2, for Unicast Gates multiple IPv6 Classifier objects may be included
+ * in the Gate-Set to allow for complex classifier rules. However, since the ordering of objects in a message and the
+ * order of processing those objects is not mandated, an AM SHOULD NOT send a GateSet with multiple IPv6
+ * Classifiers with the same ClassificationID, yet different Actions. When an AM is using IPv6 Classifier objects, at
+ * least one IPv6 Classifier MUST be provided by the PDP in all Gate-Set messages. For Unicast Gates more than one
+ * IPv6 Classifier is allowed. For Multicast Gates only one IPv6 Classifier is required to be supported. Since the IPv6
+ * Classifier is based on the DOCSIS IPv6 Classifier, all DOCSIS classifier semantics apply, with the exeption that at
+ * least one IPv6 Classifier be present in a Gate-Set message.
+ */
 public interface IIPv6Classifier extends IExtendedClassifier {
-    short LENGTH = 64;
-    byte SNUM = 6;
+//    short LENGTH = 64;
+//    byte SNUM = 6;
     byte STYPE = 3;
 
     // flags: Flow Label match enable flag
-    void setFlowLabelEnableFlag(byte flag);
-    byte getFlowLabelEnableFlag();
+    FlowLabel getFlowLabelEnableFlag();
 
     // Tc-low
-    void setTcLow(byte tcLow);
     byte getTcLow();
 
     // Tc-high
-    void setTcHigh(byte tcHigh);
     byte getTcHigh();
 
     // Tc-mask
-    void setTcMask(byte tcHigh);
     byte getTcMask();
 
     // Flow Label
-    void setFlowLabel(Long flowLabel);
     int getFlowLabel();
 
     // Next Header Type
-    void setNextHdr(short nxtHdr);
     short getNextHdr();
 
     // Source Prefix Length
-    void setSourcePrefixLen(byte srcPrefixLen);
     byte getSourcePrefixLen();
 
     // Destination Prefix Length
-    void setDestinationPrefixLen(byte dstPrefixLen);
     byte getDestinationPrefixLen();
 
-    // IPv6 Source Address
-    void setSourceIPAddress(InetAddress a);
-    InetAddress getSourceIPAddress();
+    /**
+     * The valid activation state values
+     */
+    enum FlowLabel {
 
-    // IPv6 Destination Address
-    void setDestinationIPAddress(InetAddress a);
-    InetAddress getDestinationIPAddress();
+        IRRELEVANT((byte) 0), VALID((byte) 1);
 
-    // Source Port Start
-    short getSourcePortStart();
-    void setSourcePortStart(short p);
+        FlowLabel(byte value) {
+            this.value = value;
+        }
 
-    // Source Port End
-    short getSourcePortEnd();
-    void setSourcePortEnd(short p);
+        public byte getValue() {
+            return value;
+        }
 
-    // Destination Port Start
-    short getDestinationPortStart();
-    void setDestinationPortStart(short p);
+        public static FlowLabel valueOf(byte v) {
+            switch (v) {
+                case 0:
+                    return FlowLabel.IRRELEVANT;
+                case 1:
+                    return FlowLabel.VALID;
+                default:
+                    throw new IllegalArgumentException("not supported value");
+            }
+        }
 
-    // Destination Port End
-    short getDestinationPortEnd();
-    void setDestinationPortEnd(short p);
+        private byte value;
 
-    // ClassifierID
-    short getClassifierID();
-    void setClassifierID(short p);
+    }
 
-    // Priority
-    void setPriority(byte p);
-    byte getPriority();
-
-    // Activation State
-    void setActivationState(byte s);
-    byte getActivationState();
-
-    // Action
-    void setAction(byte a);
-    byte getAction();
 }

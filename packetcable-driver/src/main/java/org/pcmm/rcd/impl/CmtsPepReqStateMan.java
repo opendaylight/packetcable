@@ -6,6 +6,7 @@ package org.pcmm.rcd.impl;
 
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.IPCMMError;
+import org.pcmm.gates.IPCMMError.ErrorCode;
 import org.pcmm.gates.impl.GateID;
 import org.pcmm.gates.impl.PCMMError;
 import org.pcmm.gates.impl.PCMMGateReq;
@@ -88,7 +89,7 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
                             logger.info("processing decision");
                             // This is assuming a gate set right or wrong
                             if (dMsg.getDecisions().size() == 1 && dMsg.getDecSI() != null) {
-                                final PCMMGateReq gateReq = new PCMMGateReq(dMsg.getDecSI().getData().getData());
+                                final PCMMGateReq gateReq = PCMMGateReq.parse(dMsg.getDecSI().getData().getData());
                                 if (gateReq.getGateSpec() != null) {
                                     processGateReq(gateReq, _socket);
                                 }
@@ -137,18 +138,22 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
         // Get direction here
         final Direction gateDir = gateReq.getGateSpec().getDirection();
         final Set<String> gateNames = gateConfig.get(gateDir);
-        final String gateName = gateReq.getTrafficProfile().getData().str();
+        // TODO - Determine if this is the best means to derive the gate name???
+        final String gateName = new String(gateReq.getTrafficProfile().getAsBinaryArray());
 
-        IPCMMError error = new PCMMError();
-        if (subId == null || gateDir == null || gateNames == null || gateName == null) {
+        final IPCMMError error;
+        if (subId == null || gateDir == null || gateNames == null) {
             // Missing required object
-            error.setErrorCode((short)3);
+            // TODO - Determine if this is the correct code. 3 was being used previously and I don't see any corresponding code.
+            error = new PCMMError(ErrorCode.UNK_GATE_ID);
         } else if (!cmStatus.keySet().contains(subId)
                 || (cmStatus.keySet().contains(subId) && !cmStatus.get(subId))) {
             // Invalid Object
-            error.setErrorCode((short)13);
+            // TODO - Determine if this code is correct
+            error = new PCMMError(ErrorCode.INVALID_SUB_ID);
         } else if (!gateNames.contains(gateName.trim())) {
-            error.setErrorCode((short)11);
+            // TODO - Determine if this code is correct
+            error = new PCMMError(ErrorCode.UNDEF_SCN_NAME);
         } else {
             error = null;
             gatesSetMap.get(gateName.trim()).add(subId);
@@ -171,8 +176,7 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
             data.add(val);
 
         // Assign a gate ID
-        final GateID gateID = new GateID();
-        gateID.setGateID(UUID.randomUUID().hashCode());
+        final GateID gateID = new GateID(UUID.randomUUID().hashCode());
         for (final byte val : gateID.getAsBinaryArray())
             data.add(val);
 

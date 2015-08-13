@@ -1,7 +1,6 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
-
 
 package org.pcmm.gates;
 
@@ -10,46 +9,18 @@ import org.pcmm.base.IPCMMBaseObject;
 import java.net.InetAddress;
 
 /**
- *
- *
- *
+ * The Classifier object specifies the packet matching rules associated with a Gate. As defined in Sections 6.4.3.1 and
+ * 6.4.3.2, for Unicast Gates multiple Classifier objects may be included in the Gate-Set to allow for complex
+ * classifier rules. When an AM is using Classifier objects, at least one Classifier MUST be provided by the PDP in all
+ * Gate-Set messages. More than one Classifier is allowed for Unicast Gates. Only one classifier is required to be
+ * supported for Multicast Gates. Unlike DOCSIS DSx signaling, Classifiers have no identifier and have no explicit add,
+ * change, or remove operations. The entire set of Classifiers present in a Gate-Set message replaces the entire set of
+ * classifiers for the existing Gate. Equivalence of Classifiers is determined by comparing all fields within the
+ * Classifier. Classifiers may be provided in any order.
  */
 public interface IClassifier extends IPCMMBaseObject {
 
-    short LENGTH = 24;
-    byte SNUM = 6;
     byte STYPE = 1;
-
-    enum Protocol {
-        /*ICMP((short) 1), IGMP((short) 2), */
-        NONE((short)0), TCP((short) 6), UDP((short) 17);
-
-        Protocol(short v) {
-            this.value = v;
-        }
-
-        public static Protocol valueOf(short v) {
-            switch (v) {
-            case 0:
-                return NONE;
-          /*
-            case 1:
-                return ICMP;
-            case 2:
-                return IGMP;
-          */
-            case 6:
-                return TCP;
-            default:
-                return UDP;
-            }
-        }
-        private short value;
-
-        public short getValue() {
-            return value;
-        }
-    }
 
     /**
      * IP Destination Address or IPv6 Destination Address is the termination
@@ -59,11 +30,11 @@ public interface IClassifier extends IPCMMBaseObject {
      */
     InetAddress getDestinationIPAddress();
 
-    void setDestinationIPAddress(InetAddress address);
-
+    /**
+     * Returns the destination port value
+     * @return - the port number
+     */
     short getDestinationPort();
-
-    void setDestinationPort(short p);
 
     /**
      * Source IP, IP Source Address, or IPv6 Source Address (in the case of
@@ -74,11 +45,11 @@ public interface IClassifier extends IPCMMBaseObject {
      */
     InetAddress getSourceIPAddress();
 
-    void setSourceIPAddress(InetAddress a);
-
+    /**
+     * Returns the source port value
+     * @return - the port number
+     */
     short getSourcePort();
-
-    void setSourcePort(short p);
 
     /**
      * Protocol field, in a legacy Classifier or Extended Classifier, identifies
@@ -87,14 +58,7 @@ public interface IClassifier extends IPCMMBaseObject {
      *
      * @return the protocol.
      */
-    short getProtocol();
-
-    /**
-     * @see <a
-     *      href="http://www.iana.org/assignments/protocol-numbers/protocol-numbers.txt">protocols</a>
-     * @param p - the protocol value
-     */
-    void setProtocol(short p);
+    Protocol getProtocol();
 
     /**
      * Priority may be used to distinguish between multiple classifiers that
@@ -106,23 +70,49 @@ public interface IClassifier extends IPCMMBaseObject {
     byte getPriority();
 
     /**
-     * sets the priority;
-     *
-     * @param p
-     *            priority
+     * Returns the DSCPTOS enumeration value (ENABLE|DISABLE)
+     * @return the enumeration
      */
-    void setPriority(byte p);
-
     byte getDSCPTOS();
 
-    void setDSCPTOS(byte v);
-
+    /**
+     * Returns the DSCPTOS mask value
+     * @return the mask
+     */
     byte getDSCPTOSMask();
 
-    void setDSCPTOSMask(byte v);
+    /**
+     * Enumeration of supported protocols
+     */
+    enum Protocol {
+        /*ICMP((short) 1), IGMP((short) 2), */
+        NONE((short)0), TCP((short) 6), UDP((short) 17);
 
-    // DSCP/TOS Field
-    // 
-    // DSCP/TOS Mask
+        Protocol(short v) {
+            this.value = v;
+        }
+
+        public static Protocol valueOf(short v) {
+            switch (v) {
+                case 0:
+                    return NONE;
+          /* TODO - Determine why these two values are not being supported???
+            case 1:
+                return ICMP;
+            case 2:
+                return IGMP;
+          */
+                case 6:
+                    return TCP;
+                default:
+                    return UDP;
+            }
+        }
+        private short value;
+
+        public short getValue() {
+            return value;
+        }
+    }
 
 }

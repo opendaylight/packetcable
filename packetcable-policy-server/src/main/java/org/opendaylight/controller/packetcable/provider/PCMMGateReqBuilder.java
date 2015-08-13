@@ -11,327 +11,340 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ext.class
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gate.spec.GateSpec;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ipv6.classifier.Ipv6Classifier;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.traffic.profile.TrafficProfile;
-import org.pcmm.gates.*;
-import org.pcmm.gates.IGateSpec.DSCPTOS;
+import org.pcmm.gates.IClassifier;
+import org.pcmm.gates.IClassifier.Protocol;
+import org.pcmm.gates.IExtendedClassifier.ActivationState;
 import org.pcmm.gates.IGateSpec.Direction;
-import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
-import org.pcmm.gates.impl.PCMMGateReq;
-import org.pcmm.gates.impl.SubscriberID;
+import org.pcmm.gates.IIPv6Classifier.FlowLabel;
+import org.pcmm.gates.ITrafficProfile;
+import org.pcmm.gates.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 /**
- *
  * PacketCable data processor
- *
  */
 public class PCMMGateReqBuilder {
 
-	private Logger logger = LoggerFactory.getLogger(PCMMGateReqBuilder.class);
+    private Logger logger = LoggerFactory.getLogger(PCMMGateReqBuilder.class);
 
-	private PCMMGateReq gateReq = null;
+    private GateID gateID = null;
+    private AMID amid = null;
+    private SubscriberID subscriberID = null;
+    private TransactionID transactionID = null;
+    private org.pcmm.gates.impl.GateSpec gateSpec = null;
+    private ITrafficProfile trafficProfile = null;
+    private IClassifier classifier = null;
+    private PCMMError error = null;
 
-	public PCMMGateReqBuilder() {
-		gateReq = new org.pcmm.gates.impl.PCMMGateReq();
-	}
+    public PCMMGateReq getGateReq() {
+        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifier, gateID, error);
+    }
 
-	public PCMMGateReq getGateReq() {
-		return gateReq;
-	}
+    public void build(final AmId qosAmId) {
+        amid = new AMID(qosAmId.getAmType().shortValue(), qosAmId.getAmTag().shortValue());
+    }
 
-	public void build(AmId qosAmId){
-		IAMID amId = new org.pcmm.gates.impl.AMID();
-		amId.setApplicationMgrTag(qosAmId.getAmTag().shortValue());
-		amId.setApplicationType(qosAmId.getAmType().shortValue());
-        gateReq.setAMID(amId);
-	}
+    public void build(final InetAddress qosSubId) {
+        subscriberID = new SubscriberID(qosSubId);
+    }
 
-	public void build(InetAddress qosSubId){
-		ISubscriberID subId = new SubscriberID();
-		subId.setSourceIPAddress(qosSubId);
-		gateReq.setSubscriberID(subId);
-	}
+    public void build(final GateSpec qosGateSpec, final ServiceFlowDirection scnDirection) {
 
-	public void build(GateSpec qosGateSpec, ServiceFlowDirection scnDirection) {
-		IGateSpec gateSpec = new org.pcmm.gates.impl.GateSpec();
-		// service flow direction
-		ServiceFlowDirection qosDir = null;
-		Direction gateDir = null;
-		if (scnDirection != null) {
-			qosDir = scnDirection;
-		} else if (qosGateSpec.getDirection() != null) {
-			qosDir = qosGateSpec.getDirection();
-		}
-		if (qosDir == ServiceFlowDirection.Ds) {
-			gateDir = Direction.DOWNSTREAM;
-		} else if (qosDir == ServiceFlowDirection.Us) {
-			gateDir = Direction.UPSTREAM;
-		}
-		gateSpec.setDirection(gateDir);
-		// DSCP/TOS Overwrite
-		TosByte tosOverwrite = qosGateSpec.getDscpTosOverwrite();
-		if (tosOverwrite != null) {
-			byte gateTos = tosOverwrite.getValue().byteValue();
-			gateSpec.setDSCP_TOSOverwrite(DSCPTOS.ENABLE);
-			gateSpec.setDSCP_TOSOverwrite(gateTos);
-			TosByte tosMask = qosGateSpec.getDscpTosMask();
-			if (tosMask != null) {
-				byte gateTosMask = tosMask.getValue().byteValue();
-				gateSpec.setDSCP_TOSMask(gateTosMask);
-			} else {
-				gateSpec.setDSCP_TOSMask((byte)0xff);
-			}
-		}
-		gateReq.setGateSpec(gateSpec);
-	}
+        final ServiceFlowDirection qosDir;
+        if (scnDirection != null) {
+            qosDir = scnDirection;
+        } else {
+            if (qosGateSpec.getDirection() != null) {
+                qosDir = qosGateSpec.getDirection();
+            } else {
+                // TODO - determine if this is a valid default value
+                qosDir = ServiceFlowDirection.Ds;
+            }
+        }
 
-	public void build(TrafficProfile qosTrafficProfile) {
-		if (qosTrafficProfile.getServiceClassName() != null) {
-			String scn = qosTrafficProfile.getServiceClassName().getValue();
-			DOCSISServiceClassNameTrafficProfile trafficProfile = new DOCSISServiceClassNameTrafficProfile();
-			if (scn.length() <= 16) { // NB.16 char SCN is max length per PCMM spec
-				trafficProfile.setServiceClassName(scn);
-				gateReq.setTrafficProfile(trafficProfile);
-			}
-		}
-	}
+        final Direction gateDir;
+        if (qosDir == ServiceFlowDirection.Ds) {
+            gateDir = Direction.DOWNSTREAM;
+        } else {
+            gateDir = Direction.UPSTREAM;
+        }
 
-	private InetAddress getByName(String ipAddressStr){
-		InetAddress ipAddress = null;
-		try {
-			ipAddress = InetAddress.getByName(ipAddressStr);
-		} catch (UnknownHostException e) {
-			logger.error(e.getMessage());
-		}
-		return ipAddress;
-	}
+        // DSCP/TOS Overwrite
+        final byte dscptos;
+        final byte gateTosMask;
 
-	public void build(Classifier qosClassifier) {
-		// Legacy classifier
-		IClassifier classifier = new org.pcmm.gates.impl.Classifier();
-		classifier.setPriority((byte) 64);
-		if (qosClassifier.getProtocol() != null){
-			classifier.setProtocol(qosClassifier.getProtocol().getValue().shortValue());
-		}
-		if (qosClassifier.getSrcIp() != null) {
-			InetAddress sip = getByName(qosClassifier.getSrcIp().getValue());
-			if (sip != null) {
-				classifier.setSourceIPAddress(sip);
-			}
-		}
-		if (qosClassifier.getDstIp() != null) {
-			InetAddress dip = getByName(qosClassifier.getDstIp().getValue());
-			if (dip != null) {
-				classifier.setDestinationIPAddress(dip);
-			}
-		}
-		if (qosClassifier.getSrcPort() != null) {
-			classifier.setSourcePort(qosClassifier.getSrcPort().getValue().shortValue());
-		}
-		if (qosClassifier.getDstPort() != null) {
-			classifier.setDestinationPort(qosClassifier.getDstPort().getValue().shortValue());
-		}
-		if (qosClassifier.getTosByte() != null) {
-			classifier.setDSCPTOS(qosClassifier.getTosByte().getValue().byteValue());
-			if (qosClassifier.getTosMask() != null) {
-				classifier.setDSCPTOSMask(qosClassifier.getTosMask().getValue().byteValue());
-			} else {
-				// set default TOS mask
-				classifier.setDSCPTOSMask((byte)0xff);
-			}
-		}
-		// push the classifier to the gate request
-		gateReq.setClassifier(classifier);
-	}
+        final TosByte tosOverwrite = qosGateSpec.getDscpTosOverwrite();
+        if (tosOverwrite != null) {
+            dscptos = 1;
+            TosByte tosMask = qosGateSpec.getDscpTosMask();
+            if (tosMask != null) {
+                gateTosMask = tosMask.getValue().byteValue();
+            } else {
+                gateTosMask = (byte) 0xff;
+            }
+        } else {
+            // TODO - These values appear to be required
+            dscptos = 0;
+            gateTosMask = 0;
+        }
+        gateSpec = new org.pcmm.gates.impl.GateSpec(gateDir, dscptos, gateTosMask);
+    }
 
-	public void build(ExtClassifier qosExtClassifier) {
-		// Extended classifier
-		IExtendedClassifier extClassifier = new org.pcmm.gates.impl.ExtendedClassifier();
-		extClassifier.setPriority((byte) 64);
-		extClassifier.setActivationState((byte) 0x01);
-		// Protocol -- zero is match any
-		if (qosExtClassifier.getProtocol() != null){
-			extClassifier.setProtocol(qosExtClassifier.getProtocol().getValue().shortValue());
-		} else {
-			extClassifier.setProtocol((short)0);
-		}
-		// Source IP address & mask
-		if (qosExtClassifier.getSrcIp() != null) {
-			InetAddress sip = getByName(qosExtClassifier.getSrcIp().getValue());
-			if (sip != null) {
-				extClassifier.setSourceIPAddress(sip);
-				if (qosExtClassifier.getSrcIpMask() != null) {
-					InetAddress sipMask = getByName(qosExtClassifier.getSrcIpMask().getValue());
-					extClassifier.setIPSourceMask(sipMask);
-				} else {
-					// default mask is /32
-					extClassifier.setIPSourceMask(getByName("255.255.255.255"));
-				}
-			}
-		}
-		// Destination IP address & mask
-		if (qosExtClassifier.getDstIp() != null) {
-			InetAddress dip = getByName(qosExtClassifier.getDstIp().getValue());
-			if (dip != null) {
-				extClassifier.setDestinationIPAddress(dip);
-				if (qosExtClassifier.getDstIpMask() != null) {
-					InetAddress dipMask = getByName(qosExtClassifier.getDstIpMask().getValue());
-					extClassifier.setIPDestinationMask(dipMask);
-				} else {
-					// default mask is /32
-					extClassifier.setIPDestinationMask(getByName("255.255.255.255"));
-				}
-			}
-		}
-		// default source port range must be set to match any even if qosExtClassifier has no range
-		// match any port range is 0-65535, NOT 0-0
-		short startPort = (short)0;
-		short endPort = (short)65535;
-		if (qosExtClassifier.getSrcPortStart() != null) {
-			startPort = qosExtClassifier.getSrcPortStart().getValue().shortValue();
-			endPort = startPort;
-			if (qosExtClassifier.getSrcPortEnd() != null) {
-				endPort = qosExtClassifier.getSrcPortEnd().getValue().shortValue();
-			}
-			if (startPort > endPort) {
-				logger.warn("Start port %d > End port %d in ext-classifier source port range -- forcing to same", startPort, endPort);
-				endPort = startPort;
-			}
-		}
-		extClassifier.setSourcePortStart(startPort);
-		extClassifier.setSourcePortEnd(endPort);
-		// default destination port range must be set to match any even if qosExtClassifier has no range
-		// match any port range is 0-65535, NOT 0-0
-		startPort = (short)0;
-		endPort = (short)65535;
-		if (qosExtClassifier.getDstPortStart() != null) {
-			startPort = qosExtClassifier.getDstPortStart().getValue().shortValue();
-			endPort = startPort;
-			if (qosExtClassifier.getDstPortEnd() != null) {
-				endPort = qosExtClassifier.getDstPortEnd().getValue().shortValue();
-			}
-			if (startPort > endPort) {
-				logger.warn("Start port %d > End port %d in ext-classifier destination port range -- forcing to same", startPort, endPort);
-				endPort = startPort;
-			}
-		}
-		extClassifier.setDestinationPortStart(startPort);
-		extClassifier.setDestinationPortEnd(endPort);
-		// DSCP/TOP byte
-		if (qosExtClassifier.getTosByte() != null) {
-			// OR in the DSCP/TOS enable bit 0x01
-			extClassifier.setDSCPTOS((byte) (qosExtClassifier.getTosByte().getValue().byteValue() | 0x01));
-			if (qosExtClassifier.getTosMask() != null) {
-				extClassifier.setDSCPTOSMask(qosExtClassifier.getTosMask().getValue().byteValue());
-			} else {
-				// set default TOS mask
-				extClassifier.setDSCPTOSMask((byte)0xff);
-			}
-		}
-		// push the extended classifier to the gate request
-		gateReq.setClassifier(extClassifier);
-	}
+    public void build(final TrafficProfile qosTrafficProfile) {
+        if (qosTrafficProfile.getServiceClassName() != null) {
+            trafficProfile =
+                    new DOCSISServiceClassNameTrafficProfile(qosTrafficProfile.getServiceClassName().getValue());
+        }
+    }
 
-	public void build(Ipv6Classifier qosIpv6Classifier) {
-		// IPv6 classifier
-		IIPv6Classifier ipv6Classifier = new org.pcmm.gates.impl.IPv6Classifier();
-		ipv6Classifier.setPriority((byte) 64);
-		ipv6Classifier.setActivationState((byte) 0x01);
-		// Flow Label
-		if (qosIpv6Classifier.getFlowLabel() != null){
-			ipv6Classifier.setFlowLabel(qosIpv6Classifier.getFlowLabel());
-			ipv6Classifier.setFlowLabelEnableFlag((byte)0x01);
-		}
-		// Next Header
-		if (qosIpv6Classifier.getNextHdr() != null){
-			ipv6Classifier.setNextHdr(qosIpv6Classifier.getNextHdr().getValue().shortValue());
-		} else {
-			// default: match any nextHdr is 256 because nextHdr 0 is Hop-by-Hop option
-			ipv6Classifier.setNextHdr((short)256);
-		}
-		// Source IPv6 address & prefix len
-		byte prefLen;
-		if (qosIpv6Classifier.getSrcIp6() != null) {
-			String[] parts = qosIpv6Classifier.getSrcIp6().getValue().split("/");
-			String Ipv6AddressStr = parts[0];
-			InetAddress sip6 = getByName(Ipv6AddressStr);
-			if (sip6 != null) {
-				ipv6Classifier.setSourceIPAddress(sip6);
-			}
-			prefLen = (byte)128;
-			if (parts.length > 1) {
-				prefLen = (byte)Integer.parseInt(parts[1]);
-			}
-			ipv6Classifier.setSourcePrefixLen(prefLen);
-		}
-		// Destination IPv6 address & prefix len
-		if (qosIpv6Classifier.getDstIp6() != null) {
-			String[] parts = qosIpv6Classifier.getDstIp6().getValue().split("/");
-			String Ipv6AddressStr = parts[0];
-			InetAddress dip6 = getByName(Ipv6AddressStr);
-			if (dip6 != null) {
-				ipv6Classifier.setDestinationIPAddress(dip6);
-			}
-			prefLen = (byte)128;
-			if (parts.length > 1) {
-				prefLen = (byte)Integer.parseInt(parts[1]);
-			}
-			ipv6Classifier.setDestinationPrefixLen(prefLen);
-		}
-		// default source port range must be set to match any -- even if qosExtClassifier has no range value
-		// match any port range is 0-65535, NOT 0-0
-		short startPort = (short)0;
-		short endPort = (short)65535;
-		if (qosIpv6Classifier.getSrcPortStart() != null) {
-			startPort = qosIpv6Classifier.getSrcPortStart().getValue().shortValue();
-			endPort = startPort;
-			if (qosIpv6Classifier.getSrcPortEnd() != null) {
-				endPort = qosIpv6Classifier.getSrcPortEnd().getValue().shortValue();
-			}
-			if (startPort > endPort) {
-				logger.warn("Start port %d > End port %d in ipv6-classifier source port range -- forcing to same", startPort, endPort);
-				endPort = startPort;
-			}
-		}
-		ipv6Classifier.setSourcePortStart(startPort);
-		ipv6Classifier.setSourcePortEnd(endPort);
-		// default destination port range must be set to match any -- even if qosExtClassifier has no range value
-		// match any port range is 0-65535, NOT 0-0
-		startPort = (short)0;
-		endPort = (short)65535;
-		if (qosIpv6Classifier.getDstPortStart() != null) {
-			startPort = qosIpv6Classifier.getDstPortStart().getValue().shortValue();
-			endPort = startPort;
-			if (qosIpv6Classifier.getDstPortEnd() != null) {
-				endPort = qosIpv6Classifier.getDstPortEnd().getValue().shortValue();
-			}
-			if (startPort > endPort) {
-				logger.warn("Start port %d > End port %d in ipv6-classifier destination port range -- forcing to same", startPort, endPort);
-				endPort = startPort;
-			}
-		}
-		ipv6Classifier.setDestinationPortStart(startPort);
-		ipv6Classifier.setDestinationPortEnd(endPort);
-		// TC low, high, mask
-		if (qosIpv6Classifier.getTcLow() != null) {
-			ipv6Classifier.setTcLow(qosIpv6Classifier.getTcLow().getValue().byteValue());
-			if (qosIpv6Classifier.getTcHigh() != null) {
-				ipv6Classifier.setTcHigh(qosIpv6Classifier.getTcHigh().getValue().byteValue());
-			}
-			if (qosIpv6Classifier.getTcMask() != null) {
-				ipv6Classifier.setTcMask(qosIpv6Classifier.getTcMask().getValue().byteValue());
-			} else {
-				// set default TOS mask
-				ipv6Classifier.setTcMask((byte)0xff);
-			}
-		} else {
-			// mask 0x00 is match any
-			ipv6Classifier.setTcMask((byte)0x00);
-		}
-		// push the IPv6 classifier to the gate request
-		gateReq.setClassifier(ipv6Classifier);
-	}
+    private InetAddress getByName(final String ipAddressStr) {
+        try {
+            return InetAddress.getByName(ipAddressStr);
+        } catch (UnknownHostException e) {
+            logger.error(e.getMessage());
+        }
+        return null;
+    }
+
+    public void build(final Classifier qosClassifier) {
+        // TODO - try and make these variables immutable
+        Protocol protocol = null;
+        byte tosOverwrite = 0;
+        byte tosMask = (byte)0x0;
+        Inet4Address srcAddress = null;
+        Inet4Address dstAddress = null;
+        short srcPort = (short) 0;
+        short dstPort = (short) 0;
+        byte priority = (byte) 64;
+
+        // Legacy classifier
+        if (qosClassifier.getProtocol() != null) {
+            protocol = Protocol.valueOf(qosClassifier.getProtocol().getValue().shortValue());
+        }
+        if (qosClassifier.getSrcIp() != null) {
+            final InetAddress sip = getByName(qosClassifier.getSrcIp().getValue());
+            if (sip != null && sip instanceof Inet4Address) {
+                srcAddress = (Inet4Address) sip;
+            }
+        }
+        if (qosClassifier.getDstIp() != null) {
+            final InetAddress dip = getByName(qosClassifier.getDstIp().getValue());
+            if (dip != null && dip instanceof Inet4Address) {
+                dstAddress = (Inet4Address) dip;
+            }
+        }
+        if (qosClassifier.getSrcPort() != null) {
+            srcPort = qosClassifier.getSrcPort().getValue().shortValue();
+        }
+        if (qosClassifier.getDstPort() != null) {
+            dstPort = qosClassifier.getDstPort().getValue().shortValue();
+        }
+        if (qosClassifier.getTosByte() != null) {
+            tosOverwrite = qosClassifier.getTosByte().getValue().byteValue();
+            if (qosClassifier.getTosMask() != null) {
+                tosMask = qosClassifier.getTosMask().getValue().byteValue();
+            } else {
+                // set default TOS mask
+                tosMask = (byte) 0xff;
+            }
+        }
+        // push the classifier to the gate request
+        classifier =
+                new org.pcmm.gates.impl.Classifier(protocol, tosOverwrite, tosMask, srcAddress, dstAddress, srcPort,
+                        dstPort, priority);
+    }
+
+    public void build(final ExtClassifier qosExtClassifier) {
+        // Extended classifier
+        final byte priority = (byte) 64;
+        final ActivationState activationState = ActivationState.ACTIVE;
+        // Protocol -- zero is match any
+        final Protocol protocol;
+        if (qosExtClassifier.getProtocol() != null) {
+            protocol = Protocol.valueOf(qosExtClassifier.getProtocol().getValue().shortValue());
+        } else {
+            protocol = Protocol.NONE;
+        }
+
+        // default source port range must be set to match any even if qosExtClassifier has no range
+        // match any port range is 0-65535, NOT 0-0
+        // TODO - try to make these two variables immutable
+        short srcStartPort = (short) 0;
+        short srcEndPort = (short) 65535;
+        if (qosExtClassifier.getSrcPortStart() != null) {
+            srcStartPort = qosExtClassifier.getSrcPortStart().getValue().shortValue();
+            srcEndPort = srcStartPort;
+            if (qosExtClassifier.getSrcPortEnd() != null) {
+                srcEndPort = qosExtClassifier.getSrcPortEnd().getValue().shortValue();
+            }
+            if (srcStartPort > srcEndPort) {
+                logger.warn("Start port %d > End port %d in ext-classifier source port range -- forcing to same",
+                        srcStartPort, srcEndPort);
+                srcEndPort = srcStartPort;
+            }
+        }
+        // default destination port range must be set to match any even if qosExtClassifier has no range
+        // match any port range is 0-65535, NOT 0-0
+        // TODO - try to make these two variables immutable
+        short dstStartPort = (short) 0;
+        short dstEndPort = (short) 65535;
+        if (qosExtClassifier.getDstPortStart() != null) {
+            dstStartPort = qosExtClassifier.getDstPortStart().getValue().shortValue();
+            dstEndPort = dstStartPort;
+            if (qosExtClassifier.getDstPortEnd() != null) {
+                dstEndPort = qosExtClassifier.getDstPortEnd().getValue().shortValue();
+            }
+            if (dstStartPort > dstEndPort) {
+                logger.warn("Start port %d > End port %d in ext-classifier destination port range -- forcing to same",
+                        dstStartPort, dstEndPort);
+                dstEndPort = dstStartPort;
+            }
+        }
+
+        // DSCP/TOP byte
+        // TODO - try to make these two variables immutable
+        byte tosOverwrite = 0;
+        byte tosMask = (byte)0x00;
+        if (qosExtClassifier.getTosByte() != null) {
+            // OR in the DSCP/TOS enable bit 0x01
+            tosOverwrite = (byte) (qosExtClassifier.getTosByte().getValue().byteValue() | 0x01);
+            if (qosExtClassifier.getTosMask() != null) {
+                tosMask = qosExtClassifier.getTosMask().getValue().byteValue();
+            } else {
+                // set default TOS mask
+                tosMask = (byte) 0xff;
+            }
+        }
+
+        // TODO - find out what the classifier ID should really be. It was never getting set previously
+        final short classifierId = (short)0;
+
+        // TODO - find out what the action value should really be. It was never getting set previously
+        final byte action = (byte)0;
+
+        // push the extended classifier to the gate request
+        classifier = new org.pcmm.gates.impl.ExtendedClassifier(protocol, tosOverwrite, tosMask,
+                getInet4Address(qosExtClassifier.getSrcIp()), getInet4Address(qosExtClassifier.getDstIp()),
+                srcStartPort, dstStartPort, priority, getInet4Address(qosExtClassifier.getSrcIpMask()),
+                getInet4Address(qosExtClassifier.getDstIpMask()), srcEndPort, dstEndPort, classifierId, activationState,
+                action);
+    }
+
+    private Inet4Address getInet4Address(
+            final org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address address) {
+        if (address != null) {
+            final InetAddress out = getByName(address.getValue());
+            if (out != null && out instanceof Inet4Address) {
+                return (Inet4Address) out;
+            }
+        }
+        return null;
+    }
+
+    public void build(final Ipv6Classifier qosIpv6Classifier) {
+        // Next Header
+        final short nextHdr;
+        if (qosIpv6Classifier.getNextHdr() != null) {
+            nextHdr = qosIpv6Classifier.getNextHdr().getValue().shortValue();
+        }
+        // default: match any nextHdr is 256 because nextHdr 0 is Hop-by-Hop option
+        else {
+            nextHdr = (short) 256;
+        }
+
+        // Source IPv6 address & prefix len
+        // TODO - try to make these two variables immutable
+        byte srcPrefixLen = (byte) 128;
+        Inet6Address srcAddress = null;
+        if (qosIpv6Classifier.getSrcIp6() != null) {
+            String[] parts = qosIpv6Classifier.getSrcIp6().getValue().split("/");
+            String Ipv6AddressStr = parts[0];
+            srcAddress = (Inet6Address) getByName(Ipv6AddressStr);
+            if (parts.length > 1) {
+                srcPrefixLen = (byte) Integer.parseInt(parts[1]);
+            } else {
+                srcPrefixLen = (byte) 128;
+            }
+
+        }
+
+        // TODO - try to make these two variables immutable
+        Inet6Address dstAddress = null;
+        byte dstPrefLen = (byte) 128;
+        // Destination IPv6 address & prefix len
+        if (qosIpv6Classifier.getDstIp6() != null) {
+            final String[] parts = qosIpv6Classifier.getDstIp6().getValue().split("/");
+            final String Ipv6AddressStr = parts[0];
+            dstAddress = (Inet6Address)getByName(Ipv6AddressStr);
+            if (parts.length > 1) dstPrefLen = (byte) Integer.parseInt(parts[1]);
+            else dstPrefLen = (byte) 128;
+        }
+
+        // default source port range must be set to match any -- even if qosExtClassifier has no range value
+        // match any port range is 0-65535, NOT 0-0
+        short srcPortBegin = (short) 0;
+        short srcPortEnd = (short) 65535;
+        if (qosIpv6Classifier.getSrcPortStart() != null) {
+            srcPortBegin = qosIpv6Classifier.getSrcPortStart().getValue().shortValue();
+            srcPortEnd = srcPortBegin;
+            if (qosIpv6Classifier.getSrcPortEnd() != null) {
+                srcPortEnd = qosIpv6Classifier.getSrcPortEnd().getValue().shortValue();
+            }
+            if (srcPortBegin > srcPortEnd) {
+                logger.warn("Start port %d > End port %d in ipv6-classifier source port range -- forcing to same",
+                        srcPortBegin, srcPortEnd);
+                srcPortEnd = srcPortBegin;
+            }
+        }
+
+        // default destination port range must be set to match any -- even if qosExtClassifier has no range value
+        // match any port range is 0-65535, NOT 0-0
+        short dstPortBegin = (short) 0;
+        short dstPortEnd = (short) 65535;
+        if (qosIpv6Classifier.getDstPortStart() != null) {
+            dstPortBegin = qosIpv6Classifier.getDstPortStart().getValue().shortValue();
+            dstPortEnd = dstPortBegin;
+            if (qosIpv6Classifier.getDstPortEnd() != null) {
+                dstPortEnd = qosIpv6Classifier.getDstPortEnd().getValue().shortValue();
+            }
+            if (dstPortBegin > dstPortEnd) {
+                logger.warn("Start port %d > End port %d in ipv6-classifier destination port range -- forcing to same",
+                        dstPortBegin, dstPortEnd);
+                dstPortEnd = dstPortBegin;
+            }
+        }
+
+        final byte tcLow;
+        if (qosIpv6Classifier.getTcLow() != null)
+            tcLow = qosIpv6Classifier.getTcLow().getValue().byteValue();
+        else tcLow = (byte) 0x00;
+
+        final byte tcHigh;
+        if (qosIpv6Classifier.getTcHigh() != null)
+            tcHigh = qosIpv6Classifier.getTcHigh().getValue().byteValue();
+        else tcHigh = (byte) 0x00;
+
+        final byte tcMask;
+        if (qosIpv6Classifier.getTcHigh() != null)
+            tcMask = qosIpv6Classifier.getTcHigh().getValue().byteValue();
+        else if (qosIpv6Classifier.getTcLow() != null) tcMask = (byte) 0xff;
+        else tcMask = (byte) 0x00;
+
+        // TODO - find out what the classifier ID should really be. It was never getting set previously
+        final short classifierId = (short)0;
+
+        // TODO - find out what the action value should really be. It was never getting set previously
+        final byte action = (byte)0;
+
+        // push the IPv6 classifier to the gate request
+        classifier = new org.pcmm.gates.impl.IPv6Classifier(srcAddress, dstAddress, srcPortBegin, dstPortBegin,
+                (byte) 64, srcPortEnd, dstPortEnd, classifierId, ActivationState.ACTIVE, action, FlowLabel.VALID, tcLow,
+                tcHigh, tcMask, qosIpv6Classifier.getFlowLabel().intValue(), nextHdr, srcPrefixLen, dstPrefLen);
+    }
 }

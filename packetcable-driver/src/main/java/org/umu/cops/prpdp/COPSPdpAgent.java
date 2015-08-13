@@ -228,7 +228,7 @@ public class COPSPdpAgent {
             sendCloseMessage(conn, ErrorTypes.UNKNOWN_OBJECT, ErrorTypes.NA,
                     "Unsupported objects (PdpAddress, Integrity)");
         } else {
-            final MMVersionInfo _mminfo = new MMVersionInfo(cMsg.getClientSI().getData().getData());
+            final MMVersionInfo _mminfo = MMVersionInfo.parse(cMsg.getClientSI().getData().getData());
             logger.debug("CMTS sent MMVersion info : major:" + _mminfo.getMajorVersionNB() + "  minor:" +
                     _mminfo.getMinorVersionNB());
         }

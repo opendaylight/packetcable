@@ -1,77 +1,70 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates.impl;
 
 import org.pcmm.base.impl.PCMMBaseObject;
 import org.pcmm.gates.ITransactionID;
+import org.umu.cops.stack.COPSMsgParser;
 
 /**
- *
+ * Implementation of the ITransactionID interface
  */
 public class TransactionID extends PCMMBaseObject implements ITransactionID {
 
     /**
-     *
+     * The transaction identifier
      */
-    public TransactionID() {
-        this(LENGTH, STYPE, SNUM);
-    }
+    private final short transId;
 
     /**
-     * @param data
+     * The gate command type
      */
-    public TransactionID(byte[] data) {
-        super(data);
-    }
+    private final GateCommandType gateCommandType;
 
     /**
-     * @param len
-     * @param sType
-     * @param sNum
+     * Constructor
+     * @param transId - the transaction identifier
+     * @param gateCommandType - the gate command type
      */
-    public TransactionID(short len, byte sType, byte sNum) {
-        super(len, sType, sNum);
+    public TransactionID(final short transId, final GateCommandType gateCommandType) {
+        super(SNum.TRANSACTION_ID, STYPE);
+        if (gateCommandType == null)
+            throw new IllegalArgumentException("Invalid gate command type");
+        this.transId = transId;
+        this.gateCommandType = gateCommandType;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.ITransactionID#setTransactionIdentifier(short)
-     */
-    @Override
-    public void setTransactionIdentifier(short id) {
-        setShort(id, (short) 0);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.ITransactionID#getTransactionIdentifier()
-     */
     @Override
     public short getTransactionIdentifier() {
-        return getShort((short) 0);
+        return transId;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.ITransactionID#setGateCommandType(short)
-     */
     @Override
-    public void setGateCommandType(short type) {
-        setShort(type, (short) 2);
+    public GateCommandType getGateCommandType() {
+        return gateCommandType;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.ITransactionID#getGateCommandType()
-     */
     @Override
-    public short getGateCommandType() {
-        return getShort((short) 2);
+    protected byte[] getBytes() {
+        final byte[] transIdBytes = COPSMsgParser.shortToBytes(transId);
+        final byte[] data = new byte[transIdBytes.length + transIdBytes.length];
+        System.arraycopy(transIdBytes, 0, data, 0, transIdBytes.length);
+
+        final byte[] gateCmdBytes = COPSMsgParser.shortToBytes(gateCommandType.getValue());
+        System.arraycopy(gateCmdBytes, 0, data, transIdBytes.length, gateCmdBytes.length);
+        return data;
     }
 
+    /**
+     * Returns a TransactionID object from a byte array
+     * @param data - the data to parse
+     * @return - the object
+     * TODO - make me more robust as RuntimeExceptions can be thrown here.
+     */
+    public static TransactionID parse(final byte[] data) {
+        return new TransactionID(COPSMsgParser.bytesToShort(data[0], data[1]),
+                GateCommandType.valueOf(COPSMsgParser.bytesToShort(data[2], data[3])));
+    }
 }

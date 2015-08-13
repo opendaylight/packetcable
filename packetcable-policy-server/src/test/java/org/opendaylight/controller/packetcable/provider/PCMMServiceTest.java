@@ -104,7 +104,7 @@ public class PCMMServiceTest {
         dstAddr = new Ipv4Address("10.32.99.99");
 
         if (realCmts) {
-            cmAddrInet = InetAddress.getByAddress(new byte[] {10, 32, 110, (byte)180});
+            cmAddrInet = InetAddress.getByAddress(new byte[] {10, 32, 110, (byte)172});
             invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
 
             // Use me when testing against a CMTS or emulator not running in the same JVM
@@ -150,12 +150,15 @@ public class PCMMServiceTest {
 
     @Test
     public void testAddInvalidCcapBadPort() {
-        ccap = makeCcapsObj((icmts.getPort() + 1), cmtsAddr, ccapId);
+        final int port;
+        if (icmts != null) port = icmts.getPort() + 1;
+        else port = PCMMPdpAgent.WELL_KNOWN_PDP_PORT + 1;
+        ccap = makeCcapsObj(port, cmtsAddr, ccapId);
         service = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
         final String message = service.addCcap();
         Assert.assertNotNull(message);
         final String expectedMsg = "404 Not Found - CCAP " + ccapId + " failed to connect @ " + cmtsAddr.getValue()
-                + ':' + (icmts.getPort() + 1) + " - ";
+                + ':' + port + " - ";
         Assert.assertTrue(expectedMsg, message.startsWith(expectedMsg));
     }
 
@@ -413,7 +416,9 @@ public class PCMMServiceTest {
         Mockito.when(classifier.getSrcIp()).thenReturn(srcAddr);
         final PortNumber srcPort = new PortNumber(1234);
         Mockito.when(classifier.getSrcPort()).thenReturn(srcPort);
-        final TosByte tosByte = new TosByte((short)160);
+
+        // TODO - Can this value be any other value than 0 or 1 (See TosByte enumeration)
+        final TosByte tosByte = new TosByte((short)0);
         Mockito.when(classifier.getTosByte()).thenReturn(tosByte);
         final TosByte tosMask = new TosByte((short)224);
         Mockito.when(classifier.getTosMask()).thenReturn(tosMask);

@@ -1,12 +1,14 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
 
 package org.pcmm;
 
 import org.pcmm.gates.IGateID;
+import org.pcmm.gates.IPCMMError.ErrorCode;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.gates.ITransactionID;
+import org.pcmm.gates.ITransactionID.GateCommandType;
 import org.pcmm.gates.impl.PCMMError;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
@@ -69,7 +71,7 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
 
             // PCMMUtils.WriteBinaryDump("COPSReportClientSI", data);
             logger.info("PCMMGateReq Parse Gate Message");
-            final PCMMGateReq gateMsg = new PCMMGateReq(data);
+            final PCMMGateReq gateMsg = PCMMGateReq.parse(data);
 
             // TODO FIXME - Why is this Map being filled but never used???
             final Map<String, String> repSIs = new HashMap<>();
@@ -125,9 +127,9 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                     _thisProcess.successReport(this, gateMsg);
             } else {
                 final String cmdType;
-                if ( trID.getGateCommandType() == ITransactionID.GateDeleteAck ) {
+                if (trID.getGateCommandType().equals(GateCommandType.GATE_DELETE_ACK)) {
                     cmdType = "GateDeleteAck";
-                } else if ( trID.getGateCommandType() == ITransactionID.GateSetAck ) {
+                } else if (trID.getGateCommandType().equals(GateCommandType.GATE_SET_ACK)) {
                     cmdType = "GateSetAck";
                 } else cmdType = null;
                 // capture the gateId from the response message
@@ -152,9 +154,8 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                     if (gateMsg.getError() != null)
                         logger.info("Gate message error - " + gateMsg.getError().toString());
                     else {
-                        final PCMMError error = new PCMMError();
-                        // TODO - figure out correct error code
-                        error.setErrorCode((short)19);
+                        // TODO - Determine if this is the correct error code
+                        final PCMMError error = new PCMMError(ErrorCode.UNK_GATE_CMD);
                         gate.setError(error);
                         logger.warn("Gate request failed without an error, setting one - " + error);
                     }

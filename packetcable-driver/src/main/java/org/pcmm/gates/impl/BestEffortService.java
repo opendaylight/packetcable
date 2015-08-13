@@ -1,79 +1,88 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates.impl;
 
-import java.util.Arrays;
-
-// import org.junit.Assert;
+import com.google.common.primitives.Bytes;
 import org.pcmm.base.impl.PCMMBaseObject;
 import org.pcmm.gates.ITrafficProfile;
-import org.umu.cops.stack.COPSData;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- *
+ * The Best Effort object defines the Traffic Profile associated with a gate through an upstream DOCSIS-specific
+ * parameterization scheme.
  */
-public class BestEffortService extends PCMMBaseObject implements
-		ITrafficProfile {
+public class BestEffortService extends PCMMBaseObject implements ITrafficProfile {
+
 	public static final byte STYPE = 3;
 	// XXX -> 60=0x3C, 112 = 0x70, 164=0xA4
 	// Length = 44=0x2C, 80=0x50 or 116=0x74
-	public static final short LENGTH = 44;
 
 	public static final byte DEFAULT_TRAFFIC_PRIORITY = 0;
-	// Authorized
-	public static final byte DEFAULT_ENVELOP = 0x7;
 
 	public static final int DEFAULT_MAX_TRAFFIC_BURST = 3044;
 
-	private BEEnvelop authorizedEnvelop;
-
-	private BEEnvelop reservedEnvelop;
-
-	private BEEnvelop committedEnvelop;
+	/**
+	 * The envelope
+	 */
+	private final byte envelope;
 
 	/**
-	 * 
-	 * @param e
-	 *            envelop
+	 * The authorized envelope. See BEEnvelope for description of the attributes. MUST NOT be NULL.
 	 */
-	public BestEffortService(byte e) {
-		super((short) (e == 1 ? LENGTH : (e == 7 ? 116 : 80)), STYPE, SNUM);
-		setEnvelop(e);
-		authorizedEnvelop = new BEEnvelop();
-		if (e > 1) {
-			reservedEnvelop = new BEEnvelop();
-			if (e == 7)
-				committedEnvelop = new BEEnvelop();
-		}
+	private final BEEnvelop authorizedEnvelop;
+
+	/**
+	 * The reserved envelope. See BEEnvelope for description of the attributes. CAN BE NULL.
+	 */
+	private final BEEnvelop reservedEnvelop;
+
+	/**
+	 * The committed envelope. See BEEnvelope for description of the attributes. CAN BE NULL.
+	 */
+	private final BEEnvelop committedEnvelop;
+
+	/**
+	 * General use constructor
+	 * @param auth - the authorized envelope (required)
+	 * @param reserved - the reserved envelope (optional)
+	 * @param committed - the committed envelope (optional)
+	 */
+	public BestEffortService(final BEEnvelop auth, final BEEnvelop reserved, final BEEnvelop committed) {
+		this(DEFAULT_ENVELOP, auth, reserved, committed);
 	}
 
-	public BestEffortService(byte[] bytes) {
-		super(bytes);
-		byte e = getEnvelop();
-		authorizedEnvelop = new BEEnvelop(headPadding(offset, Arrays.copyOfRange(bytes, 8, LENGTH)));
-		if (e > 1) {
-			reservedEnvelop = new BEEnvelop(headPadding(offset, Arrays.copyOfRange(bytes, LENGTH, 80)));
-			if (e == 7)
-				committedEnvelop = new BEEnvelop(headPadding(offset, Arrays.copyOfRange(bytes, 80, 116)));
-		}
-	}
+	/**
+	 * Constructor generally used for byte parsing only.
+	 * @param envelope - the envelope value
+	 * @param auth - the authorized envelope (required)
+	 * @param reserved - the reserved envelope (optional)
+	 * @param committed - the committed envelope (optional)
+	 */
+	protected BestEffortService(final byte envelope, final BEEnvelop auth, final BEEnvelop reserved,
+							 final BEEnvelop committed) {
+		super(SNum.TRAFFIC_PROFILE, STYPE);
+		if (auth == null) throw new IllegalArgumentException("Authorized envelope must not be null");
 
-	@Override
-	public void setEnvelop(byte e) {
-		setLength((short) (e == 1 ? LENGTH : (e == 7 ? 116 : 80)));
-		// reset cops data to fit the new length
-		byte[] array = new byte[getLength() - offset];
-		Arrays.fill(array, (byte) 0);
-		setData(new COPSData(array, 0, array.length));
-		setByte(e, (short) 0);
+		// TODO - Cannot figure out any other means to parse the bytes unless this is true. Determine if correct???
+		if (reserved == null && committed != null)
+			throw new IllegalArgumentException("Cannot have a committed envelope without a reserved");
+
+		this.envelope = envelope;
+		this.authorizedEnvelop = auth;
+		this.reservedEnvelop = reserved;
+		this.committedEnvelop = committed;
 	}
 
 	@Override
 	public byte getEnvelop() {
-		return getByte((short) 0);
+		return envelope;
 	}
 
+	// Getters
 	public BEEnvelop getAuthorizedEnvelop() {
 		return authorizedEnvelop;
 	}
@@ -87,125 +96,64 @@ public class BestEffortService extends PCMMBaseObject implements
 	}
 
 	@Override
-	public byte[] getAsBinaryArray() {
-		byte[] returnBuffer = super.getAsBinaryArray();
+	public byte[] getBytes() {
+		final List<Byte> byteList = new ArrayList<>();
+		byteList.addAll(Bytes.asList(envelope, (byte) 0, (byte) 0, (byte) 0));
+		byteList.addAll(authorizedEnvelop.getBytes());
+		if (reservedEnvelop != null) byteList.addAll(reservedEnvelop.getBytes());
+		if (committedEnvelop != null) byteList.addAll(committedEnvelop.getBytes());
+		return Bytes.toArray(byteList);
+	}
 
-		{// fill buffer with the Authorized Envelop
-			byte[] authEnv = Arrays.copyOfRange(getAuthorizedEnvelop().getAsBinaryArray(), offset, BEEnvelop.LENGHT);
-			// offset + 4 since the Envelop data begin from byte nb 8
-			System.arraycopy(authEnv, 0, returnBuffer, offset + 4, authEnv.length);
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
 		}
-		if (getReservedEnvelop() != null) {
-			byte[] reservedEnv = Arrays.copyOfRange(getReservedEnvelop().getAsBinaryArray(), offset, BEEnvelop.LENGHT);
-			System.arraycopy(reservedEnv, 0, returnBuffer, LENGTH, reservedEnv.length);
+		if (!(o instanceof BestEffortService)) {
+			return false;
 		}
-		if (getCommittedEnvelop() != null) {
-			byte[] commitEnv = Arrays.copyOfRange(getCommittedEnvelop().getAsBinaryArray(), offset, BEEnvelop.LENGHT);
-			System.arraycopy(commitEnv, 0, returnBuffer, LENGTH + 36, commitEnv.length);
+		if (!super.equals(o)) {
+			return false;
 		}
-		return returnBuffer;
+		final BestEffortService that = (BestEffortService) o;
+		return envelope == that.envelope && authorizedEnvelop.equals(that.authorizedEnvelop) &&
+				!(reservedEnvelop != null ? !reservedEnvelop.equals(that.reservedEnvelop) :
+						that.reservedEnvelop != null) &&
+				!(committedEnvelop != null ? !committedEnvelop.equals(that.committedEnvelop) :
+						that.committedEnvelop != null);
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (int) envelope;
+		result = 31 * result + authorizedEnvelop.hashCode();
+		result = 31 * result + (reservedEnvelop != null ? reservedEnvelop.hashCode() : 0);
+		result = 31 * result + (committedEnvelop != null ? committedEnvelop.hashCode() : 0);
+		return result;
 	}
 
 	/**
-     *
-     *
-     */
-	public static class BEEnvelop extends PCMMBaseObject {
-		// basically we need 36 bytes but since PCMMBasedObject needs 4 bytes
-		// more we allocate 40 bytes and then subtract them when setting BE
-		// data.
-		private final static short LENGHT = 40;
-
-		protected BEEnvelop() {
-			super(LENGHT, (byte) 0, (byte) 0);
-			setTrafficPriority(DEFAULT_TRAFFIC_PRIORITY);
-		}
-
-		protected BEEnvelop(byte[] buffer) {
-			super(buffer);
-		}
-
-		public void setTrafficPriority(byte p) {
-			setByte(p, (short) 0);
-		}
-
-		public byte getTrafficPriority() {
-			return getByte((short) 0);
-		}
-
-		//
-		public void setRequestTransmissionPolicy(int p) {
-			setInt(p, (short) 4);
-		}
-
-		public int getRequestTransmissionPolicy() {
-			return getInt((short) 4);
-		}
-
-		public int getMaximumSustainedTrafficRate() {
-			return getInt((short) 8);
-		}
-
-		public void setMaximumSustainedTrafficRate(int p) {
-			setInt(p, (short) 8);
-		}
-
-		public int getMaximumTrafficBurst() {
-			return getInt((short) 12);
-		}
-
-		public void setMaximumTrafficBurst(int p) {
-			setInt(p, (short) 12);
-		}
-
-		public int getMinimumReservedTrafficRate() {
-			return getInt((short) 16);
-		}
-
-		public void setMinimumReservedTrafficRate(int p) {
-			setInt(p, (short) 16);
-		}
-
-		public short getAssumedMinimumReservedTrafficRatePacketSize() {
-			return getShort((short) 20);
-		}
-
-		public void setAssumedMinimumReservedTrafficRatePacketSize(short p) {
-			setShort(p, (short) 20);
-		}
-
-		public short getMaximumConcatenatedBurst() {
-			return getShort((short) 22);
-		}
-
-		public void setMaximumConcatenatedBurst(short p) {
-			setShort(p, (short) 22);
-		}
-
-		public int getRequiredAttributeMask() {
-			return getInt((short) 24);
-		}
-
-		public void setRequiredAttributeMask(int p) {
-			setInt(p, (short) 24);
-		}
-
-		public int getForbiddenAttributeMask() {
-			return getInt((short) 28);
-		}
-
-		public void setForbiddenAttributeMask(int p) {
-			setInt(p, (short) 28);
-		}
-
-		public int getAttributeAggregationRuleMask() {
-			return getInt((short) 32);
-		}
-
-		public void setAttributeAggregationRuleMask(int p) {
-			setInt(p, (short) 32);
-		}
-
+	 * Returns a BestEffortService object from a byte array
+	 * @param data - the data to parse
+	 * @return - the object or null if cannot be parsed
+	 * TODO - make me more robust as RuntimeExceptions can be thrown here.
+	 */
+	public static BestEffortService parse(final byte[] data) {
+		final List<Byte> bytes = Bytes.asList(data);
+		bytes.subList(0, 51);
+		if (data.length >= 56 && data.length < 108)
+			return new BestEffortService(data[0], BEEnvelop.parse(Bytes.toArray(bytes.subList(4, 56))), null, null);
+		else if (data.length >= 108 && data.length < 160)
+			return new BestEffortService(data[0], BEEnvelop.parse(Bytes.toArray(bytes.subList(4, 56))),
+					BEEnvelop.parse(Bytes.toArray(bytes.subList(56, 108))), null);
+		else if (data.length >= 160)
+				return new BestEffortService(data[0], BEEnvelop.parse(Bytes.toArray(bytes.subList(4, 56))),
+						BEEnvelop.parse(Bytes.toArray(bytes.subList(56, 108))),
+						BEEnvelop.parse(Bytes.toArray(bytes.subList(108, 160))));
+		else return null;
 	}
 
 }

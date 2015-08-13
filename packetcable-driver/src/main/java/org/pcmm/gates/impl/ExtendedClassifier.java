@@ -1,347 +1,251 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates.impl;
 
-import org.pcmm.base.impl.PCMMBaseObject;
+import com.google.common.primitives.Bytes;
 import org.pcmm.gates.IExtendedClassifier;
+import org.umu.cops.stack.COPSMsgParser;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- *
+ * Implementation of the IExtendedClassifier interface
  */
-public class ExtendedClassifier extends PCMMBaseObject implements
-            IExtendedClassifier {
+public class ExtendedClassifier extends Classifier implements IExtendedClassifier {
 
-    public ExtendedClassifier() {
-        this(LENGTH, STYPE, SNUM);
+    /**
+     * IPv4 (for this class) and IPv6 (for extended IPv6Classifier) mask. When the address is zero, the mask is
+     * irrelevant else only packets with source IP address 'pkt.ip-src'
+     * will match if (pkt.ip-src AND classifier.ipmask-src) == classifier.ip-src.
+     */
+    protected final InetAddress srcMask;
+
+    /**
+     * IPv4 (for this class) and IPv6 (for extended IPv6Classifier) mask. When the address is zero, the mask is
+     * irrelevant else only packets with source IP address 'pkt.ip-dst'
+     * will match if (pkt.ip-dst AND classifier.ipmask-dst) == classifier.ip-dst.
+     */
+    protected final InetAddress dstMask;
+
+    /**
+     * Source Port End specifies the high-end TCP/UDP source port value. See super srcPort for low-end value.
+     */
+    protected final short srcPortEnd;
+
+    /**
+     * Destination Port End specifies the high-end TCP/UDP source port value. See super dstPort for low-end value.
+     */
+    protected final short dstPortEnd;
+
+    /**
+     * The classifiers identifier
+     */
+    protected final short classifierId;
+
+    /**
+     * Enumeration of the activation state
+     */
+    protected final ActivationState activationState;
+
+    /**
+     * The action value
+     */
+    protected final byte action;
+
+    /**
+     * Constructor
+     * @param protocol - the protocol being sent through the gate
+     * @param tosOverwrite - ENABLE/DISABLE
+     * @param tosMask - the mask
+     * @param srcAddress - the source IP
+     * @param dstAddress - the destination IP
+     * @param srcPortBegin - the source begin port
+     * @param dstPortBegin - the destination begin port
+     * @param priority - the priority value
+     * @param srcMask - the source IP mask
+     * @param dstMask - the destination IP mask
+     * @param srcPortEnd - the source start port
+     * @param dstPortEnd - the destination end port
+     * @param classifierId - the classifier identifier
+     * @param activationState - denotes the activation state
+     * @param action - the action
+     */
+    public ExtendedClassifier(final Protocol protocol, final byte tosOverwrite, final byte tosMask,
+                              final Inet4Address srcAddress, final Inet4Address dstAddress, final short srcPortBegin,
+                              final short dstPortBegin, final byte priority, final Inet4Address srcMask,
+                              final Inet4Address dstMask, final short srcPortEnd, final short dstPortEnd,
+                              final short classifierId, final ActivationState activationState, final byte action) {
+        super(IExtendedClassifier.STYPE, protocol, tosOverwrite, tosMask, srcAddress, dstAddress, srcPortBegin,
+                dstPortBegin, priority);
+        if (srcMask == null) throw new IllegalArgumentException("Source IP Mask cannot be null");
+        if (dstMask == null) throw new IllegalArgumentException("Destination IP Mask cannot be null");
+        if (activationState == null) throw new IllegalArgumentException("Activation state must not be null");
+        this.srcMask = srcMask;
+        this.dstMask = dstMask;
+        this.srcPortEnd = srcPortEnd;
+        this.dstPortEnd = dstPortEnd;
+        this.classifierId = classifierId;
+        this.activationState = activationState;
+        this.action = action;
     }
 
     /**
-     * @param data - the data bytes to parse
+     * Constructor for IPv6Classifier subclass
+     * @param sType - the type of classifier
+     * @param srcAddress - the source IP
+     * @param dstAddress - the destination IP
+     * @param srcPortBegin - the source begin port
+     * @param dstPortBegin - the destination begin port
+     * @param priority - the priority value
+     * @param srcPortEnd - the source start port
+     * @param dstPortEnd - the destination end port
+     * @param classifierId - the classifier identifier
+     * @param activationState - denotes the activation state
+     * @param action - the action
      */
-    public ExtendedClassifier(byte[] data) {
-        super(data);
+    protected ExtendedClassifier(final byte sType, final InetAddress srcAddress, final InetAddress dstAddress,
+                                 final short srcPortBegin, final short dstPortBegin, final byte priority,
+                                 final short srcPortEnd, final short dstPortEnd, final short classifierId,
+                                 final ActivationState activationState, final byte action) {
+        super(sType, null, (byte)0, (byte)0, srcAddress, dstAddress, srcPortBegin, dstPortBegin, priority);
+        if (activationState == null) throw new IllegalArgumentException("Activation state must not be null");
+        this.srcMask = null;
+        this.dstMask = null;
+        this.srcPortEnd = srcPortEnd;
+        this.dstPortEnd = dstPortEnd;
+        this.classifierId = classifierId;
+        this.activationState = activationState;
+        this.action = action;
     }
 
-    /**
-     * @param len - the classifier's length
-     * @param sType - the sType value
-     * @param sNum - the sNum value
-     */
-    public ExtendedClassifier(short len, byte sType, byte sNum) {
-        super(len, sType, sNum);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#getDestinationIPAddress()
-     */
-    @Override
-    public InetAddress getDestinationIPAddress() {
-        try {
-            return InetAddress.getByAddress(getBytes((short) 12, (short) 4));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.pcmm.gates.IClassifier#setDestinationIPAddress(java.net.InetAddress)
-     */
-    @Override
-    public void setDestinationIPAddress(InetAddress address) {
-        setBytes(address.getAddress(), (short) 12);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#getDestinationPort()
-     */
-    @Override
-    public short getDestinationPort() {
-        return getShort((short) 24);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#setDestinationPort(short)
-     */
-    @Override
-    public void setDestinationPort(short p) {
-        setShort(p, (short) 24);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#getSourceIPAddress()
-     */
-    @Override
-    public InetAddress getSourceIPAddress() {
-        try {
-            return InetAddress.getByAddress(getBytes((short) 4, (short) 4));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#setSourceIPAddress(java.net.InetAddress)
-     */
-    @Override
-    public void setSourceIPAddress(InetAddress a) {
-        setBytes(a.getAddress(), (short) 4);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#getSourcePort()
-     */
-    @Override
-    public short getSourcePort() {
-        return getShort((short) 20);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#setSourcePort(short)
-     */
-    @Override
-    public void setSourcePort(short p) {
-        setShort(p, (short) 20);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#getProtocol()
-     */
-    @Override
-    public short getProtocol() {
-        return getShort((short) 0);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#setProtocol(short)
-     */
-    @Override
-    public void setProtocol(short p) {
-        setShort(p, (short) 0);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#getPriority()
-     */
-    @Override
-    public byte getPriority() {
-        return getByte((short) 30);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IClassifier#setPriority(byte)
-     */
-    @Override
-    public void setPriority(byte p) {
-        setByte(p, (short) 30);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getIPSourceMask()
-     */
     @Override
     public InetAddress getIPSourceMask() {
-        try {
-            return InetAddress.getByAddress(getBytes((short) 8, (short) 4));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return srcMask;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.pcmm.gates.IExtendedClassifier#setIPSourceMask(java.net.InetAddress)
-     */
-    @Override
-    public void setIPSourceMask(InetAddress a) {
-        setBytes(a.getAddress(), (short) 8);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getIPDestinationMask()
-     */
     @Override
     public InetAddress getIPDestinationMask() {
-        try {
-            return InetAddress.getByAddress(getBytes((short) 16, (short) 4));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return dstMask;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.pcmm.gates.IExtendedClassifier#setIPDestinationMask(java.net.InetAddress
-     * )
-     */
-    @Override
-    public void setIPDestinationMask(InetAddress m) {
-        setBytes(m.getAddress(), (short) 16);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getSourcePortStart()
-     */
     @Override
     public short getSourcePortStart() {
-        return getShort((short) 20);
+        return super.getSourcePort();
     }
 
-    @Override
-    public void setSourcePortStart(short p) {
-        setShort(p, (short) 20);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getSourcePortEnd()
-     */
     @Override
     public short getSourcePortEnd() {
-        return getShort((short) 22);
+        return srcPortEnd;
     }
 
-    @Override
-    public void setSourcePortEnd(short p) {
-        setShort(p, (short) 22);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getDestinationPortStart()
-     */
     @Override
     public short getDestinationPortStart() {
-        return getShort((short) 24);
+        return super.getDestinationPort();
     }
 
-    @Override
-    public void setDestinationPortStart(short p) {
-        setShort(p, (short) 24);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getDestinationPortEnd()
-     */
     @Override
     public short getDestinationPortEnd() {
-        return getShort((short) 26);
+        return dstPortEnd;
     }
 
-    @Override
-    public void setDestinationPortEnd(short p) {
-        setShort(p, (short) 26);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getClassifierID()
-     */
     @Override
     public short getClassifierID() {
-        return getShort((short) 28);
+        return classifierId;
     }
 
     @Override
-    public void setClassifierID(short p) {
-        setShort(p, (short) 28);
+    public ActivationState getActivationState() {
+        return activationState;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getActivationState()
-     */
-    @Override
-    public byte getActivationState() {
-        return getByte((short) 31);
-    }
-
-    @Override
-    public void setActivationState(byte s) {
-        setByte(s, (short) 31);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IExtendedClassifier#getAction()
-     */
     @Override
     public byte getAction() {
-        return getByte((short) 32);
+        return action;
     }
 
     @Override
-    public void setAction(byte a) {
-        setByte(a, (short) 32);
+    protected byte[] getBytes() {
+        final List<Byte> byteList = new ArrayList<>(Bytes.asList(COPSMsgParser.shortToBytes(protocol.getValue())));
+        byteList.add(tosOverwrite);
+        byteList.add(tosMask);
+        byteList.addAll(Bytes.asList(srcAddress.getAddress()));
+        byteList.addAll(Bytes.asList(srcMask.getAddress()));
+        byteList.addAll(Bytes.asList(dstAddress.getAddress()));
+        byteList.addAll(Bytes.asList(dstMask.getAddress()));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(srcPort)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(srcPortEnd)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(dstPort)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(dstPortEnd)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(classifierId)));
+        byteList.add(priority);
+        byteList.add(activationState.getValue());
+        byteList.add(action);
+
+        // reserved padding
+        byteList.addAll(Bytes.asList((byte) 0, (byte) 0, (byte) 0));
+
+        return Bytes.toArray(byteList);
     }
 
     @Override
-    public byte getDSCPTOS() {
-        return getByte((short) 2);
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ExtendedClassifier)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final ExtendedClassifier that = (ExtendedClassifier) o;
+        return srcPortEnd == that.srcPortEnd && dstPortEnd == that.dstPortEnd && classifierId == that.classifierId &&
+                activationState == that.activationState && action == that.action &&
+                !(srcMask != null ? !srcMask.equals(that.srcMask) : that.srcMask != null) &&
+                !(dstMask != null ? !dstMask.equals(that.dstMask) : that.dstMask != null);
     }
 
     @Override
-    public void setDSCPTOS(byte v) {
-        setByte(v, (short) 2);
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (srcMask != null ? srcMask.hashCode() : 0);
+        result = 31 * result + (dstMask != null ? dstMask.hashCode() : 0);
+        result = 31 * result + (int) srcPortEnd;
+        result = 31 * result + (int) dstPortEnd;
+        result = 31 * result + (int) classifierId;
+        result = 31 * result + (int) activationState.getValue();
+        result = 31 * result + (int) action;
+        return result;
     }
 
-    @Override
-    public byte getDSCPTOSMask() {
-        return getByte((short) 3);
-    }
+    /**
+     * Returns a ExtendedClassifier object from a byte array
+     * @param data - the data to parse
+     * @return - the object or null if cannot be parsed
+     * TODO - make me more robust as exceptions can be swallowed here.
+     */
+    public static ExtendedClassifier parse(final byte[] data) {
+        final List<Byte> bytes = new ArrayList<>(Bytes.asList(data));
 
-    @Override
-    public void setDSCPTOSMask(byte v) {
-        setByte(v, (short) 3);
+        try {
+            return new ExtendedClassifier(Protocol.valueOf(COPSMsgParser.bytesToShort(data[0], data[1])),
+                    data[2], data[3],
+                    (Inet4Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(4, 8))),
+                    (Inet4Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(8, 12))),
+                    COPSMsgParser.bytesToShort(data[20], data[21]), COPSMsgParser.bytesToShort(data[24], data[25]),
+                    data[30], (Inet4Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(12, 16))),
+                    (Inet4Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(16, 20))),
+                    COPSMsgParser.bytesToShort(data[22], data[23]), COPSMsgParser.bytesToShort(data[26], data[27]),
+                    COPSMsgParser.bytesToShort(data[28], data[29]), ActivationState.valueOf(data[31]), data[32]);
+        } catch (UnknownHostException e) {
+            return null;
+        }
     }
 
 }

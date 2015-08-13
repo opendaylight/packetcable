@@ -9,339 +9,245 @@
  */
 package org.pcmm.gates.impl;
 
-import org.pcmm.base.impl.PCMMBaseObject;
+import com.google.common.primitives.Bytes;
 import org.pcmm.gates.IIPv6Classifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.umu.cops.stack.COPSMsgParser;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- *
+ * Implementation of the IIPv6Classifier interface
  */
-public class IPv6Classifier extends PCMMBaseObject implements
-        IIPv6Classifier {
-
-    private Logger logger = LoggerFactory.getLogger(IPv6Classifier.class);
-
-    public IPv6Classifier() {
-        this(LENGTH, STYPE, SNUM);
-    }
+public class IPv6Classifier extends ExtendedClassifier implements IIPv6Classifier {
 
     /**
-     * @param data - the data bytes to parse
+     * VALID when there is valid data for comparison with the IPv6 Flow label else IRRELEVANT
      */
-    public IPv6Classifier(byte[] data) {
-        super(data);
-    }
+    private final FlowLabel flowEnabled;
 
     /**
-     * @param len - the classifier's length
-     * @param sType - the sType value
-     * @param sNum - the sNum value
+     * Allows for matching on the IPv6 Traffic Class value (with tcHigh & tcMask)
      */
-    public IPv6Classifier(short len, byte sType, byte sNum) {
-        super(len, sType, sNum);
+    private final byte tcLow;
+
+    /**
+     * Allows for matching on the IPv6 Traffic Class value (with tcLow & tcMask)
+     */
+    private final byte tcHigh;
+
+    /**
+     * Allows for matching on the IPv6 Traffic Class value (with tcLow & tcHigh)
+     */
+    private final byte tcMask;
+
+    /**
+     * Contains data for comparison When flowEnabled == VALID else this value must be 0
+     */
+    private final int flowLabel;
+
+    /**
+     * Next Header Type field specifies the desired next header type value for any header or extension header associated
+     * with the packet. Typically this value will specify the next layer protocol type. There are two special IPv6 next
+     * header type field values: "256" matches traffic with any IPv6 next header type value, and "257" matches both TCP
+     * and UDP traffic. Values greater than 257 are invalid for comparisons (i.e., no traffic can match this entry).
+     * For further discussion of the IPv6 Next Header Type field, refer to C.2.1.10.3
+     */
+    private final short nextHdr;
+
+    /**
+     * Source Prefix Length field specifies the fixed, most significant bits of an IPv6 address that are used to
+     * determine address range and subnet ID for the IPv6 Source Address.
+     */
+    private final byte srcPrefixLen;
+
+    /**
+     * Destination Prefix Length field specifies the fixed, most significant bits of an IPv6 address that are used to
+     * determine address range and subnet ID for the IPv6 Destination Address.
+     */
+    private final byte dstPrefixLen;
+
+    /**
+     * Constructor
+     * @param srcAddress - the source IP (not null)
+     * @param dstAddress - the destination IP (not null)
+     * @param srcPortBegin - the source begin port
+     * @param dstPortBegin - the destination begin port
+     * @param priority - the priority value
+     * @param srcPortEnd - the source start port
+     * @param dstPortEnd - the destination end port
+     * @param classifierId - the classifier identifier
+     * @param activationState - denotes the activation state (not null)
+     * @param action - the action
+     * @param flowEnabled - eumeration of FlowLabel (VALID|IRRELEVANT)
+     * @param tcLow - low matching on the IPv6 Traffic Class
+     * @param tcHigh - high matching on the IPv6 Traffic Class
+     * @param tcMask - mask matching on the IPv6 Traffic Class
+     * @param flowLabel - data for comparison
+     * @param nextHdr - the next header type value
+     * @param srcPrefixLen - source prefix length
+     * @param dstPrefixLen - destination prefix length
+     */
+    public IPv6Classifier(final Inet6Address srcAddress, final Inet6Address dstAddress, final short srcPortBegin,
+                          final short dstPortBegin, final byte priority, final short srcPortEnd, final short dstPortEnd,
+                          final short classifierId, final ActivationState activationState, final byte action,
+                          final FlowLabel flowEnabled, final byte tcLow, final byte tcHigh, final byte tcMask,
+                          final int flowLabel, final short nextHdr, final byte srcPrefixLen, final byte dstPrefixLen) {
+        super(IIPv6Classifier.STYPE, srcAddress, dstAddress, srcPortBegin, dstPortBegin, priority, srcPortEnd,
+                dstPortEnd, classifierId, activationState, action);
+        if (flowEnabled == null) throw new IllegalArgumentException("Flow enabled enumeration must not be null");
+        if (flowEnabled.equals(FlowLabel.IRRELEVANT)) this.flowLabel = 0;
+        else this.flowLabel = flowLabel;
+        this.flowEnabled = flowEnabled;
+        this.tcLow = tcLow;
+        this.tcHigh = tcHigh;
+        this.tcMask = tcMask;
+        this.nextHdr = nextHdr;
+        this.srcPrefixLen = srcPrefixLen;
+        this.dstPrefixLen = dstPrefixLen;
     }
 
-    // offset:length Field Name: Description
     // 00:01 Flags: 0000.0001 Flow Label enable match
-    // 01:01 Tc-low
-    // 02:01 Tc-high
-    // 03:01 Tc-mask
-    // 04:04 Flow Label: low order 20 bits; high order 12 bits ignored
-    // 08:02 Next Header Type
-    // 10:01 Source Prefix Length
-    // 11:01 Destination Prefix Length
-    // 12:16 IPv6 Source Address
-    // 28:16 IPv6 Destination Address
-    // 44:02 Source Port Start
-    // 46:02 Source Port End
-    // 48:02 Destination Port Start
-    // 50:02 Destination Port End
-    // 52:02 ClassifierID
-    // 54:01 Priority
-    // 55:01 Activation State
-    // 56:01 Action
-    // 57:03 Reserved
-
-    // 00:01 Flags: 0000.0001 Flow Label enable match
     @Override
-    public void setFlowLabelEnableFlag(byte flag) {
-        setByte(flag, (short) 0);
-    }
-    @Override
-    public byte getFlowLabelEnableFlag() {
-        return getByte((short) 0);
+    public FlowLabel getFlowLabelEnableFlag() {
+        return flowEnabled;
     }
 
     // 01:01 Tc-low
-    @Override
-    public void setTcLow(byte tcLow) {
-        setByte(tcLow, (short) 1);
-    }
     @Override
     public byte getTcLow() {
-        return getByte((short) 1);
+        return tcLow;
     }
 
     // 02:01 Tc-high
     @Override
-    public void setTcHigh(byte tcHigh) {
-        setByte(tcHigh, (short) 2);
-    }
-    @Override
     public byte getTcHigh() {
-        return getByte((short) 2);
+        return tcHigh;
     }
 
     // 03:01 Tc-mask
     @Override
-    public void setTcMask(byte tcMask) {
-        setByte(tcMask, (short) 3);
-    }
-    @Override
     public byte getTcMask() {
-        return getByte((short) 3);
+        return tcMask;
     }
 
     // 04:04 Flow Label: low order 20 bits; high order 12 bits ignored
     @Override
-    public void setFlowLabel(Long flowLabel) {
-        setInt(flowLabel.intValue(), (short) 4);
-    }
-    @Override
     public int getFlowLabel() {
-        return getInt((short) 4);
+        return flowLabel;
     }
 
     // 08:02 Next Header Type
     @Override
-    public void setNextHdr(short nxtHdr) {
-        setShort(nxtHdr, (short) 8);
-    }
-    @Override
     public short getNextHdr() {
-        return getShort((short) 8);
+        return nextHdr;
     }
 
     // 10:01 Source Prefix Length
     @Override
-    public void setSourcePrefixLen(byte srcPrefixLen) {
-        setByte(srcPrefixLen, (short) 10);
-    }
-    @Override
     public byte getSourcePrefixLen() {
-        return getByte((short) 10);
+        return srcPrefixLen;
     }
 
     // 11:01 Destination Prefix Length
     @Override
-    public void setDestinationPrefixLen(byte dstPrefixLen) {
-        setByte(dstPrefixLen, (short) 11);
-    }
-    @Override
     public byte getDestinationPrefixLen() {
-        return getByte((short) 11);
+        return dstPrefixLen;
     }
 
-    // 12:16 IPv6 Source Address
     @Override
-    public void setSourceIPAddress(InetAddress a) {
-        setBytes(a.getAddress(), (short) 12);
+    protected byte[] getBytes() {
+        final List<Byte> byteList = new ArrayList<>();
+        byteList.add(flowEnabled.getValue());
+        byteList.add(tcLow);
+        byteList.add(tcHigh);
+        byteList.add(tcMask);
+        byteList.addAll(Bytes.asList(COPSMsgParser.intToBytes(flowLabel)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(nextHdr)));
+        byteList.add(srcPrefixLen);
+        byteList.add(dstPrefixLen);
+        byteList.addAll(Bytes.asList(srcAddress.getAddress()));
+        byteList.addAll(Bytes.asList(dstAddress.getAddress()));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(srcPort)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(srcPortEnd)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(dstPort)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(dstPortEnd)));
+        byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(classifierId)));
+        byteList.add(priority);
+        byteList.add(activationState.getValue());
+        byteList.add(action);
+        return Bytes.toArray(byteList);
     }
+
     @Override
-    public InetAddress getSourceIPAddress() {
-        try {
-            return InetAddress.getByAddress(getBytes((short) 12, (short) 16));
-        } catch (UnknownHostException e) {
-            logger.error("getSourceIPAddress(): Malformed IPv6 address: {}", e.getMessage());
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
         }
-        return null;
-    }
-
-    // 28:16 IPv6 Destination Address
-    @Override
-    public void setDestinationIPAddress(InetAddress a) {
-        setBytes(a.getAddress(), (short) 28);
-    }
-    @Override
-    public InetAddress getDestinationIPAddress() {
-        try {
-            return InetAddress.getByAddress(getBytes((short) 28, (short) 16));
-        } catch (UnknownHostException e) {
-            logger.error("getDestinationIPAddress(): Malformed IPv6 address: {}", e.getMessage());
+        if (!(o instanceof IPv6Classifier)) {
+            return false;
         }
-        return null;
-    }
-    // 44:02 Source Port Start
-    @Override
-    public short getSourcePortStart() {
-        return getShort((short) 44);
-    }
-    @Override
-    public void setSourcePortStart(short p) {
-        setShort(p, (short) 44);
-    }
-
-    // 46:02 Source Port End
-    @Override
-    public short getSourcePortEnd() {
-        return getShort((short) 46);
-    }
-    @Override
-    public void setSourcePortEnd(short p) {
-        setShort(p, (short) 46);
-    }
-
-    // 48:02 Destination Port Start
-    @Override
-    public short getDestinationPortStart() {
-        return getShort((short) 48);
-    }
-    @Override
-    public void setDestinationPortStart(short p) {
-        setShort(p, (short) 48);
-    }
-
-    // 50:02 Destination Port End
-    @Override
-    public short getDestinationPortEnd() {
-        return getShort((short) 50);
-    }
-    @Override
-    public void setDestinationPortEnd(short p) {
-        setShort(p, (short) 50);
-    }
-
-    // 52:02 ClassifierID
-    @Override
-    public short getClassifierID() {
-        return getShort((short) 52);
+        if (!super.equals(o)) {
+            return false;
+        }
+        final IPv6Classifier that = (IPv6Classifier) o;
+        return flowEnabled == that.flowEnabled && tcLow == that.tcLow && tcHigh == that.tcHigh &&
+                tcMask == that.tcMask && flowLabel == that.flowLabel && nextHdr == that.nextHdr &&
+                srcPrefixLen == that.srcPrefixLen && dstPrefixLen == that.dstPrefixLen;
     }
 
     @Override
-    public void setClassifierID(short p) {
-        setShort(p, (short) 52);
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (int) flowEnabled.getValue();
+        result = 31 * result + (int) tcLow;
+        result = 31 * result + (int) tcHigh;
+        result = 31 * result + (int) tcMask;
+        result = 31 * result + flowLabel;
+        result = 31 * result + (int) nextHdr;
+        result = 31 * result + (int) srcPrefixLen;
+        result = 31 * result + (int) dstPrefixLen;
+        return result;
     }
 
-    // 54:01 Priority
-    @Override
-    public void setPriority(byte p) {
-        setByte(p, (short) 54);
-    }
-    @Override
-    public byte getPriority() {
-        return getByte((short) 54);
-    }
+    /**
+     * Returns a ExtendedClassifier object from a byte array
+     * @param data - the data to parse
+     * @return - the object or null if cannot be parsed
+     * TODO - make me more robust as exceptions can be swallowed here.
+     */
+    public static IPv6Classifier parse(final byte[] data) {
+        final List<Byte> bytes = new ArrayList<>(Bytes.asList(data));
 
-    // 55:01 Activation State
-    @Override
-    public void setActivationState(byte s) {
-        setByte(s, (short) 55);
-    }
-    @Override
-    public byte getActivationState() {
-        return getByte((short) 55);
-    }
+        try {
+            final Inet6Address srcAddress = (Inet6Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(12, 28)));
+            final Inet6Address dstAddress = (Inet6Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(28, 44)));
+            final short srcPortBegin = COPSMsgParser.bytesToShort(data[44], data[45]);
+            final short srcPortEnd = COPSMsgParser.bytesToShort(data[46], data[47]);
+            final short dstPortBegin = COPSMsgParser.bytesToShort(data[48], data[49]);
+            final short dstPortEnd = COPSMsgParser.bytesToShort(data[50], data[51]);
+            final short classifierId = COPSMsgParser.bytesToShort(data[52], data[53]);
+            final byte priority = data[54];
+            final ActivationState activationState = ActivationState.valueOf(data[55]);
+            final byte action = data[56];
+            final FlowLabel flowEnabled = FlowLabel.valueOf(data[0]);
+            final byte tcLow = data[1];
+            final byte tcHigh = data[2];
+            final byte tcMask = data[3];
+            final int flowLabel = COPSMsgParser.bytesToInt(data[4], data[5], data[6], data[7]);
+            final short nextHdr = COPSMsgParser.bytesToShort(data[8], data[9]);
+            final byte srcPrefixLen = data[10];
+            final byte dstPrefixLen = data[11];
 
-    // 56:01 Action
-    @Override
-    public void setAction(byte a) {
-        setByte(a, (short) 56);
-    }
-    @Override
-    public byte getAction() {
-        return getByte((short) 56);
-    }
-
-
-
-    // baggage from IExtendedClassifier
-    // not used in IPv6 classifiers
-    @Override
-    public void setIPSourceMask(InetAddress a) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void setIPDestinationMask(InetAddress m) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public InetAddress getIPSourceMask() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public InetAddress getIPDestinationMask() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public short getDestinationPort() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setDestinationPort(short p) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public short getSourcePort() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setSourcePort(short p) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public short getProtocol() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setProtocol(short p) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public byte getDSCPTOS() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setDSCPTOS(byte v) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public byte getDSCPTOSMask() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setDSCPTOSMask(byte v) {
-        // TODO Auto-generated method stub
-
+            return new IPv6Classifier(srcAddress, dstAddress, srcPortBegin, dstPortBegin, priority, srcPortEnd,
+                    dstPortEnd, classifierId, activationState, action, flowEnabled, tcLow, tcHigh, tcMask, flowLabel,
+                    nextHdr, srcPrefixLen, dstPrefixLen);
+        } catch (UnknownHostException e) {
+            return null;
+        }
     }
 
 }

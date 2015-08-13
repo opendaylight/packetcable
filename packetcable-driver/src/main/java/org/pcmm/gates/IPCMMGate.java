@@ -43,20 +43,6 @@ public interface IPCMMGate {
     void setGateID(IGateID gateid);
 
     /**
-     * AMID is the handle that identifies the Application Manager and
-     * Application Type
-     *
-     */
-    void setAMID(IAMID iamid);
-
-    /**
-     * SubscriberID uniquely identifies the Client for which the policy is being
-     * set.
-     *
-     */
-    void setSubscriberID(ISubscriberID subscriberID);
-
-    /**
      * (i.e., QoS limits, timers, etc.).
      *
      */

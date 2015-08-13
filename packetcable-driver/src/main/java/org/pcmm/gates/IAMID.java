@@ -1,13 +1,17 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
-
 
 package org.pcmm.gates;
 
 import org.pcmm.base.IPCMMBaseObject;
 
 /**
+ * Class to hold the Application Manager Identification which is the handle that identifies the Application Manager
+ * and Application Type.
+ *
+ * From the Packetcable Multimedia specification section 6.1.2
+ *
  * <p>
  * The AMID consists of two fields: the Application Manager Tag and Application
  * Type. Each Application Manager is pre-provisioned with an Application Manager
@@ -36,16 +40,18 @@ import org.pcmm.base.IPCMMBaseObject;
  */
 public interface IAMID extends IPCMMBaseObject {
 
-    static final short LENGTH = 8;
-    static final byte SNUM = 2;
-    static final byte STYPE = 1;
+    byte STYPE = 1;
 
-    void setApplicationType(short type);
-
+    /**
+     * Returns the application type value
+     * @return - a short
+     */
     short getApplicationType();
 
-    void setApplicationMgrTag(short type);
-
+    /**
+     * Returns the application manager tag value
+     * @return - a short
+     */
     short getApplicationMgrTag();
 
 }

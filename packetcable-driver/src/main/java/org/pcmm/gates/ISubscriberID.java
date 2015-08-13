@@ -1,13 +1,12 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
-
 
 package org.pcmm.gates;
 
-import java.net.InetAddress;
-
 import org.pcmm.base.IPCMMBaseObject;
+
+import java.net.InetAddress;
 
 /**
  * <p>
@@ -33,9 +32,8 @@ import org.pcmm.base.IPCMMBaseObject;
  */
 
 public interface ISubscriberID extends IPCMMBaseObject {
-    static final short LENGTH = 8;
-    static final byte SNUM = 3;
-    static final byte STYPE = 1;
+
+    byte STYPE = 1;
 
     /**
      * source IP address for the PCMM gate.
@@ -43,7 +41,5 @@ public interface ISubscriberID extends IPCMMBaseObject {
      * @return IP v4 or v6 ip address.
      */
     InetAddress getSourceIPAddress();
-
-    void setSourceIPAddress(InetAddress address);
 
 }

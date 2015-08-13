@@ -1,118 +1,212 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates.impl;
 
 import org.pcmm.base.impl.PCMMBaseObject;
 import org.pcmm.gates.IGateSpec;
 import org.pcmm.gates.ISessionClassID;
+import org.umu.cops.stack.COPSMsgParser;
 
 /**
- *
+ * Implementation of the IGateSpec interface
  */
 public class GateSpec extends PCMMBaseObject implements IGateSpec {
 
-    // GateSpec flags are Direction (bit 0) and DSCPTOS overwrite enable (bit 1)
-    private byte flags = 0;
+    /**
+     * The gate's direction
+     */
+    private final Direction direction;
 
-    public GateSpec() {
-        super(LENGTH, STYPE, SNUM);
+    /**
+     * The DSCP/TOS Overwrite is a 1-byte bit field [8] defined by the following alternative structures, depending upon
+     network management strategy.
+     *
+     * When enabled, the CMTS must mark the packets traversing the CMTS DSCP/TOS value
+     */
+    private final byte tosOverwrite;
+
+    /**
+     * tosOverwrite field with the TOS mask is used to identify particular bits within the IPv4 DSCP/TOS byte
+     */
+    private final byte tosMask;
+
+    /**
+     * Session Class ID identifies the proper admission control policy or parameters to be applied for this gate
+     */
+    private final SessionClassID sessionClassID;
+
+    /**
+     * Timer value in seconds. Value of 0 indicates that the CMTS provisioned value for the timer MUST be used.
+     */
+    private final short timer1;
+
+    /**
+     * DOCSIS Admitted timer in seconds
+     */
+    private final short timer2;
+
+    /**
+     * DOCSIS Active timer in seconds
+     */
+    private final short timer3;
+
+    /**
+     * The fourth timer value in seconds
+     */
+    private final short timer4;
+
+    /**
+     * General constructor
+     * @param direction - the gate direction
+     * @param tosOverwrite - ENABLE/DISABLE
+     * @param tosMask - the mask
+     */
+    public GateSpec(final Direction direction, final byte tosOverwrite, final byte tosMask) {
+        this(direction, tosOverwrite, tosMask, new SessionClassID((byte) 0), (short) 0, (short) 0, (short) 0, (short) 0);
     }
 
-    public GateSpec(byte[] data) {
-        super(data);
-    }
+    /**
+     * Constructor generally for use when parsing a byte array to create an instance of this object.
+     * @param direction - the gate direction
+     * @param tosOverwrite - ENABLE/DISABLE
+     * @param tosMask - the mask
+     * @param sessionClassID - the session class ID
+     * @param timer1 - timer1 in seconds
+     * @param timer2 - timer2 in seconds
+     * @param timer3 - timer3 in seconds
+     * @param timer4 - timer4 in seconds
+     */
+    protected GateSpec(final Direction direction, final byte tosOverwrite, final byte tosMask,
+                    final SessionClassID sessionClassID, final short timer1, final short timer2, final short timer3,
+                    final short timer4) {
 
-    @Override
-    public ISessionClassID getSessionClassID() {
-        return new SessionClassID(getByte((short) 3));
-    }
+        super(SNum.GATE_SPEC, STYPE);
 
-    @Override
-    public void setSessionClassID(ISessionClassID id) {
-        setByte(id.toSingleByte(), (short) 3);
+        if (direction == null) throw new IllegalArgumentException("Direction is required");
+//        if (tosOverwrite == null) throw new IllegalArgumentException("TOS Overwrite is required");
+        if (sessionClassID == null) throw new IllegalArgumentException("Session class ID is required");
+
+        this.direction = direction;
+        this.tosOverwrite = tosOverwrite;
+        this.tosMask = tosMask;
+        this.sessionClassID = sessionClassID;
+        this.timer1 = timer1;
+        this.timer2 = timer2;
+        this.timer3 = timer3;
+        this.timer4 = timer4;
     }
 
     @Override
     public Direction getDirection() {
-        return Direction.valueOf(getByte((short) 0));
+        return direction;
     }
 
     @Override
-    public void setDirection(Direction direction) {
-        // OR in the Direction flag with the DSCPTOS enable flag
-        flags |= direction.getValue();
-        setByte(flags, (short) 0);
-    }
-
-    @Override
-    public short getTimerT1() {
-        return getShort((short) 4);
-    }
-
-    @Override
-    public void setTimerT1(short authTimer) {
-        setShort(authTimer, (short) 4);
-    }
-
-    @Override
-    public short getTimerT2() {
-        return getShort((short) 6);
-    }
-
-    @Override
-    public void setTimerT2(short timer) {
-        setShort(timer, (short) 6);
-
-    }
-
-    @Override
-    public short getTimerT3() {
-        return getShort((short) 8);
-    }
-
-    @Override
-    public void setTimerT3(short t) {
-        setShort(t, (short) 8);
-
-    }
-
-    @Override
-    public short getTimerT4() {
-        return getShort((short) 10);
-    }
-
-    @Override
-    public void setTimerT4(short t) {
-        setShort(t, (short) 10);
-    }
-
-    @Override
-    public void setDSCP_TOSOverwrite(DSCPTOS dscpTos) {
-        // OR in the DSCPTOS enable flag with the Direction flag
-        setDSCP_TOSOverwrite(dscpTos.getValue());
-    }
-
-    @Override
-    public void setDSCP_TOSOverwrite(byte dscpTos) {
-        flags |= dscpTos;
-        setByte(flags, (short) 1);
-    }
-
-
-    @Override
-    public DSCPTOS getDSCP_TOSOverwrite() {
-        return DSCPTOS.valueOf(getByte((short) 1));
+    public byte getDSCP_TOSOverwrite() {
+        return tosOverwrite;
     }
 
     @Override
     public byte getDSCP_TOSMask() {
-        return getByte((short) 2);
+        return tosMask;
     }
 
     @Override
-    public void setDSCP_TOSMask(byte dscp_tos_mask) {
-        setByte(dscp_tos_mask, (short) 2);
+    public ISessionClassID getSessionClassID() {
+        return sessionClassID;
     }
 
+    @Override
+    public short getTimerT1() {
+        return timer1;
+    }
+
+    @Override
+    public short getTimerT2() {
+        return timer2;
+    }
+
+    @Override
+    public short getTimerT3() {
+        return timer3;
+    }
+
+    @Override
+    public short getTimerT4() {
+        return timer4;
+    }
+
+    @Override
+    protected byte[] getBytes() {
+        final byte[] data = new byte[12];
+        data[0] = direction.getValue();
+        data[1] = tosOverwrite;
+        data[2] = tosMask;
+        data[3] = sessionClassID.toSingleByte();
+
+        final byte[] timer1Bytes = COPSMsgParser.shortToBytes(timer1);
+        data[4] = timer1Bytes[0];
+        data[5] = timer1Bytes[1];
+
+        final byte[] timer2Bytes = COPSMsgParser.shortToBytes(timer2);
+        data[6] = timer2Bytes[0];
+        data[7] = timer2Bytes[1];
+
+        final byte[] timer3Bytes = COPSMsgParser.shortToBytes(timer3);
+        data[8] = timer3Bytes[0];
+        data[9] = timer3Bytes[1];
+
+        final byte[] timer4Bytes = COPSMsgParser.shortToBytes(timer4);
+        data[10] = timer4Bytes[0];
+        data[11] = timer4Bytes[1];
+
+        return data;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof GateSpec)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final GateSpec gateSpec = (GateSpec) o;
+        return tosMask == gateSpec.tosMask && timer1 == gateSpec.timer1 && timer2 == gateSpec.timer2 &&
+                timer3 == gateSpec.timer3 && timer4 == gateSpec.timer4 && direction == gateSpec.direction &&
+                tosOverwrite == gateSpec.tosOverwrite && sessionClassID.equals(gateSpec.sessionClassID);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + direction.hashCode();
+        result = 31 * result + (int) tosOverwrite;
+        result = 31 * result + (int) tosMask;
+        result = 31 * result + sessionClassID.hashCode();
+        result = 31 * result + (int) timer1;
+        result = 31 * result + (int) timer2;
+        result = 31 * result + (int) timer3;
+        result = 31 * result + (int) timer4;
+        return result;
+    }
+
+    /**
+     * Returns a GateSpec object from a byte array
+     * @param data - the data to parse
+     * @return - the object
+     * TODO - make me more robust as RuntimeExceptions can be thrown here.
+     */
+    public static GateSpec parse(final byte[] data) {
+        return new GateSpec(Direction.valueOf(data[0]), data[1], data[2],
+                new SessionClassID(data[3]), COPSMsgParser.bytesToShort(data[4], data[5]),
+                COPSMsgParser.bytesToShort(data[6], data[7]), COPSMsgParser.bytesToShort(data[8], data[9]),
+                COPSMsgParser.bytesToShort(data[10], data[11]));
+    }
 }

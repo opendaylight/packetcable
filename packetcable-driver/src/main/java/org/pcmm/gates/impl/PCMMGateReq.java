@@ -1,14 +1,18 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates.impl;
 
-import org.pcmm.base.IPCMMBaseObject;
+import com.google.common.primitives.Bytes;
+import org.pcmm.base.impl.PCMMBaseObject.SNum;
 import org.pcmm.gates.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -20,203 +24,184 @@ public class PCMMGateReq implements IPCMMGate {
 
     public final static Logger logger = LoggerFactory.getLogger(PCMMGateReq.class);
 
-    private boolean multicast;
-    private IGateID gateID;
-    private IAMID iamid;
-    private IPCMMError error;
-    private ISubscriberID subscriberID;
-    private ITransactionID transactionID;
-    private IGateSpec gateSpec;
-    private ITrafficProfile trafficProfile;
-    private IClassifier classifier;
+    // Immutable references
+    private final boolean multicast;
+    private final IAMID iamid;
+    private final ISubscriberID subscriberID;
+    private transient ITransactionID transactionID;
+    private transient IGateSpec gateSpec;
+    private transient ITrafficProfile trafficProfile;
+    private transient IClassifier classifier;
 
-    public PCMMGateReq() {
+    // These values are transient as objects of these type will be updated asynchronously and will be used for
+    // synchronization purposes
+    private IGateID gateID;
+    private IPCMMError error;
+
+    /**
+     * Constructor
+     * @param iamid - the Application Manager ID
+     * @param subscriberID - the Subscriber ID
+     * @param transactionID - the transaction ID
+     * @param gateSpec - the Gate specification
+     * @param trafficProfile - the traffic profile
+     * @param classifier - the classifier
+     * @param gateID - the gate ID
+     * @param error - the error
+     */
+    public PCMMGateReq(IAMID iamid, ISubscriberID subscriberID, ITransactionID transactionID,
+                       IGateSpec gateSpec, ITrafficProfile trafficProfile, IClassifier classifier, IGateID gateID,
+                       IPCMMError error) {
+        // TODO - determine if and when this attribute should be used
+        this.multicast = false;
+
+        this.iamid = iamid;
+        this.subscriberID = subscriberID;
+        this.transactionID = transactionID;
+        this.gateSpec = gateSpec;
+        this.trafficProfile = trafficProfile;
+        this.classifier = classifier;
+        this.gateID = gateID;
+        this.error = error;
     }
 
-    public PCMMGateReq(byte[] data) {
-        short len, offset;
-        byte sNum, sType;
-        len = offset = 0;
-        sNum = sType = (byte) 0;
+    /**
+     * Creates a PCMM Gate Request object from parsing a byte array
+     * @param data - the data to parse
+     * @return - the request
+     */
+    public static PCMMGateReq parse(byte[] data) {
+        GateID gateID = null;
+        AMID amid = null;
+        SubscriberID subscriberID = null;
+        TransactionID transactionID = null;
+        GateSpec gateSpec = null;
+        ITrafficProfile trafficProfile = null;
+        Classifier classifier = null;
+        PCMMError error = null;
+
+        short offset = 0;
         while (offset + 5 < data.length) {
-            len = 0;
+            short len = 0;
             len |= ((short) data[offset]) << 8;
             len |= ((short) data[offset + 1]) & 0xFF;
-            sNum = data[offset + 2];
-            sType = data[offset + 3];
-            byte[] dataBuffer = Arrays.copyOfRange(data, offset, offset + len);
+            final SNum sNum = SNum.valueOf(data[offset + 2]);
+            final byte sType = data[offset + 3];
+            final int dataIndx = offset + 4;
+            byte[] dataBuffer = Arrays.copyOfRange(data, dataIndx, dataIndx + len - 4);
             switch (sNum) {
-            case IGateID.SNUM:
-                setGateID(new GateID(dataBuffer));
-                break;
-            case IAMID.SNUM:
-                setAMID(new AMID(dataBuffer));
-                break;
-            case ISubscriberID.SNUM:
-                setSubscriberID(new SubscriberID(dataBuffer));
-                break;
-            case ITransactionID.SNUM:
-                setTransactionID(new TransactionID(dataBuffer));
-                break;
-            case IGateSpec.SNUM:
-                setGateSpec(new GateSpec(dataBuffer));
-                break;
-            case ITrafficProfile.SNUM:
-                // TODO - Will need to support other traffic profiles
-                setTrafficProfile(new DOCSISServiceClassNameTrafficProfile(dataBuffer));
-                break;
-            case IClassifier.SNUM:
-                setClassifier(new Classifier(dataBuffer));
-                break;
-            case IPCMMError.SNUM:
-                error = new PCMMError(dataBuffer);
-                break;
+                case GATE_ID:
+                    gateID = GateID.parse(dataBuffer);
+                    break;
+                case AMID:
+                    amid = AMID.parse(dataBuffer);
+                    break;
+                case SUBSCRIBER_ID:
+                    subscriberID = SubscriberID.parse(dataBuffer);
+                    break;
+                case TRANSACTION_ID:
+                    transactionID = TransactionID.parse(dataBuffer);
+                    break;
+                case GATE_SPEC:
+                    gateSpec = GateSpec.parse(dataBuffer);
+                    break;
+                case TRAFFIC_PROFILE:
+                    switch (sType) {
+                        case DOCSISServiceClassNameTrafficProfile.STYPE:
+                            trafficProfile = DOCSISServiceClassNameTrafficProfile.parse(dataBuffer);
+                            break;
+                        case BestEffortService.STYPE:
+                            trafficProfile = BestEffortService.parse(dataBuffer);
+                            break;
+                    }
+                    break;
+                case CLASSIFIERS:
+                    switch (sType) {
+                        case IClassifier.STYPE:
+                            classifier = Classifier.parse(dataBuffer);
+                            break;
+                        case IExtendedClassifier.STYPE:
+                            classifier = ExtendedClassifier.parse(dataBuffer);
+                            break;
+                        case IIPv6Classifier.STYPE:
+                            classifier = IPv6Classifier.parse(dataBuffer);
+                            break;
+                    }
+                    break;
+                case PCMM_ERROR:
+                    error = PCMMError.parse(dataBuffer);
+                    break;
             default:
                 logger.warn("Unhandled Object skept : S-NUM=" + sNum
                                    + "  S-TYPE=" + sType + "  LEN=" + len);
             }
             offset += len;
         }
+
+        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifier, gateID, error);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#isMulticast()
-     */
     @Override
     public boolean isMulticast() {
         // TODO Auto-generated method stub
         return multicast;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#setGateID(short)
-     */
     @Override
     public void setGateID(IGateID gateid) {
         this.gateID = gateid;
 
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#setAMID(org.pcmm.gates.IAMID)
-     */
     @Override
-    public void setAMID(IAMID iamid) {
-        this.iamid = iamid;
+    public void setTransactionID(ITransactionID transactionID) {
+        this.transactionID = transactionID;
+
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.pcmm.gates.IPCMMGate#getSubscriberID(org.pcmm.gates.ISubscriberID)
-     */
-    @Override
-    public void setSubscriberID(ISubscriberID subscriberID) {
-        this.subscriberID = subscriberID;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getGateSpec(org.pcmm.gates.IGateSpec)
-     */
     @Override
     public void setGateSpec(IGateSpec gateSpec) {
         this.gateSpec = gateSpec;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getClassifier(org.pcmm.gates.IClassifier)
-     */
     @Override
     public void setClassifier(IClassifier classifier) {
         this.classifier = classifier;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.pcmm.gates.IPCMMGate#getTrafficProfile(org.pcmm.gates.ITrafficProfile
-     * )
-     */
     @Override
     public void setTrafficProfile(ITrafficProfile profile) {
         this.trafficProfile = profile;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getGateID()
-     */
     @Override
     public IGateID getGateID() {
         return gateID;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getAMID()
-     */
     @Override
     public IAMID getAMID() {
         return iamid;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getSubscriberID()
-     */
     @Override
     public ISubscriberID getSubscriberID() {
         return subscriberID;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getGateSpec()
-     */
     @Override
     public IGateSpec getGateSpec() {
         return gateSpec;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getClassifier()
-     */
     @Override
     public IClassifier getClassifier() {
         return classifier;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IPCMMGate#getTrafficProfile()
-     */
     @Override
     public ITrafficProfile getTrafficProfile() {
         return trafficProfile;
-    }
-
-    @Override
-    public void setTransactionID(ITransactionID transactionID) {
-        this.transactionID = transactionID;
     }
 
     @Override
@@ -234,32 +219,32 @@ public class PCMMGateReq implements IPCMMGate {
 
     @Override
     public byte[] getData() {
-        byte[] array = new byte[0];
+        final List<Byte> byteList = new ArrayList<>();
         if (getTransactionID() != null) {
-            array = fill(array, getTransactionID());
+            byteList.addAll(Bytes.asList(getTransactionID().getAsBinaryArray()));
         }
         if (getGateID() != null) {
-            array = fill(array, getGateID());
+            byteList.addAll(Bytes.asList(getGateID().getAsBinaryArray()));
         }
         if (getAMID() != null) {
-            array = fill(array, getAMID());
-
+            byteList.addAll(Bytes.asList(getAMID().getAsBinaryArray()));
         }
         if (getSubscriberID() != null) {
-            array = fill(array, getSubscriberID());
+            byteList.addAll(Bytes.asList(getSubscriberID().getAsBinaryArray()));
         }
         if (getGateSpec() != null) {
-            array = fill(array, getGateSpec());
+            byteList.addAll(Bytes.asList(getGateSpec().getAsBinaryArray()));
         }
         if (getTrafficProfile() != null) {
-            array = fill(array, getTrafficProfile());
+            byteList.addAll(Bytes.asList(getTrafficProfile().getAsBinaryArray()));
         }
         if (getClassifier() != null) {
-            array = fill(array, getClassifier());
+            byteList.addAll(Bytes.asList(getClassifier().getAsBinaryArray()));
         }
-        return array;
+        return Bytes.toArray(byteList);
     }
 
+/*
     private byte[] fill(byte[] array, IPCMMBaseObject obj) {
         byte[] a = obj.getAsBinaryArray();
         int offset = array.length;
@@ -267,4 +252,5 @@ public class PCMMGateReq implements IPCMMGate {
         System.arraycopy(a, 0, array, offset, a.length);
         return array;
     }
+*/
 }

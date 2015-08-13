@@ -1,10 +1,10 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
 
 package org.pcmm;
 
-import org.pcmm.gates.ITransactionID;
+import org.pcmm.gates.ITransactionID.GateCommandType;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ public class PCMMPdpDataProcess implements COPSPdpDataProcess {
     public void successReport(final COPSPdpReqStateMan man, final PCMMGateReq gateMsg) {
         logger.info("Success Report notified.");
 
-        if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateDeleteAck ) {
+        if ( gateMsg.getTransactionID().getGateCommandType().equals(GateCommandType.GATE_DELETE_ACK)) {
             logger.info("GateDeleteAck: GateID = " + gateMsg.getGateID().getGateID());
             if (gateMsg.getGateID().getGateID() == PCMMGlobalConfig.getGateID1())
                 PCMMGlobalConfig.setGateID1(0);
@@ -79,7 +79,7 @@ public class PCMMPdpDataProcess implements COPSPdpDataProcess {
                 PCMMGlobalConfig.setGateID2(0);
 
         }
-        if ( gateMsg.getTransactionID().getGateCommandType() == ITransactionID.GateSetAck ) {
+        if ( gateMsg.getTransactionID().getGateCommandType().equals(GateCommandType.GATE_SET_ACK)) {
             logger.info("GateSetAck : GateID = " + gateMsg.getGateID().getGateID());
             if (0 == PCMMGlobalConfig.getGateID1())
                 PCMMGlobalConfig.setGateID1(gateMsg.getGateID().getGateID());

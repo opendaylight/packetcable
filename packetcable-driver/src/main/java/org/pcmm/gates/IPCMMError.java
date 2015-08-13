@@ -7,55 +7,74 @@ package org.pcmm.gates;
 import org.pcmm.base.IPCMMBaseObject;
 
 /**
- *
+ * The aPacketCable Error object contains information on the type of error that has occurred. The error is generated in
+ * response to a Gate Control command and is contained in Gate-Set-Err, Gate-Info-Err and Gate-Delete-Err messages.
  */
 public interface IPCMMError extends IPCMMBaseObject {
-	short LENGTH = 8;
-	byte SNUM = 14;
-	byte STYPE = 1;
-	String[] errors = { "Insufficient Resources", "Unknown GateID",
-			"Missing Required Object", "Invalid Object",
-			"Volume Based Usage Limit Exceeded",
-			"Time Based Usage Limit Exceeded", "Session Class Limit Exceeded",
-			"Undefined Service Class Name", "Incompatible Envelope",
-			"Invalid SubscriberID", "Unauthorized AMID",
-			"Number of Classifiers Not Supported", "Policy Exception",
-			"Invalid Field Value in Object", "Transport Error",
-			"Unknown Gate Command", "DOCSIS 1.0 CM",
-			"Number of SIDs exceeded in CM", "Number of SIDs exceeded in CMTS",
-			"Unauthorized PSID", "No State for PDP", "Unsupported Synch Type",
-			"State Data Incomplete", "Upstream Drop Unsupported",
-			"Multicast Gate Error", "Multicast Volume Limit Unsupported",
-			"Uncommitted Multicast Not Supported",
-			"Multicast Gate Modification Not Supported",
-			"Upstream Multicast Not Supported",
-			"Multicast GateSpec incompatibility", "Multicast QoS Error",
-			"Multicast Downstream Resequencing mismatch",
-			"Other, Unspecified Error" };
 
-	enum Description {
-		ERROR_01((short) 1, errors[0]), ERROR_02((short) 2, errors[1]), ERROR_06(
-				(short) 6, errors[2]), ERROR_07((short) 7, errors[3]), ERROR_08(
-				(short) 8, errors[4]), ERROR_09((short) 9, errors[5]), ERROR_10(
-				(short) 10, errors[6]), ERROR_11((short) 11, errors[7]), ERROR_12(
-				(short) 12, errors[8]), ERROR_13((short) 13, errors[9]), ERROR_14(
-				(short) 14, errors[10]), ERROR_15((short) 15, errors[11]), ERROR_16(
-				(short) 16, errors[12]), ERROR_17((short) 17, errors[13]), ERROR_18(
-				(short) 18, errors[14]), ERROR_19((short) 19, errors[15]), ERROR_20(
-				(short) 20, errors[16]), ERROR_21((short) 21, errors[17]), ERROR_22(
-				(short) 22, errors[18]), ERROR_23((short) 23, errors[19]), ERROR_24(
-				(short) 24, errors[20]), ERROR_25((short) 25, errors[21]), ERROR_26(
-				(short) 26, errors[22]), ERROR_27((short) 27, errors[23]), ERROR_28(
-				(short) 28, errors[24]), ERROR_29((short) 29, errors[25]), ERROR_30(
-				(short) 30, errors[26]), ERROR_31((short) 31, errors[27]), ERROR_32(
-				(short) 32, errors[28]), ERROR_33((short) 33, errors[29]), ERROR_34(
-				(short) 34, errors[30]), ERROR_35((short) 35, errors[31]), ERROR_127(
-				(short) 127, errors[28]);
+	byte STYPE = 1;
+
+	/**
+	 * Returns the error code
+	 * @return - not null or NA
+	 */
+	ErrorCode getErrorCode();
+
+	/**
+	 * Returns the error sub-code
+	 * @return - not null (mostly will be NA)
+	 */
+	ErrorCode getErrorSubcode();
+
+	/**
+	 * Returns the error's description
+	 * @return - not null
+	 */
+	String getDescription();
+
+	/**
+	 * The supported PCMM error codes with description.
+	 */
+	enum ErrorCode {
+		NA((short) 0, "NA"),
+		INSUFF_RES((short) 1, "Insufficient Resources"),
+		UNK_GATE_ID((short) 2, "Unknown GateID"),
+		MISSING_REQ_OBJ((short) 6, "Missing Required Object"),
+		INVALID_OBJ((short) 7, "Invalid Object"),
+		VOL_USG_LMT((short) 8, "Volume Based Usage Limit Exceeded"),
+		TIME_USG_LMT((short) 9, "Time Based Usage Limit Exceeded"),
+		SESSN_CLASS_LMT((short) 10, "Session Class Limit Exceeded"),
+		UNDEF_SCN_NAME((short) 11, "Undefined Service Class Name"),
+		INCOMPAT_ENV((short) 12, "Incompatible Envelope"),
+		INVALID_SUB_ID((short) 13, "Invalid SubscriberID"),
+		UNAUTH_AMID((short) 14, "Unauthorized AMID"),
+		NUM_CLASSIFIERS((short) 15, "Number of Classifiers Not Supported"),
+		POLICY_EXCEPTION((short) 16, "Policy Exception"),
+		INVALID_FIELD((short) 17, "Invalid Field Value in Object"),
+		TRANSPORT_ERROR((short) 18, "Transport Error"),
+		UNK_GATE_CMD((short) 19, "Unknown Gate Command"),
+		DOCSIS_1_CM((short) 20, "DOCSIS 1.0 CM"),
+		NUM_CM_SID((short) 21, "Number of SIDs exceeded in CM"),
+		NUM_CMTS_SID((short) 22, "Number of SIDs exceeded in CMTS"),
+		UNAUTH_PSID((short) 23, "Unauthorized PSID"),
+		NO_STATE_PDP((short) 24, "No State for PDP"),
+		UNSUP_SYNC_TYPE((short) 25, "Unsupported Synch Type"),
+		STATE_INCMPL((short) 26, "State Data Incomplete"),
+		UP_DROP_UNSUPPORT((short) 27, "Upstream Drop Unsupported"),
+		MULTI_GATE_ERR((short) 28, "Multicast Gate Error"),
+		MULTI_VOL_LIMIT((short) 29, "Multicast Volume Limit Unsupported"),
+		MULTI_UNCOMMITTED((short) 30, "Uncommitted Multicast Not Supported"),
+		MULTI_GATE_MOD((short) 31, "Multicast Gate Modification Not Supported"),
+		MULTI_UP_ERR((short) 32, "Upstream Multicast Not Supported"),
+		MULTI_GATE_INCOMPAT((short) 33, "Multicast GateSpec incompatibility"),
+		MULTI_QOS_ERR((short) 34, "Multicast QoS Error"),
+		MULTI_DN_RESEQ((short) 35, "Multicast Downstream Resequencing mismatch"),
+		OTHER_UNSPECIFIED((short) 127, "Other, Unspecified Error");
 
 		private final short code;
 		private final String description;
 
-		Description(short code, String description) {
+		ErrorCode(short code, String description) {
 			this.code = code;
 			this.description = description;
 		}
@@ -68,29 +87,80 @@ public interface IPCMMError extends IPCMMBaseObject {
 			return code;
 		}
 
-		public static String valueOf(short errCode) {
-			switch (errCode) {
-			case 1:
-			case 2:
-			case 4:
-				return errors[errCode - 1];
-			case 127:
-				return errors[32];
-			default:
-				if (errCode > 35 || errCode < 1)
-					throw new IllegalArgumentException("unrecongnized error code : " + errCode);
-				return errors[errCode - 4];
+		public static ErrorCode valueOf(final short index) {
+			switch (index) {
+				case 0:
+					return NA;
+				case 1:
+					return INSUFF_RES;
+				case 2:
+					return UNK_GATE_ID;
+				case 6:
+					return MISSING_REQ_OBJ;
+				case 7:
+					return INVALID_OBJ;
+				case 8:
+					return VOL_USG_LMT;
+				case 9:
+					return TIME_USG_LMT;
+				case 10:
+					return SESSN_CLASS_LMT;
+				case 11:
+					return UNDEF_SCN_NAME;
+				case 12:
+					return INCOMPAT_ENV;
+				case 13:
+					return INVALID_SUB_ID;
+				case 14:
+					return UNAUTH_AMID;
+				case 15:
+					return NUM_CLASSIFIERS;
+				case 16:
+					return POLICY_EXCEPTION;
+				case 17:
+					return INVALID_FIELD;
+				case 18:
+					return TRANSPORT_ERROR;
+				case 19:
+					return UNK_GATE_CMD;
+				case 20:
+					return DOCSIS_1_CM;
+				case 21:
+					return NUM_CM_SID;
+				case 22:
+					return NUM_CMTS_SID;
+				case 23:
+					return UNAUTH_PSID;
+				case 24:
+					return NO_STATE_PDP;
+				case 25:
+					return UNSUP_SYNC_TYPE;
+				case 26:
+					return STATE_INCMPL;
+				case 27:
+					return UP_DROP_UNSUPPORT;
+				case 28:
+					return MULTI_GATE_ERR;
+				case 29:
+					return MULTI_VOL_LIMIT;
+				case 30:
+					return MULTI_UNCOMMITTED;
+				case 31:
+					return MULTI_GATE_MOD;
+				case 32:
+					return MULTI_UP_ERR;
+				case 33:
+					return MULTI_GATE_INCOMPAT;
+				case 34:
+					return MULTI_QOS_ERR;
+				case 35:
+					return MULTI_DN_RESEQ;
+				case 127:
+					return OTHER_UNSPECIFIED;
+				default:
+					return null;
 			}
 		}
 	}
 
-	void setErrorCode(short ErrorCode);
-
-	short getErrorCode();
-
-	void setErrorSubcode(short ErrorSubcode);
-
-	short getErrorSubcode();
-
-	String getDescription();
 }

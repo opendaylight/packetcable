@@ -1,57 +1,71 @@
-/**
- @header@
+/*
+ * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
  */
+
 package org.pcmm.gates.impl;
 
 import org.pcmm.base.impl.PCMMBaseObject;
 import org.pcmm.gates.IGateID;
+import org.umu.cops.stack.COPSMsgParser;
 
 /**
- *
+ * Implementation of the IGateID interface
  */
 public class GateID extends PCMMBaseObject implements IGateID {
 
     /**
-     *
+     * The gate ID value
      */
-    public GateID() {
-        this(LENGTH, STYPE, SNUM);
-    }
+    final int gateId;
 
     /**
-     * @param data
+     * Constructor
+     * @param gateId - the ID value
      */
-    public GateID(byte[] data) {
-        super(data);
+    public GateID(final int gateId) {
+        super(SNum.GATE_ID, STYPE);
+        this.gateId = gateId;
     }
 
-    /**
-     * @param len
-     * @param sType
-     * @param sNum
-     */
-    public GateID(short len, byte sType, byte sNum) {
-        super(len, sType, sNum);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IGateID#setGateID(int)
-     */
-    @Override
-    public void setGateID(int gateID) {
-        setInt(gateID, (short) 0);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.pcmm.gates.IGateID#getGateID()
-     */
     @Override
     public int getGateID() {
-        return getInt((short) 0);
+        return gateId;
     }
 
+    @Override
+    protected byte[] getBytes() {
+        return COPSMsgParser.intToBytes(gateId);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof GateID)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final GateID gateID = (GateID) o;
+        return gateId == gateID.gateId;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + gateId;
+        return result;
+    }
+
+    /**
+     * Returns a GateID object from a byte array
+     * @param data - the data to parse
+     * @return - the object
+     * TODO - make me more robust as RuntimeExceptions can be thrown here.
+     */
+    public static GateID parse(final byte[] data) {
+        return new GateID(COPSMsgParser.bytesToInt(data[0], data[1], data[2], data[3]));
+    }
 }
