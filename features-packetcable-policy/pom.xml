@@ -12,17 +12,17 @@
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>features-parent</artifactId>
-        <version>1.5.1-Lithium-SR1</version>
+        <version>1.5.2-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>features-packetcable-policy</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
     <name>${project.artifactId}</name>
-    <version>1.2.1-Lithium-SR1</version>
+    <version>1.2.2-SNAPSHOT</version>
     <properties>
-        <yangtools.version>0.7.1-Lithium-SR1</yangtools.version>
-        <mdsal.version>1.2.1-Lithium-SR1</mdsal.version>
-        <feature.test.version>1.5.1-Lithium-SR1</feature.test.version>
+        <yangtools.version>0.7.2-SNAPSHOT</yangtools.version>
+        <mdsal.version>1.2.2-SNAPSHOT</mdsal.version>
+        <feature.test.version>1.5.2-SNAPSHOT</feature.test.version>
     </properties>
     <dependencies>
         <dependency>
