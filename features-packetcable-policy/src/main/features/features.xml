@@ -9,26 +9,26 @@
 <features name="odl-packetcable-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
-    <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
     <feature name='odl-packetcable-policy-server-all' version='${project.version}'
         description='OpenDaylight :: packetcable :: policy :: All'>
         <feature version='${project.version}'>odl-packetcable-policy-server</feature>
     </feature>
     <feature name='odl-packetcable-policy-model' version='${project.version}'
         description='OpenDaylight :: packetcable :: policy :: Model'>
-        <feature version='${yangtools.version}'>odl-yangtools-binding</feature>
-        <feature version='${yangtools.version}'>odl-yangtools-models</feature>
-        <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-model/${project.version}</bundle>
+        <feature version='${yangtools.version}'>odl-mdsal-models</feature>
+        <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-model/{{VERSION}}</bundle>
     </feature>
     <feature name='odl-packetcable-policy-server' version='${project.version}'
         description='OpenDaylight :: packetcable :: policy :: Provider'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
         <feature version='${project.version}'>odl-packetcable-policy-model</feature>
-        <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-server/${project.version}</bundle>
-        <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
-        <configfile finalname="etc/opendaylight/karaf/80-packetcable.xml">mvn:org.opendaylight.packetcable/packetcable-policy-server/${project.version}/xml/config</configfile>
+        <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-server/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/{{VERSION}}</bundle>
+        <configfile finalname="etc/opendaylight/karaf/80-packetcable.xml">mvn:org.opendaylight.packetcable/packetcable-policy-server/{{VERSION}}/xml/config</configfile>
     </feature>
 </features>
