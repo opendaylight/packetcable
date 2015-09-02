@@ -3,7 +3,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.opendaylight.yangtools</groupId>
+        <groupId>org.opendaylight.mdsal</groupId>
         <artifactId>binding-parent</artifactId>
         <version>0.8.0-SNAPSHOT</version>
         <relativePath />
@@ -13,17 +13,30 @@
     <name>${project.artifactId}</name>
     <version>1.3.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+
+    <dependencyManagement>
+      <dependencies>
+        <dependency>
+            <groupId>org.opendaylight.mdsal.model</groupId>
+            <artifactId>mdsal-model-artifacts</artifactId>
+            <version>0.8.0-SNAPSHOT</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+      </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
-            <groupId>org.opendaylight.yangtools.model</groupId>
+            <groupId>org.opendaylight.mdsal.model</groupId>
             <artifactId>ietf-inet-types</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.yangtools.model</groupId>
+            <groupId>org.opendaylight.mdsal.model</groupId>
             <artifactId>ietf-yang-types</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.yangtools</groupId>
+            <groupId>org.opendaylight.mdsal</groupId>
             <artifactId>yang-binding</artifactId>
         </dependency>
         <dependency>
