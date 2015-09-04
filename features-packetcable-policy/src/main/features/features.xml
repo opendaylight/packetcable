@@ -11,7 +11,7 @@
     xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.controller/features-restconf/${mdsal.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
     <feature name='odl-packetcable-policy-server-all' version='${project.version}'
         description='OpenDaylight :: packetcable :: policy :: All'>
         <feature version='${project.version}'>odl-packetcable-policy-server</feature>
@@ -25,7 +25,7 @@
     <feature name='odl-packetcable-policy-server' version='${project.version}'
         description='OpenDaylight :: packetcable :: policy :: Provider'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-        <feature version="${mdsal.version}">odl-mdsal-apidocs</feature>
+        <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
         <feature version='${project.version}'>odl-packetcable-policy-model</feature>
         <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-server/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.packetcable/packetcable-driver/${project.version}</bundle>
