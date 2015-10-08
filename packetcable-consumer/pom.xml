@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.opendaylight.packetcable</groupId>
 		<artifactId>packetcable</artifactId>
-		<version>1.2.2-Lithium-SR2</version>
+		<version>1.2.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>packetcable-consumer</artifactId>
 	<packaging>bundle</packaging>
 
 	<properties>
-		<sal-binding-api.version>1.2.2-Lithium-SR2</sal-binding-api.version>
+		<sal-binding-api.version>1.2.3-SNAPSHOT</sal-binding-api.version>
 	</properties>
 
 	<dependencies>
