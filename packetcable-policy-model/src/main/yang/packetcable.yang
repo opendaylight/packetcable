@@ -8,7 +8,10 @@ module packetcable
 
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
-
+	
+    revision 2015-10-26 {
+    	description "Corrected pluralization of containers/lists and added containers around lists where needed";
+    }
     revision 2015-03-27 {
         description "Initial revision of PCMM CCAP definitions";
     }
@@ -43,8 +46,8 @@ module packetcable
 
 
 	// CCAP devices
-	container ccap {
-		list ccaps {
+	container ccaps {
+		list ccap {
 			description "
 				CCAP devices are known by their network name which is any string.
 				Each CCAP device has a network address:port, a list of subscriber IP subnets,
@@ -117,27 +120,33 @@ module packetcable
     }
 
     grouping pcmm-qos-gates {
-        list apps {
-            key "appId";
-		    leaf appId {
-		    	type string;
-		    	description "Application Identity";
-		    }
-            list subs {
-                key "subId";
-			    leaf subId {
-		            type string;
-				description "Subscriber Identity -- must be a CM or CPE IP address";
+    	container apps {
+	        list app {
+	            key "appId";
+			    leaf appId {
+			    	type string;
+			    	description "Application Identity";
 			    }
-	            list gates {
-	                key "gateId";
-				    leaf gateId {
-				    	type string;
-				    	description "Qos Gate Identity";
-				    }
-				    uses pcmm-qos-gate-attributes;
-	            }
-            }
+			    container subscribers {
+		            list subscriber {
+		                key "subscriberId";
+					    leaf subscriberId {
+				            type string;
+						description "Subscriber Identity -- must be a CM or CPE IP address";
+					    }
+					    container gates {
+				            list gate {
+				                key "gateId";
+							    leaf gateId {
+							    	type string;
+							    	description "Qos Gate Identity";
+							    }
+							    uses pcmm-qos-gate-attributes;
+				            }
+					    }
+		            }
+			    }
+	    	}
     	}
     }
 

@@ -1,5 +1,16 @@
 package org.opendaylight.controller.packetcable.provider;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import javax.annotation.concurrent.ThreadSafe;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
@@ -8,32 +19,25 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderCo
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Prefix;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.Qos;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.CcapsKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.Apps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.AppsKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.Subs;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.SubsKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.GatesKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.Qos;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.CcapKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.App;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.AppKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.concurrent.ThreadSafe;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Called by ODL framework to start this bundle.
@@ -47,7 +51,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
     private static final Logger logger = LoggerFactory.getLogger(PacketcableProvider.class);
 
     // keys to the /restconf/config/packetcable:ccap and /restconf/config/packetcable:qos config datastore
-    public static final InstanceIdentifier<Ccap> ccapIID = InstanceIdentifier.builder(Ccap.class).build();
+    public static final InstanceIdentifier<Ccaps> ccapIID = InstanceIdentifier.builder(Ccaps.class).build();
     public static final InstanceIdentifier<Qos> qosIID = InstanceIdentifier.builder(Qos.class).build();
 
     /**
@@ -61,12 +65,12 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
     private ListenerRegistration<DataChangeListener> qosDataChangeListenerRegistration;
 
     // TODO - Revisit these maps and remove the ones no longer necessary
-    private final Map<String, Ccaps> ccapMap = new ConcurrentHashMap<>();
-    private final Map<String, Gates> gateMap = new ConcurrentHashMap<>();
+    private final Map<String, Ccap> ccapMap = new ConcurrentHashMap<>();
+    private final Map<String, Gate> gateMap = new ConcurrentHashMap<>();
     private final Map<String, String> gateCcapMap = new ConcurrentHashMap<>();
-    private final Map<Subnet, Ccaps> subscriberSubnetsMap = new ConcurrentHashMap<>();
-    private final Map<ServiceClassName, List<Ccaps>> downstreamScnMap = new ConcurrentHashMap<>();
-    private final Map<ServiceClassName, List<Ccaps>> upstreamScnMap = new ConcurrentHashMap<>();
+    private final Map<Subnet, Ccap> subscriberSubnetsMap = new ConcurrentHashMap<>();
+    private final Map<ServiceClassName, List<Ccap>> downstreamScnMap = new ConcurrentHashMap<>();
+    private final Map<ServiceClassName, List<Ccap>> upstreamScnMap = new ConcurrentHashMap<>();
 
     /**
      * Holds a PCMMService object for each CCAP being managed.
@@ -128,7 +132,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         }
     }
 
-    private void updateCcapMaps(final Ccaps ccap) {
+    private void updateCcapMaps(final Ccap ccap) {
         // add ccap to the subscriberSubnets map
         for (final IpPrefix ipPrefix : ccap.getSubscriberSubnets()) {
             try {
@@ -142,7 +146,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
             if (upstreamScnMap.containsKey(scn)) {
                 upstreamScnMap.get(scn).add(ccap);
             } else {
-                final List<Ccaps> ccapList = new ArrayList<>();
+                final List<Ccap> ccapList = new ArrayList<>();
                 ccapList.add(ccap);
                 upstreamScnMap.put(scn, ccapList);
             }
@@ -152,32 +156,32 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
             if (downstreamScnMap.containsKey(scn)) {
                 downstreamScnMap.get(scn).add(ccap);
             } else {
-                final List<Ccaps> ccapList = new ArrayList<>();
+                final List<Ccap> ccapList = new ArrayList<>();
                 ccapList.add(ccap);
                 downstreamScnMap.put(scn, ccapList);
             }
         }
     }
 
-    private void removeCcapFromAllMaps(final Ccaps ccap) {
+    private void removeCcapFromAllMaps(final Ccap ccap) {
         // remove the ccap from all maps
         // subscriberSubnets map
-        for (final Map.Entry<Subnet, Ccaps> entry : subscriberSubnetsMap.entrySet()) {
+        for (final Map.Entry<Subnet, Ccap> entry : subscriberSubnetsMap.entrySet()) {
             if (entry.getValue() == ccap) {
                 subscriberSubnetsMap.remove(entry.getKey());
             }
         }
         // ccap to upstream SCN map
-        for (final Map.Entry<ServiceClassName, List<Ccaps>> entry : upstreamScnMap.entrySet()) {
-            final List<Ccaps> ccapList = entry.getValue();
+        for (final Map.Entry<ServiceClassName, List<Ccap>> entry : upstreamScnMap.entrySet()) {
+            final List<Ccap> ccapList = entry.getValue();
             ccapList.remove(ccap);
             if (ccapList.isEmpty()) {
                 upstreamScnMap.remove(entry.getKey());
             }
         }
         // ccap to downstream SCN map
-        for (final Map.Entry<ServiceClassName, List<Ccaps>> entry : downstreamScnMap.entrySet()) {
-            final List<Ccaps> ccapList = entry.getValue();
+        for (final Map.Entry<ServiceClassName, List<Ccap>> entry : downstreamScnMap.entrySet()) {
+            final List<Ccap> ccapList = entry.getValue();
             ccapList.remove(ccap);
             if (ccapList.isEmpty()) {
                 downstreamScnMap.remove(entry.getKey());
@@ -188,10 +192,10 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         if (service != null) service.disconect();
     }
 
-    private Ccaps findCcapForSubscriberId(final InetAddress inetAddr) {
-        Ccaps matchedCcap = null;
+    private Ccap findCcapForSubscriberId(final InetAddress inetAddr) {
+        Ccap matchedCcap = null;
         int longestPrefixLen = -1;
-        for (final Map.Entry<Subnet, Ccaps> entry : subscriberSubnetsMap.entrySet()) {
+        for (final Map.Entry<Subnet, Ccap> entry : subscriberSubnetsMap.entrySet()) {
             final Subnet subnet = entry.getKey();
             if (subnet.isInNet(inetAddr)) {
                 int prefixLen = subnet.getPrefixLen();
@@ -204,14 +208,14 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         return matchedCcap;
     }
 
-    private ServiceFlowDirection findScnOnCcap(final ServiceClassName scn, final Ccaps ccap) {
+    private ServiceFlowDirection findScnOnCcap(final ServiceClassName scn, final Ccap ccap) {
         if (upstreamScnMap.containsKey(scn)) {
-            final List<Ccaps> ccapList = upstreamScnMap.get(scn);
+            final List<Ccap> ccapList = upstreamScnMap.get(scn);
             if (ccapList.contains(ccap)) {
                 return ServiceFlowDirection.Us;
             }
         } else if (downstreamScnMap.containsKey(scn)) {
-            final List<Ccaps> ccapList = downstreamScnMap.get(scn);
+            final List<Ccap> ccapList = downstreamScnMap.get(scn);
             if (ccapList.contains(ccap)) {
                 return ServiceFlowDirection.Ds;
             }
@@ -225,13 +229,13 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
 
     private class InstanceData {
         // CCAP Identity
-        public final Map<InstanceIdentifier<Ccaps>, Ccaps> ccapIidMap = new HashMap<>();
+        public final Map<InstanceIdentifier<Ccap>, Ccap> ccapIidMap = new HashMap<>();
         // Gate Identity
         public String subId;
         public final Map<String, String> gatePathMap = new HashMap<>();
         public String gatePath;
-        public final Map<InstanceIdentifier<Gates>, Gates> gateIidMap = new HashMap<>();
-        // remove path for either CCAP or Gates
+        public final Map<InstanceIdentifier<Gate>, Gate> gateIidMap = new HashMap<>();
+        // remove path for either CCAP or Gate
         public final Set<String> removePathList = new HashSet<>();
 
         public final Set<InstanceIdentifier<?>> reqCcapIds = new HashSet<>();
@@ -263,32 +267,32 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         private void getGatePathMap(final InstanceIdentifier<?> thisInstance) {
             logger.info("onDataChanged().getGatePathMap(): " + thisInstance);
             try {
-                final InstanceIdentifier<Ccaps> ccapInstance = thisInstance.firstIdentifierOf(Ccaps.class);
+                final InstanceIdentifier<Ccap> ccapInstance = thisInstance.firstIdentifierOf(Ccap.class);
                 if (ccapInstance != null) {
-                    final CcapsKey ccapKey = InstanceIdentifier.keyOf(ccapInstance);
+                    final CcapKey ccapKey = InstanceIdentifier.keyOf(ccapInstance);
                     if (ccapKey != null) {
                         gatePathMap.put("ccapId", ccapKey.getCcapId());
                     }
                 } else {
                     // get the gate path keys from the InstanceIdentifier Map key set if they are there
-                    final InstanceIdentifier<Apps> appsInstance = thisInstance.firstIdentifierOf(Apps.class);
-                    if (appsInstance != null) {
-                        final AppsKey appKey = InstanceIdentifier.keyOf(appsInstance);
+                    final InstanceIdentifier<App> appInstance = thisInstance.firstIdentifierOf(App.class);
+                    if (appInstance != null) {
+                        final AppKey appKey = InstanceIdentifier.keyOf(appInstance);
                         if (appKey != null) {
                             gatePathMap.put("appId", appKey.getAppId());
                         }
                     }
-                    final InstanceIdentifier<Subs> subsInstance = thisInstance.firstIdentifierOf(Subs.class);
-                    if (subsInstance != null) {
-                        final SubsKey subKey = InstanceIdentifier.keyOf(subsInstance);
+                    final InstanceIdentifier<Subscriber> subInstance = thisInstance.firstIdentifierOf(Subscriber.class);
+                    if (subInstance != null) {
+                        final SubscriberKey subKey = InstanceIdentifier.keyOf(subInstance);
                         if (subKey != null) {
-                            subId = subKey.getSubId();
+                            subId = subKey.getSubscriberId();
                             gatePathMap.put("subId", subId);
                         }
                     }
-                    final InstanceIdentifier<Gates> gatesInstance = thisInstance.firstIdentifierOf(Gates.class);
+                    final InstanceIdentifier<Gate> gatesInstance = thisInstance.firstIdentifierOf(Gate.class);
                     if (gatesInstance != null) {
-                        final GatesKey gateKey = InstanceIdentifier.keyOf(gatesInstance);
+                        final GateKey gateKey = InstanceIdentifier.keyOf(gatesInstance);
                         if (gateKey != null) {
                             gatePathMap.put("gateId", gateKey.getGateId());
                         }
@@ -303,14 +307,14 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
             logger.info("onDataChanged().getCcaps(): " + thisData);
             for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
 
-                if (entry.getKey().getTargetType().equals(Ccaps.class)) {
-                    Ccaps ccaps = ((Ccaps) entry.getValue());
-                    InstanceIdentifier<Ccaps> ccapsIid = InstanceIdentifier.builder(Ccap.class).child(Ccaps.class, new CcapsKey(ccaps.getCcapId())).build();
+                if (entry.getKey().getTargetType().equals(Ccap.class)) {
+                    Ccap ccaps = ((Ccap) entry.getValue());
+                    InstanceIdentifier<Ccap> ccapsIid = InstanceIdentifier.builder(Ccaps.class).child(Ccap.class, new CcapKey(ccaps.getCcapId())).build();
                     ccapIidMap.put(ccapsIid, ccaps);
                 }
 
                 if (entry.getKey().getTargetType().equals(Connection.class) ||
-                        entry.getKey().getTargetType().equals(Ccaps.class)) {
+                        entry.getKey().getTargetType().equals(Ccap.class)) {
                     reqCcapIds.add(entry.getKey());
                 }
             }
@@ -319,11 +323,11 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         private void getGates(final Map<InstanceIdentifier<?>, DataObject> thisData) {
             logger.info("onDataChanged().getGates(): " + thisData);
             for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
-                if (entry.getValue() instanceof Gates) {
-                    final Gates gate = (Gates)entry.getValue();
+                if (entry.getValue() instanceof Gate) {
+                    final Gate gate = (Gate)entry.getValue();
 
                     // TODO FIXME - Potential ClassCastException thrown here!!!
-                    final InstanceIdentifier<Gates> gateIID = (InstanceIdentifier<Gates>)entry.getKey();
+                    final InstanceIdentifier<Gate> gateIID = (InstanceIdentifier<Gate>)entry.getKey();
                     getGatePathMap(gateIID);
                     if (!gateIidMap.containsKey(gateIID)){
                         gateIidMap.put(gateIID, gate);
@@ -337,8 +341,8 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
 //                            if (apps.getSubs() != null) {
 //                                for (Subs subs : apps.getSubs()) {
 //                                    if (subs.getGates() != null) {
-//                                        for (Gates gates : subs.getGates()) {
-//                                            final InstanceIdentifier<Gates> gateIID = (InstanceIdentifier<Gates>)entry.getKey();
+//                                        for (Gate gates : subs.getGates()) {
+//                                            final InstanceIdentifier<Gate> gateIID = (InstanceIdentifier<Gate>)entry.getKey();
 //                                            getGatePathMap(gateIID);
 //                                            if (!gateIidMap.containsKey(gateIID)){
 //                                                gateIidMap.put(gateIID, gates);
@@ -381,8 +385,8 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         // get the CCAP parameters
         String message;
         if (! thisData.reqCcapIds.isEmpty()) {
-            for (Map.Entry<InstanceIdentifier<Ccaps>, Ccaps> entry : thisData.ccapIidMap.entrySet()) {
-                final Ccaps thisCcap = entry.getValue();
+            for (Map.Entry<InstanceIdentifier<Ccap>, Ccap> entry : thisData.ccapIidMap.entrySet()) {
+                final Ccap thisCcap = entry.getValue();
                 // get the CCAP node identity from the Instance Data
                 final String ccapId = thisCcap.getCcapId();
 
@@ -414,14 +418,14 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
             }
         } else {
             // get the PCMM gate parameters from the ccapId/appId/subId/gateId path in the Maps entry (if new gate)
-            for (final Map.Entry<InstanceIdentifier<Gates>, Gates> entry : thisData.gateIidMap.entrySet()) {
+            for (final Map.Entry<InstanceIdentifier<Gate>, Gate> entry : thisData.gateIidMap.entrySet()) {
                 message = null;
-                final Gates gate = entry.getValue();
+                final Gate gate = entry.getValue();
                 final String gateId = gate.getGateId();
                 final String gatePathStr = thisData.gatePath + "/" + gateId ;
                 final InetAddress subId = getInetAddress(thisData.subId);
                 if (subId != null) {
-                    final Ccaps thisCcap = findCcapForSubscriberId(subId);
+                    final Ccap thisCcap = findCcapForSubscriberId(subId);
                     if (thisCcap != null) {
                         final String ccapId = thisCcap.getCcapId();
                         // verify SCN exists on CCAP and force gateSpec.Direction to align with SCN direction
@@ -485,10 +489,10 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         logger.info("onRemove(): " + thisData);
         for (final String gatePathStr: thisData.removePathList) {
             if (gateMap.containsKey(gatePathStr)) {
-                final Gates thisGate = gateMap.remove(gatePathStr);
+                final Gate thisGate = gateMap.remove(gatePathStr);
                 final String gateId = thisGate.getGateId();
                 final String ccapId = gateCcapMap.remove(gatePathStr);
-                final Ccaps thisCcap = ccapMap.get(ccapId);
+                final Ccap thisCcap = ccapMap.get(ccapId);
                 final PCMMService service = pcmmServiceMap.get(thisCcap.getCcapId());
                 if (service != null) {
                     service.sendGateDelete(gatePathStr);
@@ -501,7 +505,7 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         }
         for (final String ccapIdStr: thisData.removePathList) {
             if (ccapMap.containsKey(ccapIdStr)) {
-                final Ccaps thisCcap = ccapMap.remove(ccapIdStr);
+                final Ccap thisCcap = ccapMap.remove(ccapIdStr);
                 removeCcapFromAllMaps(thisCcap);
             }
         }
@@ -511,16 +515,16 @@ public class PacketcableProvider implements BindingAwareProvider, DataChangeList
         logger.info("onUpdate(): " + oldData);
         // update operation not allowed -- restore the original config object and complain
         if (! oldData.ccapIidMap.isEmpty()) {
-            for (final Map.Entry<InstanceIdentifier<Ccaps>, Ccaps> entry : oldData.ccapIidMap.entrySet()) {
-                final Ccaps ccap = entry.getValue();
+            for (final Map.Entry<InstanceIdentifier<Ccap>, Ccap> entry : oldData.ccapIidMap.entrySet()) {
+                final Ccap ccap = entry.getValue();
                 final String ccapId = ccap.getCcapId();
                 // restores the original data - although I don't think this is what is done here! I think the update data is put into the DS/config
                 mdsalUtils.merge(LogicalDatastoreType.CONFIGURATION, entry.getKey(), ccap);
                 logger.error("onDataChanged(): CCAP update not permitted {}/{}", ccapId, ccap);
             }
         } else {
-            for (final Map.Entry<InstanceIdentifier<Gates>, Gates> entry : oldData.gateIidMap.entrySet()) {
-                final Gates gate = entry.getValue();
+            for (final Map.Entry<InstanceIdentifier<Gate>, Gate> entry : oldData.gateIidMap.entrySet()) {
+                final Gate gate = entry.getValue();
                 final String gatePathStr = oldData.gatePath + "/" + gate.getGateId() ;
              // restores the original data - although I don't think this is what is done here! I think the update data is put into the DS/config
                 mdsalUtils.merge(LogicalDatastoreType.CONFIGURATION, entry.getKey(), gate);

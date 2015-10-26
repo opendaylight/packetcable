@@ -5,12 +5,15 @@
 package org.opendaylight.controller.packetcable.provider;
 
 import com.google.common.collect.Maps;
+import java.net.InetAddress;
+import java.util.Map;
+import javax.annotation.concurrent.ThreadSafe;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.Gates;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.PCMMPdpDataProcess;
 import org.pcmm.PCMMPdpMsgSender;
@@ -21,10 +24,6 @@ import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.COPSError;
 import org.umu.cops.stack.COPSError.ErrorTypes;
 
-import javax.annotation.concurrent.ThreadSafe;
-import java.net.InetAddress;
-import java.util.Map;
-
 /**
  * Class responsible for managing the gates for a single CCAP.
  */
@@ -32,7 +31,7 @@ import java.util.Map;
 public class PCMMService {
 	private Logger logger = LoggerFactory.getLogger(PCMMService.class);
 
-	private final Ccaps ccap;
+	private final Ccap ccap;
 	private final IpAddress ipAddr;
 	private final PortNumber portNum;
 	protected final CcapClient ccapClient;
@@ -40,7 +39,7 @@ public class PCMMService {
 
 	private final short clientType;
 
-	public PCMMService(final short clientType, final Ccaps ccap) {
+	public PCMMService(final short clientType, final Ccap ccap) {
 		this.clientType = clientType;
 		this.ccap = ccap;
 		ipAddr = ccap.getConnection().getIpAddress();
@@ -69,33 +68,33 @@ public class PCMMService {
 	}
 
 	// TODO - Consider creating an object to return that contains a success flag, message, and gate ID or gate object
-	public String sendGateSet(final String gatePathStr, final InetAddress subId, final Gates qosGate,
+	public String sendGateSet(final String gatePathStr, final InetAddress subId, final Gate qosGate,
 							  final ServiceFlowDirection scnDir) {
 		logger.info("Sending gate to CCAP with ID - " + ccap.getCcapId());
 		// assemble the gate request for this subId
 		final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
-		gateBuilder.build(ccap.getAmId());
-		gateBuilder.build(subId);
+		gateBuilder.setAmId(ccap.getAmId());
+		gateBuilder.setSubscriberId(subId);
 		// force gateSpec.Direction to align with SCN direction
 		final ServiceClassName scn = qosGate.getTrafficProfile().getServiceClassName();
 		if (scn != null) {
-			gateBuilder.build(qosGate.getGateSpec(), scnDir);
+			gateBuilder.setGateSpec(qosGate.getGateSpec(), scnDir);
 		} else {
 			// not an SCN gate
-			gateBuilder.build(qosGate.getGateSpec(), null);
+			gateBuilder.setGateSpec(qosGate.getGateSpec(), null);
 		}
-		gateBuilder.build(qosGate.getTrafficProfile());
+		gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
 
 		// pick a classifier type (only one for now)
 		if (qosGate.getClassifier() != null) {
-			gateBuilder.build(qosGate.getClassifier());
+			gateBuilder.setClassifier(qosGate.getClassifier());
 		} else if (qosGate.getExtClassifier() != null) {
-			gateBuilder.build(qosGate.getExtClassifier());
+			gateBuilder.setExtClassifier(qosGate.getExtClassifier());
 		} else if (qosGate.getIpv6Classifier() != null) {
-			gateBuilder.build(qosGate.getIpv6Classifier());
+			gateBuilder.setIpv6Classifier(qosGate.getIpv6Classifier());
 		}
 		// assemble the final gate request
-		final PCMMGateReq gateReq = gateBuilder.getGateReq();
+		final PCMMGateReq gateReq = gateBuilder.build();
 
 		if (gateRequests.get(gatePathStr) == null) {
 			// and remember it

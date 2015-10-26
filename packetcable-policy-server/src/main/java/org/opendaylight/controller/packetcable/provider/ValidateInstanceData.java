@@ -14,35 +14,34 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv6Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.CcapsBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.AmIdBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.ConnectionBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.classifier.ClassifierBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ext.classifier.ExtClassifierBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gate.spec.GateSpecBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.GatesBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ipv6.classifier.Ipv6ClassifierBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.AmIdBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.ConnectionBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.CcapBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.classifier.ClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.ext.classifier.ExtClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gate.spec.GateSpecBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.ipv6.classifier.Ipv6ClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.traffic.profile.TrafficProfileBuilder;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
@@ -56,11 +55,11 @@ public class ValidateInstanceData {
     private final MdsalUtils mdsalUtils;
 
     // Gate Identities
-    private final Map<InstanceIdentifier<Gates>, Gates> gateIidMap;
+    private final Map<InstanceIdentifier<Gate>, Gate> gateIidMap;
 
     // CCAP Identity
-    private transient Ccaps ccap;
-    private transient InstanceIdentifier<Ccaps> ccapIID;
+    private transient Ccap ccap;
+    private transient InstanceIdentifier<Ccap> ccapIID;
 
     public ValidateInstanceData(final MdsalUtils mdsalUtils, final Map<InstanceIdentifier<?>, DataObject> thisData) {
         this.mdsalUtils = mdsalUtils;
@@ -83,9 +82,9 @@ public class ValidateInstanceData {
                 return false;
             }
         } else if (! gateIidMap.isEmpty()) {
-            for (Map.Entry<InstanceIdentifier<Gates>, Gates> entry : gateIidMap.entrySet()) {
-                InstanceIdentifier<Gates> gateIID = entry.getKey();
-                Gates gate = entry.getValue();
+            for (Map.Entry<InstanceIdentifier<Gate>, Gate> entry : gateIidMap.entrySet()) {
+                InstanceIdentifier<Gate> gateIID = entry.getKey();
+                Gate gate = entry.getValue();
                 if (! validateGate(gate)) {
                     logger.error("Validate Gate {} failed - {}", gate.getGateId());
                     mdsalUtils.delete(LogicalDatastoreType.CONFIGURATION, gateIID);
@@ -98,20 +97,20 @@ public class ValidateInstanceData {
 
     private void getCcap(final Map<InstanceIdentifier<?>, DataObject> thisData) {
         for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
-            if (entry.getValue() instanceof Ccaps) {
-                ccap = (Ccaps)entry.getValue();
+            if (entry.getValue() instanceof Ccap) {
+                ccap = (Ccap)entry.getValue();
                 // TODO FIXME - ClassCastException waiting to occur here!!!
-                ccapIID = (InstanceIdentifier<Ccaps>) entry.getKey();
+                ccapIID = (InstanceIdentifier<Ccap>) entry.getKey();
             }
         }
     }
 
     private void getGates(final Map<InstanceIdentifier<?>, DataObject> thisData) {
         for (final Map.Entry<InstanceIdentifier<?>, DataObject> entry : thisData.entrySet()) {
-            if (entry.getValue() instanceof Gates) {
-                final Gates gate = (Gates)entry.getValue();
+            if (entry.getValue() instanceof Gate) {
+                final Gate gate = (Gate)entry.getValue();
                 // TODO FIXME - ClassCastException waiting to occur here!!!
-                final InstanceIdentifier<Gates> gateIID = (InstanceIdentifier<Gates>)entry.getKey();
+                final InstanceIdentifier<Gate> gateIID = (InstanceIdentifier<Gate>)entry.getKey();
                 gateIidMap.put(gateIID, gate);
             }
         }
@@ -129,7 +128,7 @@ public class ValidateInstanceData {
         return null;
     }
 
-    private boolean validateGateSpec(final Gates gate, final GatesBuilder gateBuilder) {
+    private boolean validateGateSpec(final Gate gate, final GateBuilder gateBuilder) {
         // gate-spec
         String message = "";
         String error;
@@ -190,7 +189,7 @@ public class ValidateInstanceData {
         return valid;
     }
 
-    private boolean validateTrafficProfile(final Gates gate, final GatesBuilder gateBuilder) {
+    private boolean validateTrafficProfile(final Gate gate, final GateBuilder gateBuilder) {
         // traffic-profile
         String message = "";
         boolean valid = true;
@@ -228,7 +227,7 @@ public class ValidateInstanceData {
     }
 
     // TODO FIXME - Break this method apart
-    private boolean validateClassifier(final Gates gate, final GatesBuilder gateBuilder) {
+    private boolean validateClassifier(final Gate gate, final GateBuilder gateBuilder) {
         // validate classifier
         String message = "";
         boolean valid = true;
@@ -334,7 +333,7 @@ public class ValidateInstanceData {
     }
 
     // TODO FIXME - breakup this method
-    private boolean validateExtClassifier(final Gates gate, final GatesBuilder gateBuilder) {
+    private boolean validateExtClassifier(final Gate gate, final GateBuilder gateBuilder) {
         // validate ext-classifier
         String message = "";
         String error;
@@ -505,7 +504,7 @@ public class ValidateInstanceData {
     }
 
     // TODO FIXME - break apart this method.
-    private boolean validateIpv6Classifier(final Gates gate, final GatesBuilder gateBuilder) {
+    private boolean validateIpv6Classifier(final Gate gate, final GateBuilder gateBuilder) {
         // validate ipv6-classifier
         String message = "";
         String error;
@@ -682,9 +681,9 @@ public class ValidateInstanceData {
     }
 
     // TODO FIXME - Do we really want the gate parameter object to be muted by this method?
-    private boolean validateGate(Gates gate) {
+    private boolean validateGate(Gate gate) {
         // validate gate elements and null out invalid elements as we go
-        final GatesBuilder gateBuilder = new GatesBuilder();
+        final GateBuilder gateBuilder = new GateBuilder();
         String message = "";
         boolean rebuild = false;
         // gate-spec
@@ -739,7 +738,7 @@ public class ValidateInstanceData {
         return (! rebuild);
     }
 
-    private boolean validateAmId(final Ccaps ccap, final CcapsBuilder ccapBuilder) {
+    private boolean validateAmId(final Ccap ccap, final CcapBuilder ccapBuilder) {
         // amId
         String message = "";
         String error;
@@ -789,7 +788,7 @@ public class ValidateInstanceData {
         return valid;
     }
 
-    private boolean validateConnection(final Ccaps ccap, final CcapsBuilder ccapBuilder) {
+    private boolean validateConnection(final Ccap ccap, final CcapBuilder ccapBuilder) {
         // connection
         String message = "";
         String error;
@@ -837,13 +836,13 @@ public class ValidateInstanceData {
         return valid;
     }
 
-    private boolean validateSubscriberSubnets(final Ccaps ccap, final CcapsBuilder ccapBuilder) {
+    private boolean validateSubscriberSubnets(final Ccap ccap, final CcapBuilder ccapBuilder) {
         // subscriber-subnets
         String message = "";
         String error;
         boolean valid = true;
         List<IpPrefix> subnets = null;
-        error = validateMethod(Ccaps.class, ccap, "getSubscriberSubnets");
+        error = validateMethod(Ccap.class, ccap, "getSubscriberSubnets");
         if (error == null) {
             subnets = ccap.getSubscriberSubnets();
             if (subnets == null) {
@@ -862,13 +861,13 @@ public class ValidateInstanceData {
         return valid;
     }
 
-    private boolean validateUpstreamScns(final Ccaps ccap, final CcapsBuilder ccapBuilder) {
+    private boolean validateUpstreamScns(final Ccap ccap, final CcapBuilder ccapBuilder) {
         // upstream-scns
         String message = "";
         String error;
         boolean valid = true;
         List<ServiceClassName> usScns = null;
-        error = validateMethod(Ccaps.class, ccap, "getUpstreamScns");
+        error = validateMethod(Ccap.class, ccap, "getUpstreamScns");
         if (error == null) {
             usScns = ccap.getUpstreamScns();
             if (usScns == null) {
@@ -887,12 +886,12 @@ public class ValidateInstanceData {
         return valid;
     }
 
-    private boolean validateDownstreamScns(final Ccaps ccap, final CcapsBuilder ccapBuilder) {
+    private boolean validateDownstreamScns(final Ccap ccap, final CcapBuilder ccapBuilder) {
         // downstream-scns
         String message = "";
         boolean valid = true;
         List<ServiceClassName> dsScns = null;
-        final String error = validateMethod(Ccaps.class, ccap, "getDownstreamScns");
+        final String error = validateMethod(Ccap.class, ccap, "getDownstreamScns");
         if (error == null) {
             dsScns = ccap.getDownstreamScns();
             if (dsScns == null) {
@@ -913,9 +912,9 @@ public class ValidateInstanceData {
 
 
     // TODO FIXME - Do we really want the ccap parameter object to be muted by this method?
-    private boolean validateCcap(Ccaps ccap) {
+    private boolean validateCcap(Ccap ccap) {
         // validate ccap and null out invalid elements as we go
-        final CcapsBuilder ccapBuilder = new CcapsBuilder();
+        final CcapBuilder ccapBuilder = new CcapBuilder();
         String message = "";
         boolean rebuild = false;
         // amId

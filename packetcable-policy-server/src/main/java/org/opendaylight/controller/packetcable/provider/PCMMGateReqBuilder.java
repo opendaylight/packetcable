@@ -3,14 +3,14 @@
  */
 package org.opendaylight.controller.packetcable.provider;
 
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.traffic.profile.TrafficProfile;
 import org.pcmm.gates.IClassifier;
 import org.pcmm.gates.IClassifier.Protocol;
 import org.pcmm.gates.IExtendedClassifier.ActivationState;
@@ -42,19 +42,19 @@ public class PCMMGateReqBuilder {
     private IClassifier classifier = null;
     private PCMMError error = null;
 
-    public PCMMGateReq getGateReq() {
+    public PCMMGateReq build() {
         return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifier, gateID, error);
     }
 
-    public void build(final AmId qosAmId) {
+    public void setAmId(final AmId qosAmId) {
         amid = new AMID(qosAmId.getAmType().shortValue(), qosAmId.getAmTag().shortValue());
     }
 
-    public void build(final InetAddress qosSubId) {
+    public void setSubscriberId(final InetAddress qosSubId) {
         subscriberID = new SubscriberID(qosSubId);
     }
 
-    public void build(final GateSpec qosGateSpec, final ServiceFlowDirection scnDirection) {
+    public void setGateSpec(final GateSpec qosGateSpec, final ServiceFlowDirection scnDirection) {
 
         final ServiceFlowDirection qosDir;
         if (scnDirection != null) {
@@ -96,7 +96,7 @@ public class PCMMGateReqBuilder {
         gateSpec = new org.pcmm.gates.impl.GateSpec(gateDir, dscptos, gateTosMask);
     }
 
-    public void build(final TrafficProfile qosTrafficProfile) {
+    public void setTrafficProfile(final TrafficProfile qosTrafficProfile) {
         if (qosTrafficProfile.getServiceClassName() != null) {
             trafficProfile =
                     new DOCSISServiceClassNameTrafficProfile(qosTrafficProfile.getServiceClassName().getValue());
@@ -112,7 +112,7 @@ public class PCMMGateReqBuilder {
         return null;
     }
 
-    public void build(final Classifier qosClassifier) {
+    public void setClassifier(final Classifier qosClassifier) {
         // TODO - try and make these variables immutable
         Protocol protocol = null;
         byte tosOverwrite = 0;
@@ -160,7 +160,7 @@ public class PCMMGateReqBuilder {
                         dstPort, priority);
     }
 
-    public void build(final ExtClassifier qosExtClassifier) {
+    public void setExtClassifier(final ExtClassifier qosExtClassifier) {
         // Extended classifier
         final byte priority = (byte) 64;
         final ActivationState activationState = ActivationState.ACTIVE;
@@ -247,7 +247,7 @@ public class PCMMGateReqBuilder {
         return null;
     }
 
-    public void build(final Ipv6Classifier qosIpv6Classifier) {
+    public void setIpv6Classifier(final Ipv6Classifier qosIpv6Classifier) {
         // Next Header
         final short nextHdr;
         if (qosIpv6Classifier.getNextHdr() != null) {

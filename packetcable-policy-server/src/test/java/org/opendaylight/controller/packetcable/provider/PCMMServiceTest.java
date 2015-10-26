@@ -4,6 +4,17 @@
 
 package org.opendaylight.controller.packetcable.provider;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,36 +23,35 @@ import org.mockito.Mockito;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.gates.apps.subs.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev150327.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.traffic.profile.TrafficProfile;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.rcd.IPCMMClient;
 import org.pcmm.rcd.impl.CMTS;
-import org.umu.cops.stack.*;
+import org.umu.cops.stack.COPSClientSI;
+import org.umu.cops.stack.COPSContext;
 import org.umu.cops.stack.COPSContext.RType;
+import org.umu.cops.stack.COPSData;
+import org.umu.cops.stack.COPSDecision;
 import org.umu.cops.stack.COPSDecision.Command;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSDecisionMsg;
+import org.umu.cops.stack.COPSHandle;
+import org.umu.cops.stack.COPSMsg;
+import org.umu.cops.stack.COPSMsgParser;
 import org.umu.cops.stack.COPSObjHeader.CNum;
 import org.umu.cops.stack.COPSObjHeader.CType;
-
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Tests the PCMMService's ability to connect to a CMTS. Gate additions will not properly work as there is currently
@@ -85,7 +95,7 @@ public class PCMMServiceTest {
     /**
      * Defines the CMTS to add to the PCMMService
      */
-    private Ccaps ccap;
+    private Ccap ccap;
 
     /**
      * The class under test
@@ -109,7 +119,7 @@ public class PCMMServiceTest {
 
             // Use me when testing against a CMTS or emulator not running in the same JVM
             cmtsAddr = new Ipv4Address("10.32.10.3");
-            ccap = makeCcapsObj(PCMMPdpAgent.WELL_KNOWN_PDP_PORT, cmtsAddr, ccapId);
+            ccap = makeCcapObj(PCMMPdpAgent.WELL_KNOWN_PDP_PORT, cmtsAddr, ccapId);
         } else {
             cmAddrInet = InetAddress.getByAddress(new byte[] {10, 32, 110, (byte)180});
             invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
@@ -117,13 +127,13 @@ public class PCMMServiceTest {
             // Use me for automated testing and the CMTS emulator running in the same JVM
             cmtsAddr = new Ipv4Address("127.0.0.1");
 
-            final Set<String> upGates = new HashSet<>();
-            upGates.add("extrm_up");
-            final Set<String> dnGates = new HashSet<>();
-            dnGates.add("extrm_dn");
+            final Set<String> upGate = new HashSet<>();
+            upGate.add("extrm_up");
+            final Set<String> dnGate = new HashSet<>();
+            dnGate.add("extrm_dn");
             final Map<Direction, Set<String>> gates = new HashMap<>();
-            gates.put(Direction.UPSTREAM, upGates);
-            gates.put(Direction.DOWNSTREAM, dnGates);
+            gates.put(Direction.UPSTREAM, upGate);
+            gates.put(Direction.DOWNSTREAM, dnGate);
 
             final Map<String, Boolean> cmStatus = new HashMap<>();
             cmStatus.put(cmAddrInet.getHostAddress(), true);
@@ -131,7 +141,7 @@ public class PCMMServiceTest {
             icmts = new CMTS(gates, cmStatus);
             icmts.startServer();
 
-            ccap = makeCcapsObj(icmts.getPort(), cmtsAddr, ccapId);
+            ccap = makeCcapObj(icmts.getPort(), cmtsAddr, ccapId);
         }
 
         service = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
@@ -153,7 +163,7 @@ public class PCMMServiceTest {
         final int port;
         if (icmts != null) port = icmts.getPort() + 1;
         else port = PCMMPdpAgent.WELL_KNOWN_PDP_PORT + 1;
-        ccap = makeCcapsObj(port, cmtsAddr, ccapId);
+        ccap = makeCcapObj(port, cmtsAddr, ccapId);
         service = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
         final String message = service.addCcap();
         Assert.assertNotNull(message);
@@ -264,7 +274,7 @@ public class PCMMServiceTest {
         final Socket socket = new MockSocket();
 
         final ServiceFlowDirection direction = ServiceFlowDirection.Us;
-        final Gates gate = makeGateObj("extrm_up", cmtsAddr, direction, new Ipv4Address("127.0.0.1"));
+        final Gate gate = makeGateObj("extrm_up", cmtsAddr, direction, new Ipv4Address("127.0.0.1"));
         final IPCMMGate gateReq = makeGateRequest(ccap, gate, InetAddress.getByName("localhost"), direction);
         final byte[] data = gateReq.getData();
 
@@ -328,7 +338,7 @@ public class PCMMServiceTest {
                                     final Ipv4Address dstAddr, final ServiceFlowDirection direction,
                                     final InetAddress cmAddrInet, final String gatePath,
                                     final String expGateSetMsgStart) {
-        final Gates gate = makeGateObj(scnName, srcAddr, direction, dstAddr);
+        final Gate gate = makeGateObj(scnName, srcAddr, direction, dstAddr);
 
         final String gateSetMsg = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
         Assert.assertNotNull(gateSetMsg);
@@ -356,14 +366,14 @@ public class PCMMServiceTest {
     }
 
     /**
-     * Creates a mock Ccaps object that can be used for connecting to a CMTS
+     * Creates a mock Ccap object that can be used for connecting to a CMTS
      * @param inPort - the CMTS port number
      * @param ipAddr - the CMTS IPv4 address string
      * @param ccapId - the ID of the CCAP
-     * @return - the mock Ccaps object
+     * @return - the mock Ccap object
      */
-    private Ccaps makeCcapsObj(final int inPort, final Ipv4Address ipAddr, final String ccapId) {
-        final Ccaps ccap = Mockito.mock(Ccaps.class);
+    private Ccap makeCcapObj(final int inPort, final Ipv4Address ipAddr, final String ccapId) {
+        final Ccap ccap = Mockito.mock(Ccap.class);
         final Connection conn = Mockito.mock(Connection.class);
         Mockito.when(ccap.getConnection()).thenReturn(conn);
         final PortNumber port = Mockito.mock(PortNumber.class);
@@ -384,14 +394,14 @@ public class PCMMServiceTest {
     }
 
     /**
-     * Creates a mock Gates object
+     * Creates a mock Gate object
      * @param scnValue - the service class name defined on the CMTS
      * @param dstAddr - the CM address this gate should be set against
      * @return - the gate request
      */
-    private Gates makeGateObj(final String scnValue, final Ipv4Address srcAddr, final ServiceFlowDirection direction,
+    private Gate makeGateObj(final String scnValue, final Ipv4Address srcAddr, final ServiceFlowDirection direction,
                               final Ipv4Address dstAddr) {
-        final Gates gate = Mockito.mock(Gates.class);
+        final Gate gate = Mockito.mock(Gate.class);
         final GateSpec gateSpec = Mockito.mock(GateSpec.class);
         Mockito.when(gate.getGateSpec()).thenReturn(gateSpec);
         Mockito.when(gateSpec.getDirection()).thenReturn(direction);
@@ -430,31 +440,31 @@ public class PCMMServiceTest {
         return gate;
     }
 
-    private IPCMMGate makeGateRequest(final Ccaps ccap, final Gates gateReq, final InetAddress addrSubId,
+    private IPCMMGate makeGateRequest(final Ccap ccap, final Gate gateReq, final InetAddress addrSubId,
                                      final ServiceFlowDirection direction) {
         final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
-        gateBuilder.build(ccap.getAmId());
-        gateBuilder.build(addrSubId);
+        gateBuilder.setAmId(ccap.getAmId());
+        gateBuilder.setSubscriberId(addrSubId);
         // force gateSpec.Direction to align with SCN direction
         final ServiceClassName scn = gateReq.getTrafficProfile().getServiceClassName();
         if (scn != null) {
-            gateBuilder.build(gateReq.getGateSpec(), direction);
+            gateBuilder.setGateSpec(gateReq.getGateSpec(), direction);
         } else {
             // not an SCN gate
-            gateBuilder.build(gateReq.getGateSpec(), null);
+            gateBuilder.setGateSpec(gateReq.getGateSpec(), null);
         }
-        gateBuilder.build(gateReq.getTrafficProfile());
+        gateBuilder.setTrafficProfile(gateReq.getTrafficProfile());
 
         // pick a classifier type (only one for now)
         if (gateReq.getClassifier() != null) {
-            gateBuilder.build(gateReq.getClassifier());
+            gateBuilder.setClassifier(gateReq.getClassifier());
         } else if (gateReq.getExtClassifier() != null) {
-            gateBuilder.build(gateReq.getExtClassifier());
+            gateBuilder.setExtClassifier(gateReq.getExtClassifier());
         } else if (gateReq.getIpv6Classifier() != null) {
-            gateBuilder.build(gateReq.getIpv6Classifier());
+            gateBuilder.setIpv6Classifier(gateReq.getIpv6Classifier());
         }
         // assemble the final gate request
-        return gateBuilder.getGateReq();
+        return gateBuilder.build();
     }
 
     private class MockSocket extends Socket {
