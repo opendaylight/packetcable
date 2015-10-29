@@ -1,8 +1,17 @@
-/**
- * Build PCMM gate requests from API QoS Gate objects
+/*
+ * Copyright (c) 2015 CableLabs and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
+
 package org.opendaylight.controller.packetcable.provider;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TosByte;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.AmId;
@@ -17,21 +26,22 @@ import org.pcmm.gates.IExtendedClassifier.ActivationState;
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.IIPv6Classifier.FlowLabel;
 import org.pcmm.gates.ITrafficProfile;
-import org.pcmm.gates.impl.*;
+import org.pcmm.gates.impl.AMID;
+import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
+import org.pcmm.gates.impl.GateID;
+import org.pcmm.gates.impl.PCMMError;
+import org.pcmm.gates.impl.PCMMGateReq;
+import org.pcmm.gates.impl.SubscriberID;
+import org.pcmm.gates.impl.TransactionID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 /**
- * PacketCable data processor
+ * Build PCMM gate requests from API QoS Gate objects
  */
 public class PCMMGateReqBuilder {
 
-    private Logger logger = LoggerFactory.getLogger(PCMMGateReqBuilder.class);
+    private final Logger logger = LoggerFactory.getLogger(PCMMGateReqBuilder.class);
 
     private GateID gateID = null;
     private AMID amid = null;

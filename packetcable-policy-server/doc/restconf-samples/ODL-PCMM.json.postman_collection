@@ -9,14 +9,14 @@
 			"name": "CCAP/CMTS",
 			"description": "Sample PUT, GET, & DELETE of CMTS into ODL",
 			"order": [
+				"1f68f1dc-1d2b-8d04-b7be-0e6fc03fd90a",
 				"44ba6dfe-ca0c-376a-0322-b3db2af6eb2f",
 				"0c1e6f25-e33b-e3ed-fc59-02f2b569a9ed",
 				"a817933b-9398-23d1-b269-68f81ba51bc7",
 				"f403ebfd-d7d7-c94e-0ee5-3bc864098250",
 				"672adfee-68a5-5281-d638-72c2964b35cc",
 				"1142817c-9007-f0a1-92cd-644935c1fa85",
-				"07f16f27-6ef1-b022-1921-02a3baf40d91",
-				"1f68f1dc-1d2b-8d04-b7be-0e6fc03fd90a"
+				"07f16f27-6ef1-b022-1921-02a3baf40d91"
 			],
 			"owner": 0
 		},
@@ -25,6 +25,9 @@
 			"name": "Gates",
 			"description": "Sample PUT, GET, DELETE for PCMM Gates",
 			"order": [
+				"89d6f693-4b15-44dc-d330-f191ac6780b7",
+				"b8031ee0-b6e0-dcbe-fff3-a924cbe295a4",
+				"e69fb800-4f72-819b-2875-83eecf65dfb1",
 				"0f01c73b-c17a-b53b-3694-1d746edcd2a2",
 				"11ef539e-26d3-77ab-3828-321c3f7bf6a3",
 				"03bebe64-27ff-1df3-5b6b-9237f6c8e229",
@@ -34,10 +37,11 @@
 				"ec1b0f8c-371d-a0bd-ce5f-d30aa31237cb",
 				"dc932ee9-1acd-9efe-cc83-de07894516bb",
 				"9d80f0da-4500-e843-31c5-808c91d9249b",
-				"b8031ee0-b6e0-dcbe-fff3-a924cbe295a4"
+				"7b027a58-c3a7-dd6a-555f-e5bc3644286c",
+				"e59184fc-4b70-2eb6-eaf5-001fc7f62fbc"
 			],
 			"owner": 0,
-			"collectionId": "ea685ec8-aa6d-22e9-e501-b608a6705634"
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc"
 		}
 	],
 	"timestamp": 1431957020452,
@@ -77,12 +81,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1445618651730,
+			"time": 1446221273089,
 			"name": "Add CCAP 1 - Bad",
 			"description": "tries to add a CCAP/CMTS to manage with out providing all the required fields",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"ccap\": [{\n        \"ccapId\": \"{{ccapId-1}}\",\n        \"amId\": {\n            \"am-type\": \"1\"\n        },\n        \"connection\": {\n            \"ipAddress\": \"{{ccapIp-1}}\",\n            \"port\": \"{{ccapPort-1}}\"\n        },\n        \"subscriber-subnets\": [\n            \"10.32.110.1/24\"\n        ],\n        \"downstream-scns\": [\n            \"extrm_dn\"\n        ],\n        \"upstream-scns\": [\n            \"extrm_up\"\n        ]\n    }]\n}\n"
+			"rawModeData": "{\n    \"ccap\": [{\n        \"ccapId\": \"{{ccapId-1}}\",\n        \"amId\": {\n        },\n        \"connection\": {\n            \"ipAddress\": \"{{ccapIp-1}}\",\n            \"port\": \"{{ccapPort-1}}\"\n        },\n        \"subscriber-subnets\": [\n            \"10.32.110.1/24\"\n        ],\n        \"downstream-scns\": [\n            \"extrm_dn\"\n        ],\n        \"upstream-scns\": [\n            \"extrm_up\"\n        ]\n    }]\n}\n"
 		},
 		{
 			"id": "0c1e6f25-e33b-e3ed-fc59-02f2b569a9ed",
@@ -240,6 +244,45 @@
 			"responses": []
 		},
 		{
+			"id": "7b027a58-c3a7-dd6a-555f-e5bc3644286c",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-classifier}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-classifier}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "PUT",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447349054220,
+			"name": "Bad - Gate w/ incomplete classifier",
+			"description": "PUT gate with a standard classifier that is missing some data",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-classifier}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n        },\n        \"classifier\": {\n            \"srcIp\": \"{{srcIp-1a}}\",\n            \"dstIp\": \"{{dstIp-1a}}\",\n            \"srcPort\": \"{{srcPort-1a}}\",\n            \"dstPort\": \"{{dstPort-1a}}\",\n            \"tos-byte\": \"0xa0\",\n            \"tos-mask\": \"0xe0\"\n        }\n    }]\n}\n"
+		},
+		{
+			"id": "89d6f693-4b15-44dc-d330-f191ac6780b7",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/operational/packetcable:qos/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447349051431,
+			"name": "Operational - All Gates",
+			"description": "Retrieves all gates.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": []
+		},
+		{
 			"id": "9d80f0da-4500-e843-31c5-808c91d9249b",
 			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
 			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-ipv6}}/subscribers/subscriber/{{subId-ipv6}}/gates/gate/{{gateId-ipv6}}/",
@@ -332,6 +375,45 @@
 			"time": 1445872183035,
 			"name": "Gate w/ IPv6 classifier",
 			"description": "Retrieves the gate with IPv6 classifier.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": []
+		},
+		{
+			"id": "e59184fc-4b70-2eb6-eaf5-001fc7f62fbc",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-classifier}}/subscribers/subscriber/1.2.3.4/gates/gate/{{gateId-classifier}}",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "PUT",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447425110789,
+			"name": "Bad - Gate w/ invalid subscriber",
+			"description": "PUT gate with a standard classifier that formed\ncorectly but the subscriber is unknown to the CCAP.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-classifier}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        },\n        \"classifier\": {\n            \"srcIp\": \"{{srcIp-1a}}\",\n            \"dstIp\": \"{{dstIp-1a}}\",\n            \"protocol\": \"0\",\n            \"srcPort\": \"{{srcPort-1a}}\",\n            \"dstPort\": \"{{dstPort-1a}}\",\n            \"tos-byte\": \"0xa0\",\n            \"tos-mask\": \"0xe0\"\n        }\n    }]\n}\n"
+		},
+		{
+			"id": "e69fb800-4f72-819b-2875-83eecf65dfb1",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "DELETE",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447359288221,
+			"name": "All Gates",
+			"description": "Deletes all apps, subscribers, and gates.",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": []
 		},

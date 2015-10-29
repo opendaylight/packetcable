@@ -1,0 +1,40 @@
+/*
+ * Copyright (c) 2015 CableLabs and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
+
+import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
+import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+
+/**
+ * @author rvail
+ */
+public class SubscriberValidator extends AbstractValidator<Subscriber> {
+
+    private static final String SUBSCRIBER_ID = "subscriber.subscriberId";
+    private static final String GATES = "subscriber.gates";
+
+    private final GatesValidator gatesValidator = new GatesValidator();
+
+    @Override
+    public void validate(final Subscriber subscriber, final Extent extent) throws ValidationException {
+        if (subscriber == null) {
+            throw new ValidationException("subscriber must exist");
+        }
+
+        mustExist(subscriber.getSubscriberId(), SUBSCRIBER_ID);
+        mustExist(subscriber.getGates(), GATES);
+
+        if (extent == Extent.NODE_AND_SUBTREE) {
+            validateChild(gatesValidator, subscriber.getGates());
+        }
+
+        throwErrorsIfNeeded();
+    }
+}

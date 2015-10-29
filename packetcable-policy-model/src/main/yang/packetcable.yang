@@ -3,12 +3,13 @@ module packetcable
     namespace "urn:packetcable";
     prefix "pcmm";
 
-    import ietf-yang-types 	{ prefix yang; }
-    import ietf-inet-types 	{ prefix inet; }
+    import ietf-yang-types 	{ prefix yang;  revision-date "2010-09-24"; }
+    import ietf-inet-types 	{ prefix inet; revision-date "2010-09-24"; }
+    import yang-ext { prefix ext; revision-date "2013-07-09"; }
 
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
-	
+
     revision 2015-10-26 {
     	description "Corrected pluralization of containers/lists and added containers around lists where needed";
     }
@@ -44,6 +45,13 @@ module packetcable
 	 	description "TOS/TC byte or mask";
 	 }
 
+	identity ccap-context {
+		description "Identity used to mark ccap context";
+	}
+
+	identity app-context {
+		description "Identity used to mark app context";
+	}
 
 	// CCAP devices
 	container ccaps {
@@ -54,12 +62,56 @@ module packetcable
 				and a list of available Service Class Names.
 				";
 		    key "ccapId";
+		    ext:context-instance "ccap-context";
 			leaf ccapId {
 			    type string;
-			    	description "CCAP Identity";
-			    }
+			    description "CCAP Identity";
+			    mandatory true;
+			}
 		    uses ccap-attributes;
 	    }
+    }
+
+    grouping ccap-connection {
+     	leaf ipAddress {
+	       	type inet:ip-address;
+	       	description "IP Address of CCAP";
+	       	mandatory true;
+	   	}
+	   	leaf port {
+	       	type inet:port-number;
+        	description "COPS session TCP port number";
+         	default 3918;
+        }
+		leaf connected {
+			config false;
+			type boolean;
+			description "COPS session state";
+			mandatory true;
+		}
+		leaf-list error {
+			config false;
+			type string;
+			description "Operational errors";
+		}
+//		leaf idle-detect {
+//			type uint8;
+//			description "COPS connection idle timer (seconds)";
+//          mandatory true;
+//		}
+//		leaf isIdle {
+//			config false;
+//			type boolean;
+//			description "COPS connection idle state";
+//          mandatory true;
+//		}
+
+		leaf timestamp {
+        	config false;
+        	type yang:date-and-time;
+        	description "Last update timestamp";
+        	mandatory true;
+        }
     }
 
 	grouping ccap-attributes {
@@ -69,24 +121,18 @@ module packetcable
 			a list of available Service Class Names.
 			";
 		container connection {
-			leaf ipAddress {
-	        	type inet:ip-address;
-	        	description "IP Address of CCAP";
-	    	}
-	    	leaf port {
-	        	type inet:port-number;
-	        	description "COPS session TCP port number";
-	        	default 3918;
-	    	}
+			uses ccap-connection;
         }
         container amId {
         	leaf am-tag {
         		type uint16;
         		description "Application Manager Tag -- unique for this operator";
+        		mandatory true;
         	}
         	leaf am-type {
          		type uint16;
         		description "Application Manager Type -- unique for this AM tag";
+        		mandatory true;
         	}
         }
 		leaf-list subscriber-subnets {
@@ -97,6 +143,11 @@ module packetcable
 		}
 		leaf-list downstream-scns {
 			type service-class-name;
+		}
+		leaf-list error {
+			config false;
+			type string;
+			description "ccap data errors";
 		}
 	}
 
@@ -123,6 +174,7 @@ module packetcable
     	container apps {
 	        list app {
 	            key "appId";
+	            ext:context-instance "app-context";
 			    leaf appId {
 			    	type string;
 			    	description "Application Identity";
@@ -132,7 +184,8 @@ module packetcable
 		                key "subscriberId";
 					    leaf subscriberId {
 				            type string;
-						description "Subscriber Identity -- must be a CM or CPE IP address";
+						    description "Subscriber Identity -- must be a CM or CPE IP address";
+						    mandatory true;
 					    }
 					    container gates {
 				            list gate {
@@ -140,7 +193,9 @@ module packetcable
 							    leaf gateId {
 							    	type string;
 							    	description "Qos Gate Identity";
+							    	mandatory true;
 							    }
+							    uses gate-operational-attributes;
 							    uses pcmm-qos-gate-attributes;
 				            }
 					    }
@@ -148,6 +203,44 @@ module packetcable
 			    }
 	    	}
     	}
+    }
+
+    grouping gate-operational-attributes {
+		leaf gatePath {
+			config false;
+		    type string;
+		    description "FQ Gate path app/subscriber/gate";
+		    mandatory true;
+		}
+		leaf ccapId {
+			config false;
+		    type string;
+		    description "CCAP Identity";
+		    mandatory true;
+		}
+		leaf cops-state {
+			config false;
+			type string;
+			description "Gate operational COPS state";
+			mandatory true;
+		}
+		leaf cops-gateId {
+			config false;
+			type string;
+			description "Gate operational COPS Id";
+			mandatory true;
+		}
+		leaf-list error {
+			config false;
+			type string;
+			description "Gate operational error";
+		}
+		leaf timestamp {
+        	config false;
+        	type yang:date-and-time;
+        	description "Gate operational attributes timestamp";
+        	mandatory true;
+        }
     }
 
     grouping pcmm-qos-gate-attributes {
@@ -180,6 +273,7 @@ module packetcable
 		    leaf service-class-name {
 		    	type service-class-name;
 		    	description "The Service Class Name (SCN). This SCN must be pre-provisioned on the target CCAP";
+		    	mandatory true;
 		    }
 		}
     }
@@ -188,18 +282,22 @@ module packetcable
         leaf srcPort-start {
             type inet:port-number;
             description "TCP/UDP source port range start.";
+            mandatory true;
         }
         leaf srcPort-end {
             type inet:port-number;
             description "TCP/UDP source port range end.";
+            mandatory true;
         }
         leaf dstPort-start {
             type inet:port-number;
             description "TCP/UDP destination port range start.";
+            mandatory true;
         }
         leaf dstPort-end {
             type inet:port-number;
             description "TCP/UDP destination port range end.";
+            mandatory true;
         }
     }
 
@@ -208,30 +306,37 @@ module packetcable
 	    	leaf srcIp {
 	    		type inet:ipv4-address;
 	    		description "Source IPv4 address (exact match)";
+	    		mandatory true;
 			}
 	    	leaf dstIp {
 	    		type inet:ipv4-address;
 	    		description "Destination IPv4 address (exact match)";
+	    		mandatory true;
 			}
 	 		leaf tos-byte {
 	 			type tos-byte;
 	 			description "TOS/DSCP match";
+	 			mandatory true;
 	 		}
 	 		leaf tos-mask {
 	 			type tos-byte;
 	 			description "TOS/DSCP mask";
+	 			mandatory true;
 	 		}
 	     	leaf protocol {
 	    		type tp-protocol;
 	    		description "IPv4 transport protocol";
+	    		mandatory true;
 			}
 	 		leaf srcPort {
 		        type inet:port-number;
 	    		description "TCP/UDP source port (exact match).";
+	    		mandatory true;
 	   		}
 	 		leaf dstPort {
 		        type inet:port-number;
 	    		description "TCP/UDP destination port (exact match).";
+	    		mandatory true;
 	   		}
    		}
     }
@@ -241,30 +346,37 @@ module packetcable
 	    	leaf srcIp {
 	    		type inet:ipv4-address;
 	    		description "Source IPv4 address match";
+	    		mandatory true;
 			}
 	    	leaf srcIpMask {
 	    		type inet:ipv4-address;
 	    		description "Source IPv4 mask";
+	    		mandatory true;
 			}
 	    	leaf dstIp {
 	    		type inet:ipv4-address;
 	    		description "Destination IPv4 address match";
+	    		mandatory true;
 			}
 	    	leaf dstIpMask {
 	    		type inet:ipv4-address;
 	    		description "Destination IPv4 mask";
+	    		mandatory true;
 			}
 	 		leaf tos-byte {
 	 			type tos-byte;
 	 			description "TOS/DSCP match";
+	 			mandatory true;
 	 		}
 	 		leaf tos-mask {
 	 			type tos-byte;
 	 			description "TOS/DSCP mask";
+	 			mandatory true;
 	 		}
 	     	leaf protocol {
 	    		type tp-protocol;
 	    		description "IPv4 transport protocol";
+	    		mandatory true;
 			}
 			uses tp-port-match-ranges;
    		}
@@ -274,33 +386,40 @@ module packetcable
     	container ipv6-classifier {
 	    	leaf srcIp6 {
 	    		type inet:ipv6-prefix;
-	    		description "Source IPv6 prefix match in  <address/len> notation";
+	    		description "Source IPv6 prefix match in  'address/len' notation";
+	    		mandatory true;
 			}
 	    	leaf dstIp6 {
 	    		type inet:ipv6-prefix;
-	    		description "Destination IPv6 prefix match in <address/len> notation";
+	    		description "Destination IPv6 prefix match in 'address/len' notation";
+	    		mandatory true;
 			}
 	 		leaf tc-low {
 	 			type tos-byte;
 	 			description "TC low range match";
+	 			mandatory true;
 	 		}
 	 		leaf tc-high {
 	 			type tos-byte;
 	 			description "TC high range match";
+	 			mandatory true;
 	 		}
 	 		leaf tc-mask {
 	 			type tos-byte;
 	 			description "TC mask";
+	 			mandatory true;
 	 		}
 	     	leaf next-hdr {
 	    		type tp-protocol;
 	    		description "IPv6 Next Header";
+	    		mandatory true;
 			}
 			leaf flow-label {
 				type uint32 {
 					range "0 .. 1048575";
 				}
 				description "IPv6 Flow Label (20 bits)";
+				mandatory true;
 			}
 	   		uses tp-port-match-ranges;
    		}

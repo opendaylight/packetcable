@@ -340,9 +340,14 @@ public class PCMMServiceTest {
                                     final String expGateSetMsgStart) {
         final Gate gate = makeGateObj(scnName, srcAddr, direction, dstAddr);
 
-        final String gateSetMsg = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
-        Assert.assertNotNull(gateSetMsg);
-        Assert.assertTrue(gateSetMsg, gateSetMsg.startsWith(expGateSetMsgStart));
+//        final String gateSetMsg = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
+//        Assert.assertNotNull(gateSetMsg);
+//        Assert.assertTrue(gateSetMsg, gateSetMsg.startsWith(expGateSetMsgStart));
+
+        // TODO update this method for the new GateSetStatus object
+        PCMMService.GateSetStatus status = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
+        Assert.assertNotNull(status);
+        Assert.assertTrue(status.getMessage().startsWith(expGateSetMsgStart));
 
         // TODO - add validation to the PCMMGateReq contained within the map
         Assert.assertNotNull(service.gateRequests.get(gatePath));

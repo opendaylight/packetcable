@@ -1,7 +1,10 @@
 /*
- * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
+ * Copyright (c) 2015 CableLabs and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.opendaylight.controller.packetcable.provider;
 
 import com.google.common.collect.Maps;
@@ -29,239 +32,296 @@ import org.umu.cops.stack.COPSError.ErrorTypes;
  */
 @ThreadSafe
 public class PCMMService {
-	private Logger logger = LoggerFactory.getLogger(PCMMService.class);
+    private final Logger logger = LoggerFactory.getLogger(PCMMService.class);
 
-	private final Ccap ccap;
-	private final IpAddress ipAddr;
-	private final PortNumber portNum;
-	protected final CcapClient ccapClient;
-	protected Map<String, PCMMGateReq> gateRequests = Maps.newConcurrentMap();
+    private final Ccap ccap;
+    private final IpAddress ipAddr;
+    private final PortNumber portNum;
+    protected final CcapClient ccapClient;
+    protected Map<String, PCMMGateReq> gateRequests = Maps.newConcurrentMap();
 
-	private final short clientType;
+    private final short clientType;
 
-	public PCMMService(final short clientType, final Ccap ccap) {
-		this.clientType = clientType;
-		this.ccap = ccap;
-		ipAddr = ccap.getConnection().getIpAddress();
-		portNum = ccap.getConnection().getPort();
-		ccapClient = new CcapClient(ipAddr, portNum);
-		logger.info("Attempting to add CCAP with ID {} @ {}:{}", ccap.getCcapId(), ipAddr.getIpv4Address().getValue(),
-				portNum.getValue());
-	}
+    public PCMMService(final short clientType, final Ccap ccap) {
+        this.clientType = clientType;
+        this.ccap = ccap;
+        ipAddr = ccap.getConnection().getIpAddress();
+        portNum = ccap.getConnection().getPort();
+        ccapClient = new CcapClient(ipAddr, portNum);
+        logger.info("Attempting to add CCAP with ID {} @ {}:{}", ccap.getCcapId(), ipAddr.getIpv4Address().getValue(),
+                portNum.getValue());
+    }
 
-	public void disconect() {
-		ccapClient.disconnect();
-	}
+    public void disconect() {
+        ccapClient.disconnect();
+    }
 
-	// TODO - try and change the return to something other than a String to be parsed to determine success
-	public String addCcap() {
-		ccapClient.connect();
-		if (ccapClient.isConnected) {
-			logger.info("Connected to CCAP with ID - " + ccap.getCcapId());
-			return String.format("200 OK - CCAP %s connected @ %s:%d", ccap.getCcapId(),
-					ipAddr.getIpv4Address().getValue(), portNum.getValue());
-		} else {
-			return String.format("404 Not Found - CCAP %s failed to connect @ %s:%d - %s",
-					ccap.getCcapId(),
-					ipAddr.getIpv4Address().getValue(), portNum.getValue(), ccapClient.errMessage);
-		}
-	}
+    // TODO - try and change the return to something other than a String to be parsed to determine success
+    public String addCcap() {
+        ccapClient.connect();
+        if (ccapClient.isConnected) {
+            logger.info("Connected to CCAP with ID - " + ccap.getCcapId());
+            return String
+                    .format("200 OK - CCAP %s connected @ %s:%d", ccap.getCcapId(), ipAddr.getIpv4Address().getValue(),
+                            portNum.getValue());
+        } else {
+            return String.format("404 Not Found - CCAP %s failed to connect @ %s:%d - %s", ccap.getCcapId(),
+                    ipAddr.getIpv4Address().getValue(), portNum.getValue(), ccapClient.errMessage);
+        }
+    }
 
-	// TODO - Consider creating an object to return that contains a success flag, message, and gate ID or gate object
-	public String sendGateSet(final String gatePathStr, final InetAddress subId, final Gate qosGate,
-							  final ServiceFlowDirection scnDir) {
-		logger.info("Sending gate to CCAP with ID - " + ccap.getCcapId());
-		// assemble the gate request for this subId
-		final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
-		gateBuilder.setAmId(ccap.getAmId());
-		gateBuilder.setSubscriberId(subId);
-		// force gateSpec.Direction to align with SCN direction
-		final ServiceClassName scn = qosGate.getTrafficProfile().getServiceClassName();
-		if (scn != null) {
-			gateBuilder.setGateSpec(qosGate.getGateSpec(), scnDir);
-		} else {
-			// not an SCN gate
-			gateBuilder.setGateSpec(qosGate.getGateSpec(), null);
-		}
-		gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
+    public class GateSetStatus {
+        private boolean didSucceed = false;
+        private String message = "";
+        private String copsGateId = "";
 
-		// pick a classifier type (only one for now)
-		if (qosGate.getClassifier() != null) {
-			gateBuilder.setClassifier(qosGate.getClassifier());
-		} else if (qosGate.getExtClassifier() != null) {
-			gateBuilder.setExtClassifier(qosGate.getExtClassifier());
-		} else if (qosGate.getIpv6Classifier() != null) {
-			gateBuilder.setIpv6Classifier(qosGate.getIpv6Classifier());
-		}
-		// assemble the final gate request
-		final PCMMGateReq gateReq = gateBuilder.build();
+        public boolean didSucceed() {
+            return didSucceed;
+        }
 
-		if (gateRequests.get(gatePathStr) == null) {
-			// and remember it
-			gateRequests.put(gatePathStr, gateReq);
-			// and send it to the CCAP
-			ccapClient.sendGateSet(gateReq);
-			// and wait for the COPS response to complete processing gate request
-			try {
-				// TODO - see PCMMPdpReqStateMan#processReport() gate.notify(). Should determine a better means to
-				// TODO - handle this synchronization.
-				// TODO - if not changing this, may want to make this timeout configurable
-				synchronized(gateReq) {
-					logger.info("Waiting 5000ms for gate request to be updated");
-					gateReq.wait(5000);
-					logger.debug("Gate request error - " + gateReq.getError());
-					logger.debug("Gate request ID - " + gateReq.getGateID());
-				}
-			} catch (Exception e) {
-				logger.error("PCMMService: sendGateSet(): gate response timeout exceeded for "
-						+ gatePathStr + '/' + gateReq, e);
-				return String.format("408 Request Timeout - gate response timeout exceeded for %s/%s",
-						ccap.getCcapId(), gatePathStr);
-			}
-			if (gateReq.getError() != null) {
-				logger.error("PCMMService: sendGateSet(): returned error: {}",
-						gateReq.getError().toString());
-				return String.format("404 Not Found - sendGateSet for %s/%s returned error - %s",
-						ccap.getCcapId(), gatePathStr, gateReq.getError().toString());
-			} else {
-				if (gateReq.getGateID() != null) {
-					logger.info(String.format("PCMMService: sendGateSet(): returned GateId %08x: ",
-							gateReq.getGateID().getGateID()));
-					return String.format("200 OK - sendGateSet for %s/%s returned GateId %08x",
-							ccap.getCcapId(), gatePathStr, gateReq.getGateID().getGateID());
-				} else {
-					logger.info("PCMMService: sendGateSet(): no gateId returned:");
-					return String.format("404 Not Found - sendGateSet for %s/%s no gateId returned",
-							ccap.getCcapId(), gatePathStr);
-				}
-			}
-		} else {
-			logger.info("PCMMService: sendGateSet(): no gateId returned:");
-			return String.format("404 Not Found - sendGateSet for %s/%s already exists",
-					ccap.getCcapId(), gatePathStr);
-		}
-	}
+        void setDidSucceed(final boolean didSucceed) {
+            this.didSucceed = didSucceed;
+        }
 
-	public Boolean sendGateDelete(final String gatePathStr) {
-		logger.info("sendGateDelete() - " + ccap);
-		// recover the original gate request
-		final PCMMGateReq gateReq = gateRequests.remove(gatePathStr);
-		if (gateReq != null) {
-			ccapClient.sendGateDelete(gateReq);
-			// and wait for the response to complete
-			try {
-				// TODO - see PCMMPdpReqStateMan#processReport() gate.notify(). Should determine a better means to
-				// TODO - handle this synchronization.
-				synchronized(gateReq) {
-					gateReq.wait(1000);
-				}
-			} catch (InterruptedException e) {
-				logger.error("PCMMService: sendGateDelete(): gate response timeout exceeded for {}/{}",
-						gatePathStr, gateReq);
-			}
-			if (gateReq.getError() != null) {
-				logger.warn("PCMMService: sendGateDelete(): returned error: {}", gateReq.getError().toString());
-				return false;
-			} else {
-				if (gateReq.getGateID() != null) {
-					logger.info(String.format("PCMMService: sendGateDelete(): deleted GateId %08x: ", gateReq.getGateID().getGateID()));
-				} else {
-					logger.error("PCMMService: sendGateDelete(): deleted but no gateId returned");
-				}
-				return true;
-			}
-		} else {
-			logger.warn("Attempt to delete non-existent gate with path - " + gatePathStr);
-			return false;
-		}
-	}
+        public String getMessage() {
+            return message;
+        }
 
-	/**
-	 * Used to interface with a CCAP (including CMTSs)
-	 */
-	protected class CcapClient {
-		public final PCMMPdpDataProcess pcmmProcess;
-		public final PCMMPdpAgent pcmmPdp;
+        void setMessage(final String message) {
+            this.message = message;
+        }
 
-		private final String ipv4;
-		private final Integer port;
+        public String getCopsGateId() {
+            return copsGateId;
+        }
 
-		// Needs to be initialized in connect() method else would be final
-		protected transient PCMMPdpMsgSender pcmmSender;
+        void setCopsGateId(final String copsGateId) {
+            this.copsGateId = copsGateId;
+        }
 
-		private transient Boolean isConnected = false;
-		private transient String errMessage = null;
+    }
 
-		/**
-		 * Constructor
-		 * @param ccapIp - the IP of the CCAP to manage
-		 * @param portNum - the port number of the CCAP to manage
-		 */
-		public CcapClient(final IpAddress ccapIp, final PortNumber portNum) {
-			ipv4 = ccapIp.getIpv4Address().getValue();
-			if (portNum != null)  port = portNum.getValue();
-			else port = PCMMPdpAgent.WELL_KNOWN_PDP_PORT;
-			// TODO FIXME - if this object is not null, gate processing will not work correctly
-			// TODO see - PCMMPdpReqStateMan#processReport() where the report type is success and the process is null
-			//            pcmmProcess = new PCMMPdpDataProcess();
-			pcmmProcess = null;
-			pcmmPdp = new PCMMPdpAgent(ipv4, port, clientType, pcmmProcess);
-		}
+    public GateSetStatus sendGateSet(final String gatePathStr, final InetAddress subId, final Gate qosGate,
+            final ServiceFlowDirection scnDir) {
 
-		/**
-		 * Starts the connection to the CCAP
-		 */
-		public void connect( ) {
-			logger.info("Attempting to connect to host: " + ipv4 + " port: " + port);
-			try  {
-				pcmmPdp.connect();
+        GateSetStatus status = new GateSetStatus();
 
-				// Cannot instantiate until after pcmmPdp.connect() is called as this is where the client handle is created
-				pcmmSender = new PCMMPdpMsgSender(clientType, pcmmPdp.getClientHandle(), pcmmPdp.getSocket());
+        logger.info("Sending gate to CCAP with ID - " + ccap.getCcapId());
 
-				isConnected = true;
-			} catch (Exception e) {
-				isConnected = false;
-				logger.error("Failed to connect to host: " + ipv4 + " port: " + port, e);
-				errMessage = e.getMessage();
-			}
-		}
+        // assemble the gate request for this subId
+        final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
+        gateBuilder.setAmId(ccap.getAmId());
+        gateBuilder.setSubscriberId(subId);
 
-		public void disconnect() {
-			logger.info("CcapClient: disconnect(): {}:{}", ipv4, port);
-			pcmmPdp.disconnect(new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
-			isConnected = false;
-		}
+        // force gateSpec.Direction to align with SCN direction
+        final ServiceClassName scn = qosGate.getTrafficProfile().getServiceClassName();
+        if (scn != null) {
+            gateBuilder.setGateSpec(qosGate.getGateSpec(), scnDir);
+        } else {
+            // not an SCN gate
+            gateBuilder.setGateSpec(qosGate.getGateSpec(), null);
+        }
+        gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
 
-		// TODO - consider returning a new PCMMGateReq object or a future here instead of setting the ID on the old
-		// TODO - request by reference which makes the code more convoluted thus making issues more difficult to track down.
-		public Boolean sendGateSet(final PCMMGateReq gateReq) {
-			logger.info("CcapClient: sendGateSet(): {}:{} => {}", ipv4, port, gateReq);
-			try {
-				pcmmSender.sendGateSet(gateReq);
+        // pick a classifier type (only one for now)
+        if (qosGate.getClassifier() != null) {
+            gateBuilder.setClassifier(qosGate.getClassifier());
+        } else if (qosGate.getExtClassifier() != null) {
+            gateBuilder.setExtClassifier(qosGate.getExtClassifier());
+        } else if (qosGate.getIpv6Classifier() != null) {
+            gateBuilder.setIpv6Classifier(qosGate.getIpv6Classifier());
+        }
 
-				// TODO - determine if this is the correct place to perform this operation as this currently is the
-				// TODO - place where the gate ID can be set on the gateReq object
-				//                pcmmSender.handleGateReport(pcmmPdp.getSocket());
-			} catch (COPSPdpException e) {
-				logger.error("CcapClient: sendGateSet(): {}:{} => {} FAILED:", ipv4, port, gateReq, e);
-			}
-			// and save it back to the gateRequest object for gate delete later
-			gateReq.setGateID(pcmmSender.getGateID());
+        // assemble the final gate request
+        final PCMMGateReq gateReq = gateBuilder.build();
 
-			// TODO - determine why this method is always returning true???
-			return true;
-		}
+        if (gateRequests.get(gatePathStr) == null) {
+            // and remember it
+            gateRequests.put(gatePathStr, gateReq);
+            // and send it to the CCAP
+            ccapClient.sendGateSet(gateReq);
+            // and wait for the COPS response to complete processing gate request
+            try {
+                // TODO - see PCMMPdpReqStateMan#processReport() gate.notify(). Should determine a better means to
+                // TODO - handle this synchronization.
+                // TODO - if not changing this, may want to make this timeout configurable
+                synchronized (gateReq) {
+                    logger.info("Waiting 5000ms for gate request to be updated");
+                    gateReq.wait(5000);
+                    logger.debug("Gate request error - " + gateReq.getError());
+                    logger.debug("Gate request ID - " + gateReq.getGateID());
+                }
+            } catch (Exception e) {
+                logger.error(
+                        "PCMMService: sendGateSet(): gate response timeout exceeded for " + gatePathStr + '/' + gateReq,
+                        e);
+                status.setDidSucceed(false);
+                status.setMessage(String.format("408 Request Timeout - gate response timeout exceeded for %s/%s", ccap.getCcapId(),
+                        gatePathStr));
+                return status;
+            }
 
-		public Boolean sendGateDelete(final PCMMGateReq gateReq) {
-			logger.info("CcapClient: sendGateDelete(): {}:{} => {}", ipv4, port, gateReq);
-			try {
-				pcmmSender.sendGateDelete(gateReq);
-			} catch (COPSPdpException e) {
-				logger.error("CcapClient: sendGateDelete(): {}:{} => {} FAILED: {}", ipv4, port, gateReq, e.getMessage());
-			}
-			return true;
-		}
-	}
+
+            if (gateReq.getError() != null) {
+                status.setDidSucceed(false);
+                status.setMessage(
+                        String.format("404 Not Found - sendGateSet for %s/%s returned error - %s", ccap.getCcapId(),
+                                gatePathStr, gateReq.getError().toString()));
+
+                logger.error("PCMMService: sendGateSet(): returned error: {}", gateReq.getError().toString());
+            } else {
+                if (gateReq.getGateID() != null) {
+                    status.setDidSucceed(true);
+                    status.setCopsGateId(String.format("%08x", gateReq.getGateID().getGateID()));
+                    status.setMessage(String.format("200 OK - sendGateSet for %s/%s returned GateId %08x",
+                            ccap.getCcapId(), gatePathStr, gateReq.getGateID().getGateID()) );
+                    logger.info(String.format("PCMMService: sendGateSet(): returned GateId %08x: ",
+                            gateReq.getGateID().getGateID()));
+                } else {
+                    status.setDidSucceed(false);
+                    status.setMessage(
+                            String.format("404 Not Found - sendGateSet for %s/%s no gateId returned", ccap.getCcapId(),
+                                    gatePathStr));
+
+                    logger.info("PCMMService: sendGateSet(): no gateId returned:");
+                }
+            }
+        } else {
+            logger.info("PCMMService: sendGateSet(): no gateId returned:");
+            status.setMessage(String.format("404 Not Found - sendGateSet for %s/%s already exists", ccap.getCcapId(), gatePathStr));
+        }
+
+        return status;
+    }
+
+    public Boolean sendGateDelete(final String gatePathStr) {
+        logger.info("sendGateDelete() - " + ccap);
+        // recover the original gate request
+        final PCMMGateReq gateReq = gateRequests.remove(gatePathStr);
+        if (gateReq != null) {
+            ccapClient.sendGateDelete(gateReq);
+            // and wait for the response to complete
+            try {
+                // TODO - see PCMMPdpReqStateMan#processReport() gate.notify(). Should determine a better means to
+                // TODO - handle this synchronization.
+                synchronized (gateReq) {
+                    gateReq.wait(1000);
+                }
+            } catch (InterruptedException e) {
+                logger.error("PCMMService: sendGateDelete(): gate response timeout exceeded for {}/{}", gatePathStr,
+                        gateReq);
+            }
+            if (gateReq.getError() != null) {
+                logger.warn("PCMMService: sendGateDelete(): returned error: {}", gateReq.getError().toString());
+                return false;
+            } else {
+                if (gateReq.getGateID() != null) {
+                    logger.info(String.format("PCMMService: sendGateDelete(): deleted GateId %08x: ",
+                            gateReq.getGateID().getGateID()));
+                } else {
+                    logger.error("PCMMService: sendGateDelete(): deleted but no gateId returned");
+                }
+                return true;
+            }
+        } else {
+            logger.warn("Attempt to delete non-existent gate with path - " + gatePathStr);
+            return false;
+        }
+    }
+
+    /**
+     * Used to interface with a CCAP (including CMTSs)
+     */
+    protected class CcapClient {
+        public final PCMMPdpDataProcess pcmmProcess;
+        public final PCMMPdpAgent pcmmPdp;
+
+        private final String ipv4;
+        private final Integer port;
+
+        // Needs to be initialized in connect() method else would be final
+        protected transient PCMMPdpMsgSender pcmmSender;
+
+        private transient Boolean isConnected = false;
+        private transient String errMessage = null;
+
+        /**
+         * Constructor
+         *
+         * @param ccapIp
+         *         - the IP of the CCAP to manage
+         * @param portNum
+         *         - the port number of the CCAP to manage
+         */
+        public CcapClient(final IpAddress ccapIp, final PortNumber portNum) {
+            ipv4 = ccapIp.getIpv4Address().getValue();
+            if (portNum != null) {
+                port = portNum.getValue();
+            } else {
+                port = PCMMPdpAgent.WELL_KNOWN_PDP_PORT;
+            }
+            // TODO FIXME - if this object is not null, gate processing will not work correctly
+            // TODO see - PCMMPdpReqStateMan#processReport() where the report type is success and the process is null
+            //            pcmmProcess = new PCMMPdpDataProcess();
+            pcmmProcess = null;
+            pcmmPdp = new PCMMPdpAgent(ipv4, port, clientType, pcmmProcess);
+        }
+
+        /**
+         * Starts the connection to the CCAP
+         */
+        public void connect() {
+            logger.info("Attempting to connect to host: " + ipv4 + " port: " + port);
+            try {
+                pcmmPdp.connect();
+
+                // Cannot instantiate until after pcmmPdp.connect() is called as this is where the client handle is created
+                pcmmSender = new PCMMPdpMsgSender(clientType, pcmmPdp.getClientHandle(), pcmmPdp.getSocket());
+
+                isConnected = true;
+            } catch (Exception e) {
+                isConnected = false;
+                logger.error("Failed to connect to host: " + ipv4 + " port: " + port, e);
+                errMessage = e.getMessage();
+            }
+        }
+
+        public void disconnect() {
+            logger.info("CcapClient: disconnect(): {}:{}", ipv4, port);
+            pcmmPdp.disconnect(new COPSError(ErrorTypes.SHUTTING_DOWN, ErrorTypes.NA));
+            isConnected = false;
+        }
+
+        // TODO - consider returning a new PCMMGateReq object or a future here instead of setting the ID on the old
+        // TODO - request by reference which makes the code more convoluted thus making issues more difficult to track down.
+        public Boolean sendGateSet(final PCMMGateReq gateReq) {
+            logger.info("CcapClient: sendGateSet(): {}:{} => {}", ipv4, port, gateReq);
+            try {
+                pcmmSender.sendGateSet(gateReq);
+
+                // TODO - determine if this is the correct place to perform this operation as this currently is the
+                // TODO - place where the gate ID can be set on the gateReq object
+                //                pcmmSender.handleGateReport(pcmmPdp.getSocket());
+            } catch (COPSPdpException e) {
+                logger.error("CcapClient: sendGateSet(): {}:{} => {} FAILED:", ipv4, port, gateReq, e);
+            }
+            // and save it back to the gateRequest object for gate delete later
+            gateReq.setGateID(pcmmSender.getGateID());
+
+            // TODO - determine why this method is always returning true???
+            return true;
+        }
+
+        public Boolean sendGateDelete(final PCMMGateReq gateReq) {
+            logger.info("CcapClient: sendGateDelete(): {}:{} => {}", ipv4, port, gateReq);
+            try {
+                pcmmSender.sendGateDelete(gateReq);
+            } catch (COPSPdpException e) {
+                logger.error("CcapClient: sendGateDelete(): {}:{} => {} FAILED: {}", ipv4, port, gateReq,
+                        e.getMessage());
+            }
+            return true;
+        }
+    }
 }
 

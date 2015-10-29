@@ -1,15 +1,23 @@
-package org.opendaylight.controller.packetcable.provider;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+/*
+ * Copyright (c) 2015 CableLabs and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+package org.opendaylight.controller.packetcable.provider;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * @author c3oe.de, based on snippets from Scott Plante, John Kugelmann
@@ -17,13 +25,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Subnet
 {
     /** Minimum length of a v4 or v6 subnet mask */
-    private final static int MIN_MASK_BITS = 0;
+    private static final int MIN_MASK_BITS = 0;
 
     /** Maximum length of a v4 subnet mask */
-    private final static int MAX_MASK_BITS_V4 = 32;
+    private static final int MAX_MASK_BITS_V4 = 32;
 
     /** Maximum length of a v6 subnet mask */
-    private final static int MAX_MASK_BITS_V6 = 128;
+    private static final int MAX_MASK_BITS_V6 = 128;
 
     /** The length of the subnet prefix */
     private final int prefixLen;
@@ -154,7 +162,7 @@ public class Subnet
     }
 
     @Override
-    final public boolean equals( Object obj )
+    public final boolean equals( Object obj )
     {
         if (null == obj) return false;
         if (this == obj) return true;
@@ -168,7 +176,7 @@ public class Subnet
     }
 
     @Override
-    final public int hashCode()
+    public final int hashCode()
     {
         return new HashCodeBuilder(997, 311)
                 .append(prefixLen)
@@ -188,7 +196,7 @@ public class Subnet
         return buf.toString();
     }
 
-    static private void bigInteger2IpString( final StringBuilder buf, final BigInteger bigInteger, final int displayBytes )
+    private static void bigInteger2IpString( final StringBuilder buf, final BigInteger bigInteger, final int displayBytes )
     {
         final boolean isIPv4 = 4 == displayBytes;
         byte[] bytes = bigInteger.toByteArray();

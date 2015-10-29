@@ -8,13 +8,11 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.util.concurrent.ExecutionException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.opendaylight.controller.packetcable.provider.PacketcableProvider;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PacketcableProviderTest {
