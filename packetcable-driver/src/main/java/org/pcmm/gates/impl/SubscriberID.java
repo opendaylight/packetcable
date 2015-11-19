@@ -4,6 +4,9 @@
 
 package org.pcmm.gates.impl;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.net.Inet4Address;
 import org.pcmm.base.impl.PCMMBaseObject;
 import org.pcmm.gates.ISubscriberID;
 
@@ -25,7 +28,7 @@ public class SubscriberID extends PCMMBaseObject implements ISubscriberID {
      * @param srcIp - the source host address
      */
     public SubscriberID(final InetAddress srcIp) {
-        super(SNum.SUBSCRIBER_ID, STYPE);
+        super(SNum.SUBSCRIBER_ID, chooseSType(srcIp));
         if (srcIp == null) throw new IllegalArgumentException("srcIp must not be null");
         this.srcIp = srcIp;
     }
@@ -60,6 +63,16 @@ public class SubscriberID extends PCMMBaseObject implements ISubscriberID {
         int result = super.hashCode();
         result = 31 * result + srcIp.hashCode();
         return result;
+    }
+
+    private static byte chooseSType(final InetAddress srcIp) {
+        checkNotNull(srcIp);
+        if (srcIp instanceof Inet4Address) {
+            return STYPE_IPV4;
+        }
+        else {
+            return STYPE_IPV6;
+        }
     }
 
     /**

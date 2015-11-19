@@ -4,6 +4,10 @@
 
 package org.opendaylight.controller.packetcable.provider;
 
+import static junit.framework.TestCase.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,29 +15,33 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.Classifiers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.traffic.profile.TrafficProfile;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.IPCMMGate;
@@ -60,14 +68,14 @@ import org.umu.cops.stack.COPSObjHeader.CType;
  */
 public class PCMMServiceTest {
 
-    private final static String ccapId = "ccap-1";
-    private final static String gatePath = "testGatePath";
+    private static final String ccapId = "ccap-1";
+    private static final String gatePath = "testGatePath";
 
     /**
      * Denotes whether or not a real CMTS is being tested against.
      * Ensure the checked-in value is always false else tests will most likely fail.
      */
-    private final static boolean realCmts = false;
+    private static final boolean realCmts = false;
 
 
     // The test objects/values to use that will be instantiated in @Before
@@ -243,24 +251,24 @@ public class PCMMServiceTest {
         // TODO - fix cmts emulator
         final String expectedMsgStart = "404 Not Found - sendGateSet for " + ccapId + '/' + gatePath
                 + " returned error - Error Code: 13 Error Subcode : 0  Invalid SubscriberID";
-        addRemoveValidateGate(service, "extrm_up", srcAddr, dstAddr, ServiceFlowDirection.Us, invalidCmAddrInet,
-                gatePath, expectedMsgStart);
+        addInvalidGate(service, "extrm_up", srcAddr, dstAddr, ServiceFlowDirection.Us, invalidCmAddrInet, gatePath,
+                expectedMsgStart);
     }
 
     @Test
     public void testAddInvalidScnUpGate() throws Exception {
         final String expectedMsgStart = "404 Not Found - sendGateSet for " + ccapId + '/' + gatePath
                 + " returned error - Error Code: 11 Error Subcode : 0  Undefined Service Class Name";
-        addRemoveValidateGate(service, "extrm_up_invalid", srcAddr, dstAddr, ServiceFlowDirection.Us, cmAddrInet,
-                gatePath, expectedMsgStart);
+        addInvalidGate(service, "extrm_up_invalid", srcAddr, dstAddr, ServiceFlowDirection.Us, cmAddrInet, gatePath,
+                expectedMsgStart);
     }
 
     @Test
     public void testAddInvalidScnDownGate() throws Exception {
         final String expectedMsgStart = "404 Not Found - sendGateSet for " + ccapId + '/' + gatePath
                 + " returned error - Error Code: 11 Error Subcode : 0  Undefined Service Class Name";
-        addRemoveValidateGate(service, "extrm_dn_invalid", srcAddr, dstAddr, ServiceFlowDirection.Ds, cmAddrInet,
-                gatePath, expectedMsgStart);
+        addInvalidGate(service, "extrm_dn_invalid", srcAddr, dstAddr, ServiceFlowDirection.Ds, cmAddrInet, gatePath,
+                expectedMsgStart);
     }
 
     /**
@@ -313,6 +321,16 @@ public class PCMMServiceTest {
         deleteGate(service, gatePath);
     }
 
+    private void addInvalidGate(final PCMMService service, final String scnName, final Ipv4Address srcAddr,
+            final Ipv4Address dstAddr, final ServiceFlowDirection direction,
+            final InetAddress cmAddrInet, final String gatePath,
+            final String expGateSetMsgStart) {
+        connectToCmts(service);
+        final int numRequestsBefore = service.gateRequests.size();
+        addAndValidateGate(service, scnName, srcAddr, dstAddr, direction, cmAddrInet, gatePath, expGateSetMsgStart);
+        assertEquals(numRequestsBefore, service.gateRequests.size());
+    }
+
     private void connectToCmts(final PCMMService service) {
         final String message = service.addCcap();
         Assert.assertNotNull(message);
@@ -350,7 +368,10 @@ public class PCMMServiceTest {
         Assert.assertTrue(status.getMessage().startsWith(expGateSetMsgStart));
 
         // TODO - add validation to the PCMMGateReq contained within the map
-        Assert.assertNotNull(service.gateRequests.get(gatePath));
+        if (status.didSucceed()) {
+            Assert.assertTrue((service.gateRequests.containsKey(gatePath)));
+            Assert.assertNotNull(service.gateRequests.get(gatePath));
+        }
     }
 
     /**
@@ -378,22 +399,22 @@ public class PCMMServiceTest {
      * @return - the mock Ccap object
      */
     private Ccap makeCcapObj(final int inPort, final Ipv4Address ipAddr, final String ccapId) {
-        final Ccap ccap = Mockito.mock(Ccap.class);
-        final Connection conn = Mockito.mock(Connection.class);
-        Mockito.when(ccap.getConnection()).thenReturn(conn);
-        final PortNumber port = Mockito.mock(PortNumber.class);
-        Mockito.when(conn.getPort()).thenReturn(port);
-        Mockito.when(port.getValue()).thenReturn(inPort);
+        final Ccap ccap = mock(Ccap.class);
+        final Connection conn = mock(Connection.class);
+        when(ccap.getConnection()).thenReturn(conn);
+        final PortNumber port = mock(PortNumber.class);
+        when(conn.getPort()).thenReturn(port);
+        when(port.getValue()).thenReturn(inPort);
 
-        final IpAddress addr = Mockito.mock(IpAddress.class);
-        Mockito.when(conn.getIpAddress()).thenReturn(addr);
-        Mockito.when(addr.getIpv4Address()).thenReturn(ipAddr);
+        final IpAddress addr = mock(IpAddress.class);
+        when(conn.getIpAddress()).thenReturn(addr);
+        when(addr.getIpv4Address()).thenReturn(ipAddr);
 
-        Mockito.when(ccap.getCcapId()).thenReturn(ccapId);
-        final AmId amid = Mockito.mock(AmId.class);
-        Mockito.when(ccap.getAmId()).thenReturn(amid);
-        Mockito.when(amid.getAmTag()).thenReturn(0xcada);
-        Mockito.when(amid.getAmType()).thenReturn(1);
+        when(ccap.getCcapId()).thenReturn(ccapId);
+        final AmId amid = mock(AmId.class);
+        when(ccap.getAmId()).thenReturn(amid);
+        when(amid.getAmTag()).thenReturn(0xcada);
+        when(amid.getAmType()).thenReturn(1);
 
         return ccap;
     }
@@ -406,42 +427,51 @@ public class PCMMServiceTest {
      */
     private Gate makeGateObj(final String scnValue, final Ipv4Address srcAddr, final ServiceFlowDirection direction,
                               final Ipv4Address dstAddr) {
-        final Gate gate = Mockito.mock(Gate.class);
-        final GateSpec gateSpec = Mockito.mock(GateSpec.class);
-        Mockito.when(gate.getGateSpec()).thenReturn(gateSpec);
-        Mockito.when(gateSpec.getDirection()).thenReturn(direction);
+        final Gate gate = mock(Gate.class);
+        final GateSpec gateSpec = mock(GateSpec.class);
+        when(gate.getGateSpec()).thenReturn(gateSpec);
+        when(gateSpec.getDirection()).thenReturn(direction);
         // TODO - make sure to write a test when this value is not null
-        Mockito.when(gateSpec.getDscpTosOverwrite()).thenReturn(null);
-        final TrafficProfile trafficProfile = Mockito.mock(TrafficProfile.class);
-        final ServiceClassName scn = Mockito.mock(ServiceClassName.class);
-        Mockito.when(scn.getValue()).thenReturn(scnValue);
-        Mockito.when(trafficProfile.getServiceClassName()).thenReturn(scn);
-        Mockito.when(gate.getTrafficProfile()).thenReturn(trafficProfile);
+        when(gateSpec.getDscpTosOverwrite()).thenReturn(null);
+        final TrafficProfile trafficProfile = mock(TrafficProfile.class);
+        final ServiceClassName scn = mock(ServiceClassName.class);
+        when(scn.getValue()).thenReturn(scnValue);
+        when(trafficProfile.getServiceClassName()).thenReturn(scn);
+        when(gate.getTrafficProfile()).thenReturn(trafficProfile);
 
         // TODO - write tests when this is null and ExtClassifier or Ipv6Classifier objects are not null
-        final Classifier classifier = Mockito.mock(Classifier.class);
+        final Classifier classifier = mock(Classifier.class);
 
         // This is the address of the CM
-        Mockito.when(classifier.getDstIp()).thenReturn(dstAddr);
+        when(classifier.getDstIp()).thenReturn(dstAddr);
 
         final PortNumber dstPort = new PortNumber(4321);
-        Mockito.when(classifier.getDstPort()).thenReturn(dstPort);
+        when(classifier.getDstPort()).thenReturn(dstPort);
         final TpProtocol protocol = new TpProtocol(0);
-        Mockito.when(classifier.getProtocol()).thenReturn(protocol);
-        Mockito.when(classifier.getSrcIp()).thenReturn(srcAddr);
+        when(classifier.getProtocol()).thenReturn(protocol);
+        when(classifier.getSrcIp()).thenReturn(srcAddr);
         final PortNumber srcPort = new PortNumber(1234);
-        Mockito.when(classifier.getSrcPort()).thenReturn(srcPort);
+        when(classifier.getSrcPort()).thenReturn(srcPort);
 
         // TODO - Can this value be any other value than 0 or 1 (See TosByte enumeration)
         final TosByte tosByte = new TosByte((short)0);
-        Mockito.when(classifier.getTosByte()).thenReturn(tosByte);
+        when(classifier.getTosByte()).thenReturn(tosByte);
         final TosByte tosMask = new TosByte((short)224);
-        Mockito.when(classifier.getTosMask()).thenReturn(tosMask);
+        when(classifier.getTosMask()).thenReturn(tosMask);
 
-        // TODO - enhance to test support of the other classifier types
-        Mockito.when(gate.getClassifier()).thenReturn(classifier);
-        Mockito.when(gate.getExtClassifier()).thenReturn(null);
-        Mockito.when(gate.getIpv6Classifier()).thenReturn(null);
+        final QosClassifierChoice classifierChoice = mock(QosClassifierChoice.class);
+        when(classifierChoice.getClassifier()).thenReturn(classifier);
+
+        ClassifierContainer classifierContainer = mock(ClassifierContainer.class);
+        when(classifierContainer.getClassifierChoice()).thenReturn(classifierChoice);
+
+        final List<ClassifierContainer> containerList = Collections.singletonList(classifierContainer);
+
+        Classifiers classifiers = mock(Classifiers.class);
+        when(classifiers.getClassifierContainer()).thenReturn(containerList);
+
+        when(gate.getClassifiers()).thenReturn(classifiers);
+
         return gate;
     }
 
@@ -460,14 +490,8 @@ public class PCMMServiceTest {
         }
         gateBuilder.setTrafficProfile(gateReq.getTrafficProfile());
 
-        // pick a classifier type (only one for now)
-        if (gateReq.getClassifier() != null) {
-            gateBuilder.setClassifier(gateReq.getClassifier());
-        } else if (gateReq.getExtClassifier() != null) {
-            gateBuilder.setExtClassifier(gateReq.getExtClassifier());
-        } else if (gateReq.getIpv6Classifier() != null) {
-            gateBuilder.setIpv6Classifier(gateReq.getIpv6Classifier());
-        }
+        gateBuilder.setClassifiers(gateReq.getClassifiers().getClassifierContainer());
+
         // assemble the final gate request
         return gateBuilder.build();
     }

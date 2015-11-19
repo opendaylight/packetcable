@@ -6,6 +6,8 @@
 package org.pcmm.gates;
 
 
+import java.util.List;
+
 /**
  * <p>
  * A PacketCable Multimedia Gate is a logical representation of a policy
@@ -53,7 +55,7 @@ public interface IPCMMGate {
      * Service Flow.
      *
      */
-    void setClassifier(IClassifier classifier);
+    void setClassifiers(List<IClassifier> classifiers);
 
     /**
      * Traffic Profile describes the QoS attributes of the Service Flow used to
@@ -103,7 +105,7 @@ public interface IPCMMGate {
      *
      * @return Classifier object.
      */
-    IClassifier getClassifier();
+    List<IClassifier> getClassifiers();
 
     /**
      * Traffic Profile describes the QoS attributes of the Service Flow used to

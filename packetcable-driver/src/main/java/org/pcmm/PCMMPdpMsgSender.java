@@ -168,7 +168,7 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
         // remove the gateSpec, traffic profile, and classifiers from original gate request
         gate.setGateSpec(null);
         gate.setTrafficProfile(null);
-        gate.setClassifier(null);
+        gate.setClassifiers(null);
         // clear the error object
         gate.setError(null);
 

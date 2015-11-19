@@ -13,10 +13,10 @@ import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.PCMMPdpDataProcess;
 import org.pcmm.PCMMPdpMsgSender;
@@ -123,14 +123,7 @@ public class PCMMService {
         }
         gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
 
-        // pick a classifier type (only one for now)
-        if (qosGate.getClassifier() != null) {
-            gateBuilder.setClassifier(qosGate.getClassifier());
-        } else if (qosGate.getExtClassifier() != null) {
-            gateBuilder.setExtClassifier(qosGate.getExtClassifier());
-        } else if (qosGate.getIpv6Classifier() != null) {
-            gateBuilder.setIpv6Classifier(qosGate.getIpv6Classifier());
-        }
+        gateBuilder.setClassifiers(qosGate.getClassifiers().getClassifierContainer());
 
         // assemble the final gate request
         final PCMMGateReq gateReq = gateBuilder.build();
@@ -163,6 +156,7 @@ public class PCMMService {
 
 
             if (gateReq.getError() != null) {
+                gateRequests.remove(gatePathStr);
                 status.setDidSucceed(false);
                 status.setMessage(
                         String.format("404 Not Found - sendGateSet for %s/%s returned error - %s", ccap.getCcapId(),

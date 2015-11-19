@@ -47,7 +47,8 @@ abstract public class COPSMsg {
      * @throws   IOException
      */
     public final void writeData(final Socket socket) throws IOException {
-        logger.info("Writing data for OPCode - " + _hdr.getOpCode());
+        logger.debug("Writing data for OPCode - " + _hdr.getOpCode());
+
         _hdr.writeData(socket, _hdr.getHdrLength() + getDataLength());
         writeBody(socket);
     }

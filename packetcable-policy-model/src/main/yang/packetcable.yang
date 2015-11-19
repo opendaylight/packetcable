@@ -3,279 +3,304 @@ module packetcable
     namespace "urn:packetcable";
     prefix "pcmm";
 
-    import ietf-yang-types 	{ prefix yang;  revision-date "2010-09-24"; }
-    import ietf-inet-types 	{ prefix inet; revision-date "2010-09-24"; }
+    import ietf-yang-types     { prefix yang;  revision-date "2010-09-24"; }
+    import ietf-inet-types     { prefix inet; revision-date "2010-09-24"; }
     import yang-ext { prefix ext; revision-date "2013-07-09"; }
 
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2015-11-01 {
+        description "Extended gates to support multiple classifiers.";
+    }
     revision 2015-10-26 {
-    	description "Corrected pluralization of containers/lists and added containers around lists where needed";
+        description "Corrected pluralization of containers/lists and added containers around lists where needed";
     }
     revision 2015-03-27 {
         description "Initial revision of PCMM CCAP definitions";
     }
 
 
-	// Global typedefs
-	typedef service-class-name {
+    // Global typedefs
+    typedef service-class-name {
         type string { length "2..16"; }
         description "The Service Class Name is MUST be 2-16 bytes.";
     }
     typedef service-flow-direction {
-	    type enumeration {
-		      enum us {
-		        value "1";
-		        description "Upstream service flow.";
-		      }
-		      enum ds {
-		        value "2";
-		        description "Downstream service flow.";
-		      }
-	  	}
-    	description "This value represents the service flow direction.";
-  	}
- 	typedef tp-protocol {
- 		type uint16 {range "0..257";}
-	    description "This value represents the IP transport protocol (or Next Header) where 256 is any protocol and 257 is TCP or UDP";
-	 }
-	 typedef tos-byte {
-	 	type uint8;
-	 	description "TOS/TC byte or mask";
-	 }
+        type enumeration {
+              enum us {
+                value "1";
+                description "Upstream service flow.";
+              }
+              enum ds {
+                value "2";
+                description "Downstream service flow.";
+              }
+          }
+        description "This value represents the service flow direction.";
+      }
+     typedef tp-protocol {
+         type uint16 {range "0..257";}
+        description "This value represents the IP transport protocol (or Next Header) where 256 is any protocol and 257 is TCP or UDP";
+     }
+     typedef tos-byte {
+         type uint8;
+         description "TOS/TC byte or mask";
+     }
 
-	identity ccap-context {
-		description "Identity used to mark ccap context";
-	}
+    identity ccap-context {
+        description "Identity used to mark ccap context";
+    }
 
-	identity app-context {
-		description "Identity used to mark app context";
-	}
+    identity app-context {
+        description "Identity used to mark app context";
+    }
 
-	// CCAP devices
-	container ccaps {
-		list ccap {
-			description "
-				CCAP devices are known by their network name which is any string.
-				Each CCAP device has a network address:port, a list of subscriber IP subnets,
-				and a list of available Service Class Names.
-				";
-		    key "ccapId";
-		    ext:context-instance "ccap-context";
-			leaf ccapId {
-			    type string;
-			    description "CCAP Identity";
-			    mandatory true;
-			}
-		    uses ccap-attributes;
-	    }
+    // CCAP devices
+    container ccaps {
+        list ccap {
+            description "
+                CCAP devices are known by their network name which is any string.
+                Each CCAP device has a network address:port, a list of subscriber IP subnets,
+                and a list of available Service Class Names.
+                ";
+            key "ccapId";
+            ext:context-instance "ccap-context";
+            leaf ccapId {
+                type string;
+                description "CCAP Identity";
+                mandatory true;
+            }
+            uses ccap-attributes;
+        }
     }
 
     grouping ccap-connection {
-     	leaf ipAddress {
-	       	type inet:ip-address;
-	       	description "IP Address of CCAP";
-	       	mandatory true;
-	   	}
-	   	leaf port {
-	       	type inet:port-number;
-        	description "COPS session TCP port number";
-         	default 3918;
+         leaf ipAddress {
+               type inet:ip-address;
+               description "IP Address of CCAP";
+               mandatory true;
+           }
+           leaf port {
+               type inet:port-number;
+            description "COPS session TCP port number";
+             default 3918;
         }
-		leaf connected {
-			config false;
-			type boolean;
-			description "COPS session state";
-			mandatory true;
-		}
-		leaf-list error {
-			config false;
-			type string;
-			description "Operational errors";
-		}
-//		leaf idle-detect {
-//			type uint8;
-//			description "COPS connection idle timer (seconds)";
+        leaf connected {
+            config false;
+            type boolean;
+            description "COPS session state";
+            mandatory true;
+        }
+        leaf-list error {
+            config false;
+            type string;
+            description "Operational errors";
+        }
+//        leaf idle-detect {
+//            type uint8;
+//            description "COPS connection idle timer (seconds)";
 //          mandatory true;
-//		}
-//		leaf isIdle {
-//			config false;
-//			type boolean;
-//			description "COPS connection idle state";
+//        }
+//        leaf isIdle {
+//            config false;
+//            type boolean;
+//            description "COPS connection idle state";
 //          mandatory true;
-//		}
+//        }
 
-		leaf timestamp {
-        	config false;
-        	type yang:date-and-time;
-        	description "Last update timestamp";
-        	mandatory true;
+        leaf timestamp {
+            config false;
+            type yang:date-and-time;
+            description "Last update timestamp";
+            mandatory true;
         }
     }
 
-	grouping ccap-attributes {
-		description "
-			Each CCAP device has a COPS connection address:port,
-			a list of subscriber IP subnets, and
-			a list of available Service Class Names.
-			";
-		container connection {
-			uses ccap-connection;
+    grouping ccap-attributes {
+        description "
+            Each CCAP device has a COPS connection address:port,
+            a list of subscriber IP subnets, and
+            a list of available Service Class Names.
+            ";
+        container connection {
+            uses ccap-connection;
         }
         container amId {
-        	leaf am-tag {
-        		type uint16;
-        		description "Application Manager Tag -- unique for this operator";
-        		mandatory true;
-        	}
-        	leaf am-type {
-         		type uint16;
-        		description "Application Manager Type -- unique for this AM tag";
-        		mandatory true;
-        	}
+            leaf am-tag {
+                type uint16;
+                description "Application Manager Tag -- unique for this operator";
+                mandatory true;
+            }
+            leaf am-type {
+                 type uint16;
+                description "Application Manager Type -- unique for this AM tag";
+                mandatory true;
+            }
         }
-		leaf-list subscriber-subnets {
-			type inet:ip-prefix;
-		}
-		leaf-list upstream-scns {
-			type service-class-name;
-		}
-		leaf-list downstream-scns {
-			type service-class-name;
-		}
-		leaf-list error {
-			config false;
-			type string;
-			description "ccap data errors";
-		}
-	}
+        leaf-list subscriber-subnets {
+            type inet:ip-prefix;
+        }
+        leaf-list upstream-scns {
+            type service-class-name;
+        }
+        leaf-list downstream-scns {
+            type service-class-name;
+        }
+        leaf-list error {
+            config false;
+            type string;
+            description "ccap data errors";
+        }
+    }
 
-	// PCMM QoS Gates
+    // PCMM QoS Gates
     container qos {
-    	description "
-    		PCMM QoS Gates are organized as a tree by Application/Subscriber/Gate:
-    			Each Application is known by its appId which is any string.
-    			Each Subscriber is known by its subId which is a CPE IP address in either IPv4 or IPv6 format.
-    			Each Gate is known by its gateId which is any string.
+        description "
+            PCMM QoS Gates are organized as a tree by Application/Subscriber/Gate:
+                Each Application is known by its appId which is any string.
+                Each Subscriber is known by its subscriberId which is a CPE IP address in either IPv4 or IPv6 format.
+                Each Gate is known by its gateId which is any string.
 
-    		The subscriber's CPE IP address is used to locate the CCAP device that is currently hosting the
-    		the Cable Modem that is connected to the subscriber's device. Therefore, it is not necessary
-    		for the PCMM applications to know the topology of the CCAP devices and CMs in the network path
-    		to their subscriber devices.
+            The subscriber's CPE IP address is used to locate the CCAP device that is currently hosting the
+            the Cable Modem that is connected to the subscriber's device. Therefore, it is not necessary
+            for the PCMM applications to know the topology of the CCAP devices and CMs in the network path
+            to their subscriber devices.
 
-    		Note that each CCAP entry contains a list of connected subscriber IP subnets as well as a list
-    		of all Service Class Names (SCNs) available on the CCAP device.
-    		";
-		uses pcmm-qos-gates;
+            Note that each CCAP entry contains a list of connected subscriber IP subnets as well as a list
+            of all Service Class Names (SCNs) available on the CCAP device.
+            ";
+        uses pcmm-qos-gates;
     }
 
     grouping pcmm-qos-gates {
-    	container apps {
-	        list app {
-	            key "appId";
-	            ext:context-instance "app-context";
-			    leaf appId {
-			    	type string;
-			    	description "Application Identity";
-			    }
-			    container subscribers {
-		            list subscriber {
-		                key "subscriberId";
-					    leaf subscriberId {
-				            type string;
-						    description "Subscriber Identity -- must be a CM or CPE IP address";
-						    mandatory true;
-					    }
-					    container gates {
-				            list gate {
-				                key "gateId";
-							    leaf gateId {
-							    	type string;
-							    	description "Qos Gate Identity";
-							    	mandatory true;
-							    }
-							    uses gate-operational-attributes;
-							    uses pcmm-qos-gate-attributes;
-				            }
-					    }
-		            }
-			    }
-	    	}
-    	}
+        container apps {
+            list app {
+                key "appId";
+                ext:context-instance "app-context";
+                leaf appId {
+                    type string;
+                    description "Application Identity";
+                }
+                container subscribers {
+                    list subscriber {
+                        key "subscriberId";
+                        leaf subscriberId {
+                            type string;
+                            description "Subscriber Identity -- must be a CM or CPE IP address";
+                            mandatory true;
+                        }
+                        container gates {
+                            list gate {
+                                key "gateId";
+                                leaf gateId {
+                                    type string;
+                                    description "Qos Gate Identity";
+                                    mandatory true;
+                                }
+                                uses gate-operational-attributes;
+                                uses pcmm-qos-gate-attributes;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     grouping gate-operational-attributes {
-		leaf gatePath {
-			config false;
-		    type string;
-		    description "FQ Gate path app/subscriber/gate";
-		    mandatory true;
-		}
-		leaf ccapId {
-			config false;
-		    type string;
-		    description "CCAP Identity";
-		    mandatory true;
-		}
-		leaf cops-state {
-			config false;
-			type string;
-			description "Gate operational COPS state";
-			mandatory true;
-		}
-		leaf cops-gateId {
-			config false;
-			type string;
-			description "Gate operational COPS Id";
-			mandatory true;
-		}
-		leaf-list error {
-			config false;
-			type string;
-			description "Gate operational error";
-		}
-		leaf timestamp {
-        	config false;
-        	type yang:date-and-time;
-        	description "Gate operational attributes timestamp";
-        	mandatory true;
+        leaf gatePath {
+            config false;
+            type string;
+            description "FQ Gate path app/subscriber/gate";
+            mandatory true;
+        }
+        leaf ccapId {
+            config false;
+            type string;
+            description "CCAP Identity";
+            mandatory true;
+        }
+        leaf cops-state {
+            config false;
+            type string;
+            description "Gate operational COPS state";
+            mandatory true;
+        }
+        leaf cops-gateId {
+            config false;
+            type string;
+            description "Gate operational COPS Id";
+            mandatory true;
+        }
+        leaf-list error {
+            config false;
+            type string;
+            description "Gate operational error";
+        }
+        leaf timestamp {
+            config false;
+            type yang:date-and-time;
+            description "Gate operational attributes timestamp";
+            mandatory true;
+        }
+    }
+
+
+    grouping classifier-attributes {
+        container classifiers {
+            list classifier-container {
+                key "classifier-id";
+                leaf classifier-id {
+                    type uint8;
+                    description "Classifier ID and Gate classifier priority";
+                }
+                   choice classifier-choice {
+                      case qos-classifier-choice {
+                        uses pcmm-qos-classifier;
+                    }
+                    case ext-classifier-choice {
+                        uses pcmm-qos-ext-classifier;
+                     }
+                     case ipv6-classifier-choice {
+                         uses pcmm-qos-ipv6-classifier;
+                     }
+                 }
+             }
         }
     }
 
     grouping pcmm-qos-gate-attributes {
-     	uses pcmm-qos-gate-spec;
-     	uses pcmm-qos-traffic-profile;
-  		uses pcmm-qos-classifier;
- 		uses pcmm-qos-ext-classifier;
- 		uses pcmm-qos-ipv6-classifier;
+         uses pcmm-qos-gate-spec;
+         uses pcmm-qos-traffic-profile;
+         uses classifier-attributes;
     }
 
     grouping pcmm-qos-gate-spec {
-    	container gate-spec {
-			leaf direction {
-				type service-flow-direction;
-				description "Gate Direction (ignored for traffic profile SCN)";
-			}
-			leaf dscp-tos-overwrite {
-				type tos-byte;
-				description "Optional DSCP/TOS overwrite value";
-			}
-			leaf dscp-tos-mask {
-				type tos-byte;
-				description "Optional DSCP/TOS overwrite AND mask";
-			}
-		}
+        container gate-spec {
+            leaf direction {
+                type service-flow-direction;
+                description "Gate Direction (ignored for traffic profile SCN)";
+            }
+            leaf dscp-tos-overwrite {
+                type tos-byte;
+                description "Optional DSCP/TOS overwrite value";
+            }
+            leaf dscp-tos-mask {
+                type tos-byte;
+                description "Optional DSCP/TOS overwrite AND mask";
+            }
+        }
     }
 
     grouping pcmm-qos-traffic-profile {
-    	container traffic-profile {
-		    leaf service-class-name {
-		    	type service-class-name;
-		    	description "The Service Class Name (SCN). This SCN must be pre-provisioned on the target CCAP";
-		    	mandatory true;
-		    }
-		}
+        container traffic-profile {
+            leaf service-class-name {
+                type service-class-name;
+                description "The Service Class Name (SCN). This SCN must be pre-provisioned on the target CCAP";
+                mandatory true;
+            }
+        }
     }
 
     grouping tp-port-match-ranges {
@@ -302,127 +327,127 @@ module packetcable
     }
 
     grouping pcmm-qos-classifier {
-    	container classifier {
-	    	leaf srcIp {
-	    		type inet:ipv4-address;
-	    		description "Source IPv4 address (exact match)";
-	    		mandatory true;
-			}
-	    	leaf dstIp {
-	    		type inet:ipv4-address;
-	    		description "Destination IPv4 address (exact match)";
-	    		mandatory true;
-			}
-	 		leaf tos-byte {
-	 			type tos-byte;
-	 			description "TOS/DSCP match";
-	 			mandatory true;
-	 		}
-	 		leaf tos-mask {
-	 			type tos-byte;
-	 			description "TOS/DSCP mask";
-	 			mandatory true;
-	 		}
-	     	leaf protocol {
-	    		type tp-protocol;
-	    		description "IPv4 transport protocol";
-	    		mandatory true;
-			}
-	 		leaf srcPort {
-		        type inet:port-number;
-	    		description "TCP/UDP source port (exact match).";
-	    		mandatory true;
-	   		}
-	 		leaf dstPort {
-		        type inet:port-number;
-	    		description "TCP/UDP destination port (exact match).";
-	    		mandatory true;
-	   		}
-   		}
+        container classifier {
+            leaf srcIp {
+                type inet:ipv4-address;
+                description "Source IPv4 address (exact match)";
+                mandatory true;
+            }
+            leaf dstIp {
+                type inet:ipv4-address;
+                description "Destination IPv4 address (exact match)";
+                mandatory true;
+            }
+             leaf tos-byte {
+                 type tos-byte;
+                 description "TOS/DSCP match";
+                 mandatory true;
+             }
+             leaf tos-mask {
+                 type tos-byte;
+                 description "TOS/DSCP mask";
+                 mandatory true;
+             }
+             leaf protocol {
+                type tp-protocol;
+                description "IPv4 transport protocol";
+                mandatory true;
+            }
+             leaf srcPort {
+                type inet:port-number;
+                description "TCP/UDP source port (exact match).";
+                mandatory true;
+               }
+             leaf dstPort {
+                type inet:port-number;
+                description "TCP/UDP destination port (exact match).";
+                mandatory true;
+               }
+           }
     }
 
     grouping pcmm-qos-ext-classifier {
-    	container ext-classifier {
-	    	leaf srcIp {
-	    		type inet:ipv4-address;
-	    		description "Source IPv4 address match";
-	    		mandatory true;
-			}
-	    	leaf srcIpMask {
-	    		type inet:ipv4-address;
-	    		description "Source IPv4 mask";
-	    		mandatory true;
-			}
-	    	leaf dstIp {
-	    		type inet:ipv4-address;
-	    		description "Destination IPv4 address match";
-	    		mandatory true;
-			}
-	    	leaf dstIpMask {
-	    		type inet:ipv4-address;
-	    		description "Destination IPv4 mask";
-	    		mandatory true;
-			}
-	 		leaf tos-byte {
-	 			type tos-byte;
-	 			description "TOS/DSCP match";
-	 			mandatory true;
-	 		}
-	 		leaf tos-mask {
-	 			type tos-byte;
-	 			description "TOS/DSCP mask";
-	 			mandatory true;
-	 		}
-	     	leaf protocol {
-	    		type tp-protocol;
-	    		description "IPv4 transport protocol";
-	    		mandatory true;
-			}
-			uses tp-port-match-ranges;
-   		}
+        container ext-classifier {
+            leaf srcIp {
+                type inet:ipv4-address;
+                description "Source IPv4 address match";
+                mandatory true;
+            }
+            leaf srcIpMask {
+                type inet:ipv4-address;
+                description "Source IPv4 mask";
+                mandatory true;
+            }
+            leaf dstIp {
+                type inet:ipv4-address;
+                description "Destination IPv4 address match";
+                mandatory true;
+            }
+            leaf dstIpMask {
+                type inet:ipv4-address;
+                description "Destination IPv4 mask";
+                mandatory true;
+            }
+             leaf tos-byte {
+                 type tos-byte;
+                 description "TOS/DSCP match";
+                 mandatory true;
+             }
+             leaf tos-mask {
+                 type tos-byte;
+                 description "TOS/DSCP mask";
+                 mandatory true;
+             }
+             leaf protocol {
+                type tp-protocol;
+                description "IPv4 transport protocol";
+                mandatory true;
+            }
+            uses tp-port-match-ranges;
+           }
     }
 
     grouping pcmm-qos-ipv6-classifier {
-    	container ipv6-classifier {
-	    	leaf srcIp6 {
-	    		type inet:ipv6-prefix;
-	    		description "Source IPv6 prefix match in  'address/len' notation";
-	    		mandatory true;
-			}
-	    	leaf dstIp6 {
-	    		type inet:ipv6-prefix;
-	    		description "Destination IPv6 prefix match in 'address/len' notation";
-	    		mandatory true;
-			}
-	 		leaf tc-low {
-	 			type tos-byte;
-	 			description "TC low range match";
-	 			mandatory true;
-	 		}
-	 		leaf tc-high {
-	 			type tos-byte;
-	 			description "TC high range match";
-	 			mandatory true;
-	 		}
-	 		leaf tc-mask {
-	 			type tos-byte;
-	 			description "TC mask";
-	 			mandatory true;
-	 		}
-	     	leaf next-hdr {
-	    		type tp-protocol;
-	    		description "IPv6 Next Header";
-	    		mandatory true;
-			}
-			leaf flow-label {
-				type uint32 {
-					range "0 .. 1048575";
-				}
-				description "IPv6 Flow Label (20 bits)";
-				mandatory true;
-			}
-	   		uses tp-port-match-ranges;
-   		}
+        container ipv6-classifier {
+            leaf srcIp6 {
+                type inet:ipv6-prefix;
+                description "Source IPv6 prefix match in  'address/len' notation";
+                mandatory true;
+            }
+            leaf dstIp6 {
+                type inet:ipv6-prefix;
+                description "Destination IPv6 prefix match in 'address/len' notation";
+                mandatory true;
+            }
+             leaf tc-low {
+                 type tos-byte;
+                 description "TC low range match";
+                 mandatory true;
+             }
+             leaf tc-high {
+                 type tos-byte;
+                 description "TC high range match";
+                 mandatory true;
+             }
+             leaf tc-mask {
+                 type tos-byte;
+                 description "TC mask";
+                 mandatory true;
+             }
+             leaf next-hdr {
+                type tp-protocol;
+                description "IPv6 Next Header";
+                mandatory true;
+            }
+            leaf flow-label {
+                type uint32 {
+                    range "0 .. 1048575";
+                }
+                description "IPv6 Flow Label (20 bits)";
+                mandatory true;
+            }
+               uses tp-port-match-ranges;
+           }
     }
 
 }

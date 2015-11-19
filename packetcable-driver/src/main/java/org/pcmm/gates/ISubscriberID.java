@@ -33,7 +33,8 @@ import java.net.InetAddress;
 
 public interface ISubscriberID extends IPCMMBaseObject {
 
-    byte STYPE = 1;
+    byte STYPE_IPV4 = 1;
+    byte STYPE_IPV6 = 2;
 
     /**
      * source IP address for the PCMM gate.

@@ -18,7 +18,7 @@ import java.net.UnknownHostException;
  */
 public class SubscriberIDTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void nullConstArg() {
         new SubscriberID(null);
     }

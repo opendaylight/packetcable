@@ -37,8 +37,15 @@
 				"ec1b0f8c-371d-a0bd-ce5f-d30aa31237cb",
 				"dc932ee9-1acd-9efe-cc83-de07894516bb",
 				"9d80f0da-4500-e843-31c5-808c91d9249b",
+				"34c31e77-afa6-e5b5-6218-f58224d8285b",
+				"9e408c15-1a8f-a9fc-f996-7137f44cdfcd",
+				"d1738b5f-1671-b0e6-ed00-06aa9a40c955",
 				"7b027a58-c3a7-dd6a-555f-e5bc3644286c",
-				"e59184fc-4b70-2eb6-eaf5-001fc7f62fbc"
+				"e59184fc-4b70-2eb6-eaf5-001fc7f62fbc",
+				"9d3cfaa5-fc27-47b6-d993-c2e451d31048",
+				"696cfabd-8836-902f-f3ab-9d24a08168a9",
+				"749ba143-bcde-07c1-4ee4-401abce079e2",
+				"10ac6396-d30a-85b1-121d-db3e2d9f50a3"
 			],
 			"owner": 0,
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc"
@@ -120,12 +127,32 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1445871971575,
+			"time": 1447948746908,
 			"name": "Gate w/ classifier",
 			"description": "PUT gate with standard classifier",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-classifier}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        },\n        \"classifier\": {\n            \"srcIp\": \"{{srcIp-1a}}\",\n            \"dstIp\": \"{{dstIp-1a}}\",\n            \"protocol\": \"0\",\n            \"srcPort\": \"{{srcPort-1a}}\",\n            \"dstPort\": \"{{dstPort-1a}}\",\n            \"tos-byte\": \"0xa0\",\n            \"tos-mask\": \"0xe0\"\n        }\n    }]\n}\n"
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-classifier}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"protocol\": \"0\",\n                        \"srcPort\": \"{{srcPort-1a}}\",\n                        \"dstPort\": \"{{dstPort-1a}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\"\n                    }\n                }\n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
+		},
+		{
+			"id": "10ac6396-d30a-85b1-121d-db3e2d9f50a3",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "DELETE",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448396955856,
+			"name": "Bad? Gate w/ 24 Classifiers",
+			"description": "Put a gate with 24 classifiers.\nThis is proably more than a CMTS will support.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"rawModeData": ""
 		},
 		{
 			"id": "1142817c-9007-f0a1-92cd-644935c1fa85",
@@ -186,6 +213,26 @@
 			"responses": []
 		},
 		{
+			"id": "34c31e77-afa6-e5b5-6218-f58224d8285b",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "PUT",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448396369778,
+			"name": "Gate w/ Multiple Classifiers",
+			"description": "Get gate with Multiple classifiers",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-multi}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                 {\n                    \"classifier-id\": \"2\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-2a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                 {\n                    \"classifier-id\": \"3\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-3a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                 {\n                    \"classifier-id\": \"4\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                }\n                \n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
+		},
+		{
 			"id": "44ba6dfe-ca0c-376a-0322-b3db2af6eb2f",
 			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
 			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:ccaps",
@@ -217,12 +264,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1445872070412,
+			"time": 1447948856388,
 			"name": "Gate w/ ext classifier",
 			"description": "PUT gate with ext classifier",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-ext}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnDn}}\"\n        },\n        \"ext-classifier\": {\n            \"srcIp\": \"{{srcIp-1a}}\",\n            \"srcIpMask\": \"{{srcIpMask}}\",\n            \"dstIp\": \"{{dstIp-1a}}\",\n            \"dstIpMask\": \"{{dstIpMask}}\",\n            \"tos-byte\": \"0xa0\",\n            \"tos-mask\": \"0xe0\",\n            \"protocol\": \"0\",\n            \"srcPort-start\": \"{{srcPort-1a}}\",\n            \"srcPort-end\": \"{{srcPort-1b}}\",\n            \"dstPort-start\": \"{{dstPort-1a}}\",\n            \"dstPort-end\": \"{{dstPort-1b}}\"\n        }\n    }]\n}\n"
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-ext}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                }\n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
 		},
 		{
 			"id": "672adfee-68a5-5281-d638-72c2964b35cc",
@@ -244,9 +291,9 @@
 			"responses": []
 		},
 		{
-			"id": "7b027a58-c3a7-dd6a-555f-e5bc3644286c",
+			"id": "696cfabd-8836-902f-f3ab-9d24a08168a9",
 			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
-			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-classifier}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-classifier}}/",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "PUT",
@@ -256,12 +303,51 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1447349054220,
+			"time": 1448397048797,
+			"name": "Bad? Gate w/ 24 Classifiers",
+			"description": "Put a gate with 24 classifiers. Spec requires support for 4 but there is no maximum.\nHowever this is proably more than a CCAP will support.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-multi}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"2\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-2a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"3\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-3a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"4\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"5\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"6\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"7\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"8\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"9\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"10\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"11\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"12\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"13\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"14\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"15\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"16\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"17\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"18\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"19\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"20\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"21\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"22\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"23\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },\n                {\n                    \"classifier-id\": \"24\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-4a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                }\n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
+		},
+		{
+			"id": "749ba143-bcde-07c1-4ee4-401abce079e2",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448396914372,
+			"name": "Bad? Gate w/ 24 Classifiers",
+			"description": "Get a gate with 24 classifiers.\nThis is proably more than a CMTS will support.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": []
+		},
+		{
+			"id": "7b027a58-c3a7-dd6a-555f-e5bc3644286c",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-bad}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-bad}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "PUT",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447949146228,
 			"name": "Bad - Gate w/ incomplete classifier",
 			"description": "PUT gate with a standard classifier that is missing some data",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-classifier}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n        },\n        \"classifier\": {\n            \"srcIp\": \"{{srcIp-1a}}\",\n            \"dstIp\": \"{{dstIp-1a}}\",\n            \"srcPort\": \"{{srcPort-1a}}\",\n            \"dstPort\": \"{{dstPort-1a}}\",\n            \"tos-byte\": \"0xa0\",\n            \"tos-mask\": \"0xe0\"\n        }\n    }]\n}\n"
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-bad}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"protocol\": \"0\",\n                        \"srcPort\": \"{{srcPort-1a}}\",\n                        \"dstPort\": \"{{dstPort-1a}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\"\n                    }\n                }\n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n        }\n    }\n}"
 		},
 		{
 			"id": "89d6f693-4b15-44dc-d330-f191ac6780b7",
@@ -283,6 +369,26 @@
 			"responses": []
 		},
 		{
+			"id": "9d3cfaa5-fc27-47b6-d993-c2e451d31048",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "PUT",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448397901238,
+			"name": "Bad - Gate w/ Legacy & Ext Classifiers",
+			"description": "Get gate with Legacy & Extended classifiers",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-multi}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"ext-classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"srcIpMask\": \"{{srcIpMask}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"dstIpMask\": \"{{dstIpMask}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\",\n                        \"protocol\": \"0\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                },{\n                    \"classifier-id\": \"2\",\n                    \"classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"protocol\": \"0\",\n                        \"srcPort\": \"{{srcPort-1a}}\",\n                        \"dstPort\": \"{{dstPort-1a}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\"\n                    }\n                }\n                 \n                \n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
+		},
+		{
 			"id": "9d80f0da-4500-e843-31c5-808c91d9249b",
 			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
 			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-ipv6}}/subscribers/subscriber/{{subId-ipv6}}/gates/gate/{{gateId-ipv6}}/",
@@ -300,6 +406,26 @@
 			"description": "Delete QoS gate with IPv6 classifier",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": []
+		},
+		{
+			"id": "9e408c15-1a8f-a9fc-f996-7137f44cdfcd",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447949491059,
+			"name": "Gate w/ Multiple Classifiers",
+			"description": "Get gate with Multiple classifiers",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": [],
+			"folder": "8454f1d3-bf11-01d5-3c17-1c635512818b"
 		},
 		{
 			"id": "a782c414-e6ad-a247-63f8-f1353e462870",
@@ -333,12 +459,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1445616876070,
+			"time": 1447957774435,
 			"name": "Add CCAP 1",
 			"description": "Adds a CCAP/CMTS to manage",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"ccap\": [{\n        \"ccapId\": \"{{ccapId-1}}\",\n        \"amId\": {\n            \"am-tag\": \"0xcada\",\n            \"am-type\": \"1\"\n        },\n        \"connection\": {\n            \"ipAddress\": \"{{ccapIp-1}}\",\n            \"port\": \"{{ccapPort-1}}\"\n        },\n        \"subscriber-subnets\": [\n            \"10.32.110.1/24\"\n        ],\n        \"downstream-scns\": [\n            \"extrm_dn\"\n        ],\n        \"upstream-scns\": [\n            \"extrm_up\"\n        ]\n    }]\n}\n"
+			"rawModeData": "{\n    \"ccap\": [{\n        \"ccapId\": \"{{ccapId-1}}\",\n        \"amId\": {\n            \"am-tag\": \"0xcada\",\n            \"am-type\": \"1\"\n        },\n        \"connection\": {\n            \"ipAddress\": \"{{ccapIp-1}}\",\n            \"port\": \"{{ccapPort-1}}\"\n        },\n        \"subscriber-subnets\": [\n            \"10.32.110.1/24\", \n            \"2001:470:c09b:4000::/64\"\n        ],\n        \"downstream-scns\": [\n            \"extrm_dn\"\n        ],\n        \"upstream-scns\": [\n            \"extrm_up\"\n        ]\n    }]\n}\n"
 		},
 		{
 			"id": "b8031ee0-b6e0-dcbe-fff3-a924cbe295a4",
@@ -356,6 +482,25 @@
 			"time": 1445372731369,
 			"name": "All Gates",
 			"description": "Retrieves all gates.",
+			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
+			"responses": []
+		},
+		{
+			"id": "d1738b5f-1671-b0e6-ed00-06aa9a40c955",
+			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-multi}}/subscribers/subscriber/{{subId-classifier}}/gates/gate/{{gateId-multi}}/",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "DELETE",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1447949459469,
+			"name": "Gate w/ Multiple Classifiers",
+			"description": "Delete gate with Multiple classifiers",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": []
 		},
@@ -381,7 +526,7 @@
 		{
 			"id": "e59184fc-4b70-2eb6-eaf5-001fc7f62fbc",
 			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\nContent-Type: application/json\n",
-			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-classifier}}/subscribers/subscriber/1.2.3.4/gates/gate/{{gateId-classifier}}",
+			"url": "http://{{odlHost}}:{{odlPort}}/restconf/config/packetcable:qos/apps/app/{{appId-bad}}/subscribers/subscriber/1.2.3.4/gates/gate/{{gateId-bad}}",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "PUT",
@@ -391,12 +536,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1447425110789,
+			"time": 1447949210199,
 			"name": "Bad - Gate w/ invalid subscriber",
 			"description": "PUT gate with a standard classifier that formed\ncorectly but the subscriber is unknown to the CCAP.",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-classifier}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        },\n        \"classifier\": {\n            \"srcIp\": \"{{srcIp-1a}}\",\n            \"dstIp\": \"{{dstIp-1a}}\",\n            \"protocol\": \"0\",\n            \"srcPort\": \"{{srcPort-1a}}\",\n            \"dstPort\": \"{{dstPort-1a}}\",\n            \"tos-byte\": \"0xa0\",\n            \"tos-mask\": \"0xe0\"\n        }\n    }]\n}\n"
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-bad}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"classifier\": {\n                        \"srcIp\": \"{{srcIp-1a}}\",\n                        \"dstIp\": \"{{dstIp-1a}}\",\n                        \"protocol\": \"0\",\n                        \"srcPort\": \"{{srcPort-1a}}\",\n                        \"dstPort\": \"{{dstPort-1a}}\",\n                        \"tos-byte\": \"0xa0\",\n                        \"tos-mask\": \"0xe0\"\n                    }\n                }\n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
 		},
 		{
 			"id": "e69fb800-4f72-819b-2875-83eecf65dfb1",
@@ -430,12 +575,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1445872149650,
+			"time": 1447948932123,
 			"name": "Gate w/ IPv6 classifier",
 			"description": "PUT gate with IPv6 classifier",
 			"collectionId": "5c57b040-54e7-d5bf-296d-d5a4afdd39bc",
 			"responses": [],
-			"rawModeData": "{\n    \"gate\": [{\n        \"gateId\": \"{{gateId-ipv6}}\",\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnDn}}\"\n        },\n        \"ipv6-classifier\": {\n            \"srcIp6\": \"{{srcIp-IPv6}}\",\n            \"dstIp6\": \"{{dstIp-IPv6}}\",\n            \"flow-label\": \"101\",\n            \"tc-low\": \"0xa0\",\n            \"tc-high\": \"0xc0\",\n            \"tc-mask\": \"0xe0\",\n            \"next-hdr\": \"256\",\n            \"srcPort-start\": \"{{srcPort-1a}}\",\n            \"srcPort-end\": \"{{srcPort-1b}}\",\n            \"dstPort-start\": \"{{dstPort-1a}}\",\n            \"dstPort-end\": \"{{dstPort-1b}}\"\n        }\n    }]\n}\n"
+			"rawModeData": "{\n    \"gate\": {\n        \"gateId\": \"{{gateId-ipv6}}\",\n        \"classifiers\": {\n            \"classifier-container\": [\n                {\n                    \"classifier-id\": \"1\",\n                    \"ipv6-classifier\": {\n                        \"srcIp6\": \"{{srcIp-IPv6}}\",\n                        \"dstIp6\": \"{{dstIp-IPv6}}\",\n                        \"flow-label\": \"101\",\n                        \"tc-low\": \"0xa0\",\n                        \"tc-high\": \"0xc0\",\n                        \"tc-mask\": \"0xe0\",\n                        \"next-hdr\": \"256\",\n                        \"srcPort-start\": \"{{srcPort-1a}}\",\n                        \"srcPort-end\": \"{{srcPort-1b}}\",\n                        \"dstPort-start\": \"{{dstPort-1a}}\",\n                        \"dstPort-end\": \"{{dstPort-1b}}\"\n                    }\n                }\n            ]\n        },\n        \"gate-spec\": {\n            \"dscp-tos-overwrite\": \"0xa0\",\n            \"dscp-tos-mask\": \"0xff\"\n        },\n        \"traffic-profile\": {\n            \"service-class-name\": \"{{scnUp}}\"\n        }\n    }\n}"
 		},
 		{
 			"id": "f403ebfd-d7d7-c94e-0ee5-3bc864098250",

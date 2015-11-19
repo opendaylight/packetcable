@@ -93,7 +93,7 @@ public class IPv6Classifier extends ExtendedClassifier implements IIPv6Classifie
      */
     public IPv6Classifier(final Inet6Address srcAddress, final Inet6Address dstAddress, final short srcPortBegin,
                           final short dstPortBegin, final byte priority, final short srcPortEnd, final short dstPortEnd,
-                          final short classifierId, final ActivationState activationState, final byte action,
+                          final short classifierId, final ActivationState activationState, final Action action,
                           final FlowLabel flowEnabled, final byte tcLow, final byte tcHigh, final byte tcMask,
                           final int flowLabel, final short nextHdr, final byte srcPrefixLen, final byte dstPrefixLen) {
         super(IIPv6Classifier.STYPE, srcAddress, dstAddress, srcPortBegin, dstPortBegin, priority, srcPortEnd,
@@ -178,7 +178,11 @@ public class IPv6Classifier extends ExtendedClassifier implements IIPv6Classifie
         byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(classifierId)));
         byteList.add(priority);
         byteList.add(activationState.getValue());
-        byteList.add(action);
+        byteList.add(action.getByte());
+
+        // reserved padding
+        byteList.addAll(Bytes.asList((byte) 0, (byte) 0, (byte) 0));
+
         return Bytes.toArray(byteList);
     }
 
@@ -232,7 +236,7 @@ public class IPv6Classifier extends ExtendedClassifier implements IIPv6Classifie
             final short classifierId = COPSMsgParser.bytesToShort(data[52], data[53]);
             final byte priority = data[54];
             final ActivationState activationState = ActivationState.valueOf(data[55]);
-            final byte action = data[56];
+            final Action action = Action.getFromByte(data[56]);
             final FlowLabel flowEnabled = FlowLabel.valueOf(data[0]);
             final byte tcLow = data[1];
             final byte tcHigh = data[2];

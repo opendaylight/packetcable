@@ -10,7 +10,7 @@ package org.opendaylight.controller.packetcable.provider.validation.impl.validat
 
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
 
 /**
  * @author rvail

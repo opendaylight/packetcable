@@ -6,6 +6,7 @@ package org.pcmm.gates.impl;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.pcmm.gates.IExtendedClassifier;
 import org.pcmm.gates.IExtendedClassifier.ActivationState;
 import org.pcmm.gates.IIPv6Classifier.FlowLabel;
 
@@ -21,14 +22,14 @@ public class IPv6ClassifierTest {
     @Test(expected = IllegalArgumentException.class)
     public void nullSrcAddr() throws UnknownHostException {
         new IPv6Classifier(null, (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
-                (short)1, (short)2, (byte)4, (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9,
+                (short)1, (short)2, (byte)4, (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD,
                 FlowLabel.VALID, (byte)11, (byte)12, (byte)13, 14, (short)15, (byte)16, (byte)17);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullDstAddr() throws UnknownHostException {
         new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
-                null, (short)1, (short)2, (byte)4, (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9,
+                null, (short)1, (short)2, (byte)4, (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD,
                 FlowLabel.VALID, (byte)11, (byte)12, (byte)13, 14, (short)15, (byte)16, (byte)17);
     }
 
@@ -36,7 +37,15 @@ public class IPv6ClassifierTest {
     public void nullActivationState() throws UnknownHostException {
         new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
                 (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"), (short)1, (short)2, (byte)4, (short)5,
-                (short)6, (short)7, null, (byte)9, FlowLabel.VALID, (byte)11, (byte)12, (byte)13, 14, (short)15,
+                (short)6, (short)7, null, IExtendedClassifier.Action.ADD, FlowLabel.VALID, (byte)11, (byte)12, (byte)13, 14, (short)15,
+                (byte)16, (byte)17);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void nullAction() throws UnknownHostException {
+        new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
+                (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"), (short)1, (short)2, (byte)4, (short)5,
+                (short)6, (short)7, ActivationState.ACTIVE, null, FlowLabel.VALID, (byte)11, (byte)12, (byte)13, 14, (short)15,
                 (byte)16, (byte)17);
     }
 
@@ -44,7 +53,7 @@ public class IPv6ClassifierTest {
     public void nullFlowLabel() throws UnknownHostException {
         new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
                 (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"), (short)1, (short)2, (byte)4, (short)5,
-                (short)6, (short)7, ActivationState.ACTIVE, (byte)9, null, (byte)11, (byte)12, (byte)13, 14, (short)15,
+                (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD, null, (byte)11, (byte)12, (byte)13, 14, (short)15,
                 (byte)16, (byte)17);
     }
 
@@ -52,7 +61,7 @@ public class IPv6ClassifierTest {
     public void constructionActiveValid() throws UnknownHostException {
         final IPv6Classifier classifier = new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
                 (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
-                (short)11, (short)12, (byte)14, (short)15, (short)16, (short)17, ActivationState.ACTIVE, (byte)19,
+                (short)11, (short)12, (byte)14, (short)15, (short)16, (short)17, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD,
                 FlowLabel.VALID, (byte)21, (byte)22, (byte)23, 24, (short)25, (byte)26, (byte)27);
 
         Assert.assertNull(classifier.getProtocol());
@@ -68,7 +77,7 @@ public class IPv6ClassifierTest {
         Assert.assertEquals((short) 16, classifier.getDestinationPortEnd());
         Assert.assertEquals((short) 17, classifier.getClassifierID());
         Assert.assertEquals(ActivationState.ACTIVE, classifier.getActivationState());
-        Assert.assertEquals((byte) 19, classifier.getAction());
+        Assert.assertEquals(IExtendedClassifier.Action.ADD, classifier.getAction());
         Assert.assertEquals(FlowLabel.VALID, classifier.getFlowLabelEnableFlag());
         Assert.assertEquals((byte) 21, classifier.getTcLow());
         Assert.assertEquals((byte) 22, classifier.getTcHigh());
@@ -83,7 +92,7 @@ public class IPv6ClassifierTest {
     public void constructionInactiveIrrelevant() throws UnknownHostException {
         final IPv6Classifier classifier = new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
                 (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
-                (short)11, (short)12, (byte)14, (short)15, (short)16, (short)17, ActivationState.INACTIVE, (byte)19,
+                (short)11, (short)12, (byte)14, (short)15, (short)16, (short)17, ActivationState.INACTIVE, IExtendedClassifier.Action.ADD,
                 FlowLabel.IRRELEVANT, (byte)21, (byte)22, (byte)23, 24, (short)25, (byte)26, (byte)27);
 
         Assert.assertNull(classifier.getProtocol());
@@ -99,7 +108,7 @@ public class IPv6ClassifierTest {
         Assert.assertEquals((short) 16, classifier.getDestinationPortEnd());
         Assert.assertEquals((short) 17, classifier.getClassifierID());
         Assert.assertEquals(ActivationState.INACTIVE, classifier.getActivationState());
-        Assert.assertEquals((byte) 19, classifier.getAction());
+        Assert.assertEquals(IExtendedClassifier.Action.ADD, classifier.getAction());
         Assert.assertEquals(FlowLabel.IRRELEVANT, classifier.getFlowLabelEnableFlag());
         Assert.assertEquals((byte) 21, classifier.getTcLow());
         Assert.assertEquals((byte) 22, classifier.getTcHigh());
@@ -117,7 +126,7 @@ public class IPv6ClassifierTest {
     public void byteParsingActiveValid() throws UnknownHostException {
         final IPv6Classifier classifier = new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
                 (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
-                (short)21, (short)22, (byte)24, (short)25, (short)26, (short)27, ActivationState.ACTIVE, (byte)29,
+                (short)21, (short)22, (byte)24, (short)25, (short)26, (short)27, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD,
                 FlowLabel.VALID, (byte)31, (byte)32, (byte)33, 34, (short)35, (byte)36, (byte)37);
         final IPv6Classifier parsed = IPv6Classifier.parse(classifier.getBytes());
         Assert.assertEquals(classifier, parsed);
@@ -127,7 +136,7 @@ public class IPv6ClassifierTest {
     public void byteParsingInactiveIrrelevant() throws UnknownHostException {
         final IPv6Classifier classifier = new IPv6Classifier((Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
                 (Inet6Address)InetAddress.getByName("00:00:00:00:00:00:00:01"),
-                (short)21, (short)22, (byte)24, (short)25, (short)26, (short)27, ActivationState.INACTIVE, (byte)29,
+                (short)21, (short)22, (byte)24, (short)25, (short)26, (short)27, ActivationState.INACTIVE, IExtendedClassifier.Action.ADD,
                 FlowLabel.IRRELEVANT, (byte)31, (byte)32, (byte)33, 34, (short)35, (byte)36, (byte)37);
         final IPv6Classifier parsed = IPv6Classifier.parse(classifier.getBytes());
         Assert.assertEquals(classifier, parsed);

@@ -46,7 +46,7 @@ public class COPSMsgParser {
      * @throws IOException
      */
     private static COPSHeaderData readHeader(final Socket socket) throws IOException {
-        logger.info("Reading COPS Header");
+        logger.debug("Reading COPS Header");
         final byte[] data = new byte[8];
         final int bytesRead = readData(socket, data, 8);
         if (bytesRead != 8) throw new IOException("Expected 8 bytes, read in " + bytesRead);
@@ -98,7 +98,7 @@ public class COPSMsgParser {
     }
 
     private static COPSMsg readBody(final Socket socket, final COPSHeaderData hdrData) throws IOException, COPSException {
-        logger.info("Reading COPS Body of type - " + hdrData.header.getOpCode());
+        logger.debug("Reading COPS Body of type - " + hdrData.header.getOpCode());
         final int expectedBytes = hdrData.msgByteCount - hdrData.header.getHdrLength();
         final byte[] buffer = new byte[expectedBytes];
         final int nread = readData(socket, buffer, expectedBytes);

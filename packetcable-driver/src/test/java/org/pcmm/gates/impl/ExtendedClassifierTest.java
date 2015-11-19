@@ -7,6 +7,7 @@ package org.pcmm.gates.impl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.pcmm.gates.IClassifier.Protocol;
+import org.pcmm.gates.IExtendedClassifier;
 import org.pcmm.gates.IExtendedClassifier.ActivationState;
 
 import java.net.Inet4Address;
@@ -24,7 +25,7 @@ public class ExtendedClassifierTest {
         new ExtendedClassifier(null, (byte)1, (byte)1, (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)1, (short)2, (byte)4,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9);
+                (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -32,7 +33,7 @@ public class ExtendedClassifierTest {
         new ExtendedClassifier(Protocol.NONE, (byte)1, (byte)1, null,
                 (Inet4Address)InetAddress.getByName("localhost"), (short)1, (short)2, (byte)4,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9);
+                (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -40,7 +41,7 @@ public class ExtendedClassifierTest {
         new ExtendedClassifier(Protocol.NONE, (byte)1, (byte)1, (Inet4Address) InetAddress.getByName("localhost"),
                 null, (short)1, (short)2, (byte)4,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9);
+                (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -48,7 +49,7 @@ public class ExtendedClassifierTest {
         new ExtendedClassifier(Protocol.NONE, (byte)1, (byte)1, (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)1, (short)2, (byte)4,
                 null, (Inet4Address) InetAddress.getByName("localhost"),
-                (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9);
+                (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -56,15 +57,23 @@ public class ExtendedClassifierTest {
         new ExtendedClassifier(Protocol.NONE, (byte)1, (byte)1, (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)1, (short)2, (byte)4,
                 (Inet4Address) InetAddress.getByName("localhost"), null,
-                (short)5, (short)6, (short)7, ActivationState.ACTIVE, (byte)9);
+                (short)5, (short)6, (short)7, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void nullActivationState() throws UnknownHostException {
+      public void nullActivationState() throws UnknownHostException {
         new ExtendedClassifier(Protocol.NONE, (byte)1, (byte)1, (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)1, (short)2, (byte)4,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)5, (short)6, (short)7, null, (byte)9);
+                (short)5, (short)6, (short)7, null, IExtendedClassifier.Action.ADD);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void nullAction() throws UnknownHostException {
+        new ExtendedClassifier(Protocol.NONE, (byte)1, (byte)1, (Inet4Address) InetAddress.getByName("localhost"),
+                (Inet4Address)InetAddress.getByName("localhost"), (short)1, (short)2, (byte)4,
+                (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
+                (short)5, (short)6, (short)7, ActivationState.ACTIVE, null);
     }
 
     @Test
@@ -73,7 +82,7 @@ public class ExtendedClassifierTest {
                 (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)11, (short)12, (byte)14,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)15, (short)16, (short)17, ActivationState.ACTIVE, (byte)19);
+                (short)15, (short)16, (short)17, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
         Assert.assertEquals(Protocol.NONE, classifier.getProtocol());
         Assert.assertEquals((byte)1, classifier.getDSCPTOS());
         Assert.assertEquals(InetAddress.getByName("localhost"), classifier.getSourceIPAddress());
@@ -87,7 +96,7 @@ public class ExtendedClassifierTest {
         Assert.assertEquals((short) 16, classifier.getDestinationPortEnd());
         Assert.assertEquals((short) 17, classifier.getClassifierID());
         Assert.assertEquals(ActivationState.ACTIVE, classifier.getActivationState());
-        Assert.assertEquals((byte) 19, classifier.getAction());
+        Assert.assertEquals(IExtendedClassifier.Action.ADD, classifier.getAction());
     }
 
     @Test
@@ -96,7 +105,7 @@ public class ExtendedClassifierTest {
                 (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)11, (short)12, (byte)14,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)15, (short)16, (short)17, ActivationState.INACTIVE, (byte)19);
+                (short)15, (short)16, (short)17, ActivationState.INACTIVE, IExtendedClassifier.Action.ADD);
         Assert.assertEquals(Protocol.NONE, classifier.getProtocol());
         Assert.assertEquals((byte)1, classifier.getDSCPTOS());
         Assert.assertEquals(InetAddress.getByName("localhost"), classifier.getSourceIPAddress());
@@ -110,7 +119,7 @@ public class ExtendedClassifierTest {
         Assert.assertEquals((short) 16, classifier.getDestinationPortEnd());
         Assert.assertEquals((short) 17, classifier.getClassifierID());
         Assert.assertEquals(ActivationState.INACTIVE, classifier.getActivationState());
-        Assert.assertEquals((byte) 19, classifier.getAction());
+        Assert.assertEquals(IExtendedClassifier.Action.ADD, classifier.getAction());
     }
 
     @Test
@@ -119,7 +128,7 @@ public class ExtendedClassifierTest {
                 (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)21, (short)22, (byte)24,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)25, (short)26, (short)27, ActivationState.ACTIVE, (byte)29);
+                (short)25, (short)26, (short)27, ActivationState.ACTIVE, IExtendedClassifier.Action.ADD);
         final ExtendedClassifier parsed = ExtendedClassifier.parse(classifier.getBytes());
         Assert.assertEquals(classifier, parsed);
     }
@@ -130,7 +139,7 @@ public class ExtendedClassifierTest {
                 (Inet4Address) InetAddress.getByName("localhost"),
                 (Inet4Address)InetAddress.getByName("localhost"), (short)21, (short)22, (byte)24,
                 (Inet4Address) InetAddress.getByName("localhost"), (Inet4Address) InetAddress.getByName("localhost"),
-                (short)25, (short)26, (short)27, ActivationState.INACTIVE, (byte)29);
+                (short)25, (short)26, (short)27, ActivationState.INACTIVE, IExtendedClassifier.Action.ADD);
         final ExtendedClassifier parsed = ExtendedClassifier.parse(classifier.getBytes());
         Assert.assertEquals(classifier, parsed);
     }

@@ -4,7 +4,9 @@
 
 package org.pcmm.gates.impl;
 
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
+import java.util.Collections;
 import org.pcmm.base.impl.PCMMBaseObject.SNum;
 import org.pcmm.gates.*;
 import org.slf4j.Logger;
@@ -15,14 +17,15 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * <p>
+ * {@code
  * <Gate-set>=<Decision Header><TransactionID><AMID> <SubscriberID> [<GateI>]
- * <GateSpec> <Traffic Profile> <classifier>
- * </p>
+ * <GateSpec> <Traffic Profile> <classifier>[<classifier>...]
+ * }
+ *
  */
 public class PCMMGateReq implements IPCMMGate {
 
-    public final static Logger logger = LoggerFactory.getLogger(PCMMGateReq.class);
+    public static final Logger logger = LoggerFactory.getLogger(PCMMGateReq.class);
 
     // Immutable references
     private final boolean multicast;
@@ -31,7 +34,7 @@ public class PCMMGateReq implements IPCMMGate {
     private transient ITransactionID transactionID;
     private transient IGateSpec gateSpec;
     private transient ITrafficProfile trafficProfile;
-    private transient IClassifier classifier;
+    private transient List<IClassifier> classifiers;
 
     // These values are transient as objects of these type will be updated asynchronously and will be used for
     // synchronization purposes
@@ -45,12 +48,12 @@ public class PCMMGateReq implements IPCMMGate {
      * @param transactionID - the transaction ID
      * @param gateSpec - the Gate specification
      * @param trafficProfile - the traffic profile
-     * @param classifier - the classifier
+     * @param classifiers - the classifier
      * @param gateID - the gate ID
      * @param error - the error
      */
     public PCMMGateReq(IAMID iamid, ISubscriberID subscriberID, ITransactionID transactionID,
-                       IGateSpec gateSpec, ITrafficProfile trafficProfile, IClassifier classifier, IGateID gateID,
+                       IGateSpec gateSpec, ITrafficProfile trafficProfile, List<IClassifier> classifiers, IGateID gateID,
                        IPCMMError error) {
         // TODO - determine if and when this attribute should be used
         this.multicast = false;
@@ -60,7 +63,7 @@ public class PCMMGateReq implements IPCMMGate {
         this.transactionID = transactionID;
         this.gateSpec = gateSpec;
         this.trafficProfile = trafficProfile;
-        this.classifier = classifier;
+        this.classifiers = Lists.newArrayList(classifiers);
         this.gateID = gateID;
         this.error = error;
     }
@@ -77,7 +80,7 @@ public class PCMMGateReq implements IPCMMGate {
         TransactionID transactionID = null;
         GateSpec gateSpec = null;
         ITrafficProfile trafficProfile = null;
-        Classifier classifier = null;
+        List<IClassifier> classifiers = Lists.newArrayListWithExpectedSize(4);
         PCMMError error = null;
 
         short offset = 0;
@@ -118,13 +121,13 @@ public class PCMMGateReq implements IPCMMGate {
                 case CLASSIFIERS:
                     switch (sType) {
                         case IClassifier.STYPE:
-                            classifier = Classifier.parse(dataBuffer);
+                            classifiers.add(Classifier.parse(dataBuffer));
                             break;
                         case IExtendedClassifier.STYPE:
-                            classifier = ExtendedClassifier.parse(dataBuffer);
+                            classifiers.add(ExtendedClassifier.parse(dataBuffer));
                             break;
                         case IIPv6Classifier.STYPE:
-                            classifier = IPv6Classifier.parse(dataBuffer);
+                            classifiers.add(IPv6Classifier.parse(dataBuffer));
                             break;
                     }
                     break;
@@ -138,7 +141,7 @@ public class PCMMGateReq implements IPCMMGate {
             offset += len;
         }
 
-        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifier, gateID, error);
+        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifiers, gateID, error);
     }
 
     @Override
@@ -165,8 +168,13 @@ public class PCMMGateReq implements IPCMMGate {
     }
 
     @Override
-    public void setClassifier(IClassifier classifier) {
-        this.classifier = classifier;
+    public void setClassifiers(List<IClassifier> classifiers) {
+        if (classifiers == null) {
+            this.classifiers = null;
+        }
+        else {
+            this.classifiers = new ArrayList<>(classifiers);
+        }
     }
 
     @Override
@@ -195,8 +203,11 @@ public class PCMMGateReq implements IPCMMGate {
     }
 
     @Override
-    public IClassifier getClassifier() {
-        return classifier;
+    public List<IClassifier> getClassifiers() {
+        if (classifiers == null) {
+            return null;
+        }
+        return Collections.unmodifiableList(classifiers);
     }
 
     @Override
@@ -238,8 +249,10 @@ public class PCMMGateReq implements IPCMMGate {
         if (getTrafficProfile() != null) {
             byteList.addAll(Bytes.asList(getTrafficProfile().getAsBinaryArray()));
         }
-        if (getClassifier() != null) {
-            byteList.addAll(Bytes.asList(getClassifier().getAsBinaryArray()));
+        if (getClassifiers() != null) {
+            for (IClassifier classifier : getClassifiers()) {
+                byteList.addAll(Bytes.asList(classifier.getAsBinaryArray()));
+            }
         }
         return Bytes.toArray(byteList);
     }

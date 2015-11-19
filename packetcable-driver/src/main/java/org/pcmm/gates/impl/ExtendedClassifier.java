@@ -56,7 +56,7 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
     /**
      * The action value
      */
-    protected final byte action;
+    protected final Action action;
 
     /**
      * Constructor
@@ -80,12 +80,13 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
                               final Inet4Address srcAddress, final Inet4Address dstAddress, final short srcPortBegin,
                               final short dstPortBegin, final byte priority, final Inet4Address srcMask,
                               final Inet4Address dstMask, final short srcPortEnd, final short dstPortEnd,
-                              final short classifierId, final ActivationState activationState, final byte action) {
+                              final short classifierId, final ActivationState activationState, final Action action) {
         super(IExtendedClassifier.STYPE, protocol, tosOverwrite, tosMask, srcAddress, dstAddress, srcPortBegin,
                 dstPortBegin, priority);
         if (srcMask == null) throw new IllegalArgumentException("Source IP Mask cannot be null");
         if (dstMask == null) throw new IllegalArgumentException("Destination IP Mask cannot be null");
         if (activationState == null) throw new IllegalArgumentException("Activation state must not be null");
+        if (action == null) throw new IllegalArgumentException("Action must not be null");
         this.srcMask = srcMask;
         this.dstMask = dstMask;
         this.srcPortEnd = srcPortEnd;
@@ -112,9 +113,10 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
     protected ExtendedClassifier(final byte sType, final InetAddress srcAddress, final InetAddress dstAddress,
                                  final short srcPortBegin, final short dstPortBegin, final byte priority,
                                  final short srcPortEnd, final short dstPortEnd, final short classifierId,
-                                 final ActivationState activationState, final byte action) {
+                                 final ActivationState activationState, final Action action) {
         super(sType, null, (byte)0, (byte)0, srcAddress, dstAddress, srcPortBegin, dstPortBegin, priority);
         if (activationState == null) throw new IllegalArgumentException("Activation state must not be null");
+        if (action == null) throw new IllegalArgumentException("Action must not be null");
         this.srcMask = null;
         this.dstMask = null;
         this.srcPortEnd = srcPortEnd;
@@ -165,7 +167,7 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
     }
 
     @Override
-    public byte getAction() {
+    public Action getAction() {
         return action;
     }
 
@@ -185,7 +187,7 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
         byteList.addAll(Bytes.asList(COPSMsgParser.shortToBytes(classifierId)));
         byteList.add(priority);
         byteList.add(activationState.getValue());
-        byteList.add(action);
+        byteList.add(action.getByte());
 
         // reserved padding
         byteList.addAll(Bytes.asList((byte) 0, (byte) 0, (byte) 0));
@@ -220,7 +222,7 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
         result = 31 * result + (int) dstPortEnd;
         result = 31 * result + (int) classifierId;
         result = 31 * result + (int) activationState.getValue();
-        result = 31 * result + (int) action;
+        result = 31 * result + (int) action.getByte();
         return result;
     }
 
@@ -242,7 +244,8 @@ public class ExtendedClassifier extends Classifier implements IExtendedClassifie
                     data[30], (Inet4Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(12, 16))),
                     (Inet4Address)InetAddress.getByAddress(Bytes.toArray(bytes.subList(16, 20))),
                     COPSMsgParser.bytesToShort(data[22], data[23]), COPSMsgParser.bytesToShort(data[26], data[27]),
-                    COPSMsgParser.bytesToShort(data[28], data[29]), ActivationState.valueOf(data[31]), data[32]);
+                    COPSMsgParser.bytesToShort(data[28], data[29]), ActivationState.valueOf(data[31]),
+                    Action.getFromByte(data[32]));
         } catch (UnknownHostException e) {
             return null;
         }

@@ -41,27 +41,27 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderCo
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Prefix;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.Qos;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccap.attributes.ConnectionBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.ccaps.CcapBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.Apps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.App;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.AppBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.AppKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.Subscribers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.SubscribersBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.Subscriber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151026.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.Qos;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.ConnectionBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.CcapBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.Apps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.App;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.AppBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.AppKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.Subscribers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.SubscribersBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -136,28 +136,6 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
         qosDataChangeListenerRegistration = dataBroker
                 .registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, PacketcableProvider.qosIID.child(Apps.class).child(App.class),
                         qosDataChangeListener, DataBroker.DataChangeScope.SUBTREE);
-
-        // Add empty top level elements
-//        for (LogicalDatastoreType datastoreType : LogicalDatastoreType.values()) {
-//            WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
-//            writeTransaction.put(datastoreType, ccapsIID, new CcapsBuilder().build());
-//            CheckedFuture<Void, TransactionCommitFailedException> future = writeTransaction.submit();
-//            try {
-//                future.checkedGet();
-//            } catch (TransactionCommitFailedException e) {
-//                logger.error("Failed to initialise top level ccaps in datastore {}", datastoreType, e);
-//            }
-//            writeTransaction = dataBroker.newWriteOnlyTransaction();
-//            writeTransaction.put(datastoreType, qosIID, new QosBuilder().build());
-//            future = writeTransaction.submit();
-//            try {
-//                future.checkedGet();
-//            } catch (TransactionCommitFailedException e) {
-//                logger.error("Failed to initialise top level qos in datastore {}", datastoreType, e);
-//            }
-//        }
-
-
     }
 
     /**
@@ -224,6 +202,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
     }
 
     private Ccap findCcapForSubscriberId(final InetAddress inetAddr) {
+        // TODO replace this with a loading cache, https://github.com/google/guava/wiki/CachesExplained
         Ccap matchedCcap = null;
         int longestPrefixLen = -1;
         for (final Map.Entry<Subnet, Ccap> entry : subscriberSubnetsMap.entrySet()) {
@@ -721,9 +700,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
                 }
 
                 PCMMService.GateSetStatus status = pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate, scnDirection);
-                gateMap.put(newGatePathStr, newGate);
-                gateCcapMap.put(newGatePathStr, ccap.getCcapId());
-
+                if (status.didSucceed()) {
+                    gateMap.put(newGatePathStr, newGate);
+                    gateCcapMap.put(newGatePathStr, ccap.getCcapId());
+                }
                 final GateBuilder gateBuilder = new GateBuilder();
                 gateBuilder.setGateId(newGate.getGateId())
                         .setGatePath(newGatePathStr)
@@ -797,7 +777,6 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
             for (final InstanceIdentifier<Gate> removedGateIID : removedPaths) {
 
                 mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, removedGateIID);
-                //TODO check if this was the last gate for this app/subscriber and if so delete them
 
                 executor.execute(new SubscriberCleaner(removedGateIID));
 

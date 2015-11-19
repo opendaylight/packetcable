@@ -71,7 +71,8 @@ public interface IExtendedClassifier extends IClassifier {
      */
     ActivationState getActivationState();
 
-    byte getAction();
+
+    Action getAction();
 
     /**
      * The valid activation state values
@@ -101,6 +102,35 @@ public interface IExtendedClassifier extends IClassifier {
 
         private byte value;
 
+    }
+
+    /**
+     * For the Extended Classifier or the IPv6, the Action field is a
+     * 1 byte unsigned integer with the following values:
+     * <ul>
+     *     <li>0x00, Add classifier</li>
+     *     <li>0x01, Replace classifier</li>
+     *     <li>0x02, Delete classifier</li>
+     *     <li>0x03, No change</li>
+     * </ul>
+     *
+     */
+     enum Action {
+        ADD,
+        REPLACE,
+        DELETE,
+        NO_CHANGE;
+
+        public byte getByte(){
+            return (byte)this.ordinal();
+        }
+
+        public static Action getFromByte(byte action) {
+            if (action >= 0 && action < Action.values().length) {
+                return Action.values()[action];
+            }
+            throw new IllegalArgumentException("action byte out of range[0..3]: " + action);
+        }
     }
 
 }
