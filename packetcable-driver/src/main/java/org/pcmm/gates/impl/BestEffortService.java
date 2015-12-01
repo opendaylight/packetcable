@@ -69,7 +69,7 @@ public class BestEffortService extends PCMMBaseObject implements ITrafficProfile
 	protected BestEffortService(final byte envelope, final BEEnvelop auth, final BEEnvelop reserved,
 							 final BEEnvelop committed) {
 		super(SNum.TRAFFIC_PROFILE, STYPE);
-		if (auth == null) throw new IllegalArgumentException("Authorized envelope must not be null");
+		if (auth == null) throw new IllegalArgumentException("AUTHORIZED envelope must not be null");
 
 		// TODO - Cannot figure out any other means to parse the bytes unless this is true. Determine if correct???
 		if (reserved == null && committed != null)

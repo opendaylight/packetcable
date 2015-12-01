@@ -197,18 +197,24 @@ public class COPSPepConnection extends COPSConnection {
                     return;
                 }
 
+
                 // Check message type
                 // TODO FIXME - Use of manager object could result in a NPE
                 if (decision.getFlag().equals(DecisionFlag.REQSTATE)) {
-                    if (decision.getCommand().equals(Command.REMOVE))
+                    if (decision.getCommand().equals(Command.REMOVE)) {
                         // Delete Request State
                         manager.processDeleteRequestState(dMsg);
-                    else
+                    } else if (decision.getCommand().equals(Command.INSTALL)) {
                         // Open new Request State
                         handleOpenNewRequestStateMsg(handle);
-                } else
+                    }
+                    else {
+                        logger.error("Unknown command");
+                    }
+                } else {
                     // Decision
                     manager.processDecision(dMsg);
+                }
             }
         }
     }
@@ -220,10 +226,11 @@ public class COPSPepConnection extends COPSConnection {
      */
     private void handleOpenNewRequestStateMsg(final COPSHandle handle) throws COPSPepException {
         final COPSPepReqStateMan manager = _managerMap.get(handle);
-        if (manager == null)
+        if (manager == null) {
             logger.warn("Unable to find state manager with key - " + handle.getId().str());
-        else
+        } else {
             manager.processOpenNewRequestState();
+        }
     }
 
     /**
@@ -236,10 +243,11 @@ public class COPSPepConnection extends COPSConnection {
         }
 
         final COPSPepReqStateMan manager = _managerMap.get(cMsg.getClientHandle());
-        if (manager == null)
+        if (manager == null) {
             logger.warn("Unable to find state manager with key - " + cMsg.getClientHandle().getId().str());
-        else
+        } else {
             manager.processSyncStateRequest(cMsg);
+        }
     }
 
     /**

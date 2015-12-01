@@ -25,14 +25,14 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
     /**
      * The error sub-code (defaults to NA)
      */
-    private final ErrorCode subErrCode;
+    private final short subErrCode;
 
     /**
      * Constructor without a sub-code which will then be set to NA
      * @param errorCode - the error code (required and not NA)
      */
     public PCMMError(final ErrorCode errorCode) {
-        this(errorCode, null);
+        this(errorCode, (short)0);
     }
 
     /**
@@ -40,13 +40,12 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
      * @param errorCode - the error code (required and not NA)
      * @param subErrCode - the sub-code (defaults to NA when null)
      */
-    public PCMMError(final ErrorCode errorCode, final ErrorCode subErrCode) {
+    public PCMMError(final ErrorCode errorCode, final short subErrCode) {
         super(SNum.PCMM_ERROR, STYPE);
         if (errorCode == null || errorCode.equals(ErrorCode.NA))
             throw new IllegalArgumentException("ErrorCode is required and must not be NA");
         this.errorCode = errorCode;
-        if (subErrCode == null) this.subErrCode = ErrorCode.NA;
-        else this.subErrCode = subErrCode;
+        this.subErrCode = subErrCode;
     }
 
     @Override
@@ -55,7 +54,7 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
     }
 
     @Override
-    public ErrorCode getErrorSubcode() {
+    public short getErrorSubcode() {
         return subErrCode;
     }
 
@@ -66,8 +65,22 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
      */
     @Override
     public String getDescription() {
-        String hex = Integer.toHexString(subErrCode.getCode() & 0xFFFF);
-        return "Error Code: " + errorCode.getCode() + " Error Subcode : " + hex + "  " + errorCode.getDescription();
+        //Error-Subcode is a 2-byte unsigned integer field used to provide further information about the error.
+        // In the case of Error-Codes 6, 7 and 17, this 16-bit field MUST contain, as two 8-bit values the
+        // S-Num and S-Type of the object that is missing or in error.
+        String subcode;
+        switch (errorCode) {
+            case MISSING_REQ_OBJ:
+            case INVALID_OBJ:
+            case INVALID_FIELD:
+                byte[] sParts = COPSMsgParser.shortToBytes(subErrCode);
+                subcode = String.format("S-Num: %d, S-Type: %d", sParts[0], sParts[1]);
+                break;
+            default:
+                subcode = "Subcode: " + Integer.toHexString(subErrCode & 0xFFFF);
+        }
+
+        return "Error Code: " + errorCode.getCode() + " " + subcode + "  " + errorCode.getDescription();
     }
 
     @Override
@@ -78,7 +91,7 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
     @Override
     protected byte[] getBytes() {
         final byte[] errorCodeBytes = COPSMsgParser.shortToBytes(errorCode.getCode());
-        final byte[] subErrCodeBytes = COPSMsgParser.shortToBytes(subErrCode.getCode());
+        final byte[] subErrCodeBytes = COPSMsgParser.shortToBytes(subErrCode);
         final byte[] data = new byte[errorCodeBytes.length + subErrCodeBytes.length];
         System.arraycopy(errorCodeBytes, 0, data, 0, errorCodeBytes.length);
         System.arraycopy(subErrCodeBytes, 0, data, errorCodeBytes.length, subErrCodeBytes.length);
@@ -104,7 +117,7 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + errorCode.hashCode();
-        result = 31 * result + subErrCode.hashCode();
+        result = 31 * result + subErrCode;
         return result;
     }
 
@@ -116,7 +129,7 @@ public class PCMMError extends PCMMBaseObject implements IPCMMError {
      */
     public static PCMMError parse(final byte[] data) {
         return new PCMMError(ErrorCode.valueOf(COPSMsgParser.bytesToShort(data[0], data[1])),
-                ErrorCode.valueOf((COPSMsgParser.bytesToShort(data[2], data[3]))));
+                (COPSMsgParser.bytesToShort(data[2], data[3])));
 
     }
 

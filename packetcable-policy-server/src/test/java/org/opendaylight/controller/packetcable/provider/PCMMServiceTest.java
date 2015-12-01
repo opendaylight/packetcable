@@ -5,6 +5,9 @@
 package org.opendaylight.controller.packetcable.provider;
 
 import static junit.framework.TestCase.assertEquals;
+
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,10 +46,10 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.traffic.profile.TrafficProfile;
 import org.pcmm.PCMMPdpAgent;
-import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.rcd.IPCMMClient;
 import org.pcmm.rcd.impl.CMTS;
+import org.pcmm.rcd.impl.CMTSConfig;
 import org.umu.cops.stack.COPSClientSI;
 import org.umu.cops.stack.COPSContext;
 import org.umu.cops.stack.COPSContext.RType;
@@ -120,33 +123,33 @@ public class PCMMServiceTest {
     public void setup() throws IOException {
         srcAddr = new Ipv4Address("10.10.10.0");
         dstAddr = new Ipv4Address("10.32.99.99");
+        invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
 
         if (realCmts) {
             cmAddrInet = InetAddress.getByAddress(new byte[] {10, 32, 110, (byte)172});
-            invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
+
 
             // Use me when testing against a CMTS or emulator not running in the same JVM
             cmtsAddr = new Ipv4Address("10.32.10.3");
             ccap = makeCcapObj(PCMMPdpAgent.WELL_KNOWN_PDP_PORT, cmtsAddr, ccapId);
         } else {
             cmAddrInet = InetAddress.getByAddress(new byte[] {10, 32, 110, (byte)180});
-            invalidCmAddrInet = InetAddress.getByAddress(new byte[] {99, 99, 99, 99});
 
             // Use me for automated testing and the CMTS emulator running in the same JVM
             cmtsAddr = new Ipv4Address("127.0.0.1");
 
-            final Set<String> upGate = new HashSet<>();
-            upGate.add("extrm_up");
-            final Set<String> dnGate = new HashSet<>();
-            dnGate.add("extrm_dn");
-            final Map<Direction, Set<String>> gates = new HashMap<>();
-            gates.put(Direction.UPSTREAM, upGate);
-            gates.put(Direction.DOWNSTREAM, dnGate);
+            final Set<String> upSCN = new HashSet<>();
+            upSCN.add("extrm_up");
+            final Set<String> dnSCN = new HashSet<>();
+            dnSCN.add("extrm_dn");
 
             final Map<String, Boolean> cmStatus = new HashMap<>();
             cmStatus.put(cmAddrInet.getHostAddress(), true);
             cmStatus.put(invalidCmAddrInet.getHostAddress(), false);
-            icmts = new CMTS(gates, cmStatus);
+
+            CMTSConfig config = new CMTSConfig(0, (short)4, upSCN, dnSCN, cmStatus);
+
+            icmts = new CMTS(config);
             icmts.startServer();
 
             ccap = makeCcapObj(icmts.getPort(), cmtsAddr, ccapId);
@@ -250,7 +253,7 @@ public class PCMMServiceTest {
     public void testAddAndRemoveInvalidCmAddrUpGate() throws Exception {
         // TODO - fix cmts emulator
         final String expectedMsgStart = "404 Not Found - sendGateSet for " + ccapId + '/' + gatePath
-                + " returned error - Error Code: 13 Error Subcode : 0  Invalid SubscriberID";
+                + " returned error - Error Code: 13 Subcode: 0  Invalid SubscriberID";
         addInvalidGate(service, "extrm_up", srcAddr, dstAddr, ServiceFlowDirection.Us, invalidCmAddrInet, gatePath,
                 expectedMsgStart);
     }
@@ -258,7 +261,7 @@ public class PCMMServiceTest {
     @Test
     public void testAddInvalidScnUpGate() throws Exception {
         final String expectedMsgStart = "404 Not Found - sendGateSet for " + ccapId + '/' + gatePath
-                + " returned error - Error Code: 11 Error Subcode : 0  Undefined Service Class Name";
+                + " returned error - Error Code: 11 Subcode: 0  Undefined Service Class Name";
         addInvalidGate(service, "extrm_up_invalid", srcAddr, dstAddr, ServiceFlowDirection.Us, cmAddrInet, gatePath,
                 expectedMsgStart);
     }
@@ -266,7 +269,7 @@ public class PCMMServiceTest {
     @Test
     public void testAddInvalidScnDownGate() throws Exception {
         final String expectedMsgStart = "404 Not Found - sendGateSet for " + ccapId + '/' + gatePath
-                + " returned error - Error Code: 11 Error Subcode : 0  Undefined Service Class Name";
+                + " returned error - Error Code: 11 Subcode: 0  Undefined Service Class Name";
         addInvalidGate(service, "extrm_dn_invalid", srcAddr, dstAddr, ServiceFlowDirection.Ds, cmAddrInet, gatePath,
                 expectedMsgStart);
     }
@@ -362,10 +365,11 @@ public class PCMMServiceTest {
 //        Assert.assertNotNull(gateSetMsg);
 //        Assert.assertTrue(gateSetMsg, gateSetMsg.startsWith(expGateSetMsgStart));
 
-        // TODO update this method for the new GateSetStatus object
-        PCMMService.GateSetStatus status = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
+        // TODO update this method for the new GateSendStatus object
+        PCMMService.GateSendStatus status = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
         Assert.assertNotNull(status);
-        Assert.assertTrue(status.getMessage().startsWith(expGateSetMsgStart));
+        assertThat(status.getMessage(), startsWith(expGateSetMsgStart));
+
 
         // TODO - add validation to the PCMMGateReq contained within the map
         if (status.didSucceed()) {

@@ -85,6 +85,14 @@ public class AMID extends PCMMBaseObject implements IAMID {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "AMID{" +
+                "appType=" + appType +
+                ", appMgrTag=" + appMgrTag +
+                '}';
+    }
+
     /**
      * Returns an AMID object from a byte array
      * @param data - the data to parse

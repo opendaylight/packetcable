@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
  */
 public abstract class AbstractPCMMServer implements IPCMMServer {
 
-	private final static Logger logger = LoggerFactory.getLogger(AbstractPCMMServer.class);
+	private static final Logger logger = LoggerFactory.getLogger(AbstractPCMMServer.class);
 
 	/*
 	 * A ServerSocket to accept messages ( OPN requests)
