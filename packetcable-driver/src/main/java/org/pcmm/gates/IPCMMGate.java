@@ -48,6 +48,12 @@ public interface IPCMMGate {
     void setGateID(IGateID gateid);
 
     /**
+     * gateState is the handle for the Gate State.
+     *
+     */
+    void setGateState(IGateState gateState);
+    
+    /**
      * (i.e., QoS limits, timers, etc.).
      *
      */
@@ -69,6 +75,10 @@ public interface IPCMMGate {
     void setTransactionID(ITransactionID transactionID);
 
     void setError(IPCMMError error);
+    
+    void setGateTimeInfo(IGateTimeInfo gateTimeInfo);
+    
+    void setGateUsageInfo(IGateUsageInfo gateUsageInfo);
 
     ITransactionID getTransactionID();
 
@@ -79,6 +89,14 @@ public interface IPCMMGate {
      */
     IGateID getGateID();
 
+    /**
+     * GateState is the handle for the GateState.
+     *
+     * @return gateSTATE
+     */
+    IGateState getGateState();
+    
+    
     /**
      * AMID is the handle that identifies the Application Manager and
      * Application Type
@@ -121,6 +139,9 @@ public interface IPCMMGate {
      */
     IPCMMError getError();
 
+	IGateTimeInfo getGateTimeInfo();
+	
+	IGateUsageInfo getGateUsageInfo();
 
     /**
      *

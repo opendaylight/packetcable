@@ -12,7 +12,7 @@ import org.pcmm.base.IPCMMBaseObject;
 
 public interface ITrafficProfile extends IPCMMBaseObject {
 
-    // Authorized
+    // AUTHORIZED
     byte DEFAULT_ENVELOP = 0x7;
 
     byte getEnvelop();

@@ -8,6 +8,8 @@
 
 package org.pcmm.rcd.impl;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.pcmm.gates.IGateSpec.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,37 +30,26 @@ import java.util.Set;
  */
 class PcmmCmtsConnection extends COPSPepConnection {
 
-    private final static Logger logger = LoggerFactory.getLogger(COPSPepConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(COPSPepConnection.class);
 
-    /**
-     * The configured gates
-     */
-    private final Map<Direction, Set<String>> gateConfig;
-
-    /**
-     * The connected CMTSs and whether or not they are up
-     */
-    private final Map<String, Boolean> cmStatus;
+    private final CMTSConfig config;
 
     /**
      * Constructor
      * @param clientType - the client-type
      * @param sock - the socket connection
-     * @param gateConfig - the configured gates
-     * @param cmStatus - the configured CMs and whether or each is connected
+     * @param config - emulator configuration
      */
-    public PcmmCmtsConnection(final short clientType, final Socket sock, final Map<Direction, Set<String>> gateConfig,
-                              final Map<String, Boolean> cmStatus) {
+    public PcmmCmtsConnection(final short clientType, final Socket sock, final CMTSConfig config) {
         super(clientType, sock);
-        this.gateConfig = Collections.unmodifiableMap(gateConfig);
-        this.cmStatus = Collections.unmodifiableMap(cmStatus);
+        this.config = checkNotNull(config);
     }
 
     @Override
     public COPSPepReqStateMan addRequestState(final COPSHandle clientHandle, final COPSPepDataProcess process)
             throws COPSException {
         final COPSPepReqStateMan manager = new CmtsPepReqStateMan(_clientType, clientHandle, (CmtsDataProcessor)process,
-                _sock, gateConfig, cmStatus);
+                _sock, config);
         if (_managerMap.get(clientHandle) != null)
             throw new COPSPepException("Duplicate Handle, rejecting " + clientHandle);
 

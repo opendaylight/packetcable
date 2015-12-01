@@ -98,7 +98,7 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
         final ITransactionID trID = new TransactionID(_transactionID, GateCommandType.GATE_SET);
 
         gate.setTransactionID(trID);
-        // retain the transactionId to gate request mapping for gateID recovery after response
+        // retain the transactitrIDnumonId to gate request mapping for gateID recovery after response
         // see PCMMPdpReqStateMan.processReport()
         final Short trIDnum = trID.getTransactionIdentifier();
         logger.info("Adding gate to cache - " + gate + " with key - " + trIDnum);
@@ -227,13 +227,43 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
      *
      * @throws COPSPdpException
      */
-    public void sendGateInfo() throws COPSPdpException {
+    public void sendGateInfo(final IPCMMGate gate) throws COPSPdpException {
         /*
          * <Gate-Info> ::= <Common Header> [<Client Handle>] [<Integrity>]
          */
-        final COPSSyncStateMsg msg = new COPSSyncStateMsg(getClientType(), _handle, null);
+    	
+    	// added 
+        final ITransactionID trID = new TransactionID(_transactionID, GateCommandType.GATE_INFO);
+        gate.setTransactionID(trID);
+        // retain the transactionId to gate request mapping for gateID recovery after response
+        // see PCMMPdpReqStateMan.processReport()
+        final Short trIDnum = trID.getTransactionIdentifier();
+        logger.info("Adding gate to cache - " + gate + " with key - " + trIDnum);
+        PCMMGlobalConfig.transactionGateMap.put(trIDnum, gate);
+        
+        // gateDelete only requires AMID, subscriberID, and gateID
+        // remove the gateSpec, traffic profile, and classifiers from original gate request
+        gate.setGateSpec(null);
+        gate.setTrafficProfile(null);
+        gate.setClassifiers(null);
+        // clear the error object
+        gate.setError(null);
+        
+        
+        // XXX - GateID
+        final byte[] data = gate.getData();
+        final Set<COPSDecision> decisionSet = new HashSet<>();
+        decisionSet.add(new COPSDecision(CType.DEF, Command.INSTALL, DecisionFlag.REQERROR));
+        final Map<COPSContext, Set<COPSDecision>> decisionMap = new HashMap<>();
+        decisionMap.put(new COPSContext(RType.CONFIG, (short)0), decisionSet);
+        final COPSClientSI clientSD = new COPSClientSI(CNum.DEC, CType.CSI, new COPSData(data, 0, data.length));
+    	
+        //final COPSSyncStateMsg msg = new COPSSyncStateMsg(getClientType(), _handle, null);
+        final COPSDecisionMsg decisionMsg = new COPSDecisionMsg(getClientType(), _handle, decisionMap, null, clientSD);
+        
         try {
-            msg.writeData(_sock);
+            //msg.writeData(_sock);
+            decisionMsg.writeData(_sock);
         } catch (IOException e) {
             throw new COPSPdpException("Failed to send the GateInfo request", e);
         }

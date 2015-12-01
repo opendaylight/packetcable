@@ -17,12 +17,12 @@ public class PCMMErrorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void nullErrorAndSubCodes() {
-        new PCMMError(null, null);
+        new PCMMError(null, (short)0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void nullErrorCode() {
-        new PCMMError(null, ErrorCode.DOCSIS_1_CM);
+        new PCMMError(null, (short)0);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -32,9 +32,9 @@ public class PCMMErrorTest {
 
     @Test
     public void construction() {
-        final PCMMError error = new PCMMError(ErrorCode.TRANSPORT_ERROR, null);
+        final PCMMError error = new PCMMError(ErrorCode.TRANSPORT_ERROR, (short)0);
         Assert.assertEquals(ErrorCode.TRANSPORT_ERROR, error.getErrorCode());
-        Assert.assertEquals(ErrorCode.NA, error.getErrorSubcode());
+        Assert.assertEquals(ErrorCode.NA.getCode(), error.getErrorSubcode());
 
         final byte[] dataBytes = error.getBytes();
         Assert.assertEquals(4, dataBytes.length);
@@ -47,7 +47,7 @@ public class PCMMErrorTest {
 
     @Test
     public void byteParsing() {
-        final PCMMError error = new PCMMError(ErrorCode.INVALID_FIELD, ErrorCode.INVALID_SUB_ID);
+        final PCMMError error = new PCMMError(ErrorCode.INVALID_FIELD, ErrorCode.INVALID_SUB_ID.getCode());
         final PCMMError parsed = PCMMError.parse(error.getBytes());
         Assert.assertEquals(error, parsed);
     }
