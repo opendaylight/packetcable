@@ -58,7 +58,7 @@ class CmtsDataProcessor implements COPSPepDataProcess {
                 final ITransactionID transactionID = PCMMGateReq.parse(new COPSData(data).getData()).getTransactionID();
 
                 // TODO - Determine how and why a response gate request can have only a transaction ID???
-                final IPCMMGate responseGate = new PCMMGateReq(null, null, transactionID, null, null, null, null, null);
+                final IPCMMGate responseGate = new PCMMGateReq(null, null, transactionID, null, null, null, null, null, null, null, null);
 
                 // TODO FIXME - Why is the key always null??? What value should be used here???
                 final String key = null;

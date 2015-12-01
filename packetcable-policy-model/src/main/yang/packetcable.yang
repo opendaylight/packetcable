@@ -209,23 +209,35 @@ module packetcable
     }
 
     grouping gate-operational-attributes {
-        leaf gatePath {
-            config false;
-            type string;
-            description "FQ Gate path app/subscriber/gate";
-            mandatory true;
-        }
-        leaf ccapId {
-            config false;
-            type string;
-            description "CCAP Identity";
-            mandatory true;
-        }
-        leaf cops-state {
-            config false;
-            type string;
-            description "Gate operational COPS state";
-            mandatory true;
+		leaf gatePath {
+			config false;
+		    type string;
+		    description "FQ Gate path app/subscriber/gate";
+		    mandatory true;
+		}
+		leaf ccapId {
+			config false;
+		    type string;
+		    description "CCAP Identity";
+		    mandatory true;
+		}
+		leaf cops-gate-state {
+			config false;
+			type string;
+			description "Operational COPS Gate state";
+			mandatory true;
+		}
+		leaf cops-gate-time-info {
+			config false;
+			type string;
+			description "Operational COPS Gate time info";
+			mandatory true;
+		}
+		leaf cops-gate-usage-info {
+          config false;
+          type string;
+          description "Operational COPS gate usage info";
+          mandatory true;
         }
         leaf cops-gateId {
             config false;
@@ -450,5 +462,95 @@ module packetcable
            }
     }
 
-}
+	    //RPCs
+    rpc ccap-set-connection {
+   		input {
+            leaf ccapId {
+           		type instance-identifier;
+           		ext:context-reference ccap-context;
+           	}
+           	container connection {
+           		leaf connected {
+           			type boolean;
+           			description "COPS session state";
+           		}
+//           		leaf idle-detect {
+//					type uint8;		
+//					description "COPS connection idle timer";
+//				}
+           	}
+    	 }
+    	 output {
+    	 	container ccap {
+    	 		leaf ccapId {
+    	 			type string;
+    	 		}
+    	 		container connection {
+					uses ccap-connection;
+				}
+    	 	}
+    	 	leaf response {
+        		type string;
+        	}
+			leaf timestamp {
+       			type yang:date-and-time;
+				description "RPC timestamp";
+	     	}
+    	 }
+    }
+    
+    rpc ccap-poll-connection {
+   		input {
+            leaf ccapId {
+           		type instance-identifier;
+           		ext:context-reference ccap-context;
+           	}
+    	 }
+    	 output {
+    	 	container ccap {
+    	 		leaf ccapId {
+    	 			type string;
+    	 		}
+    	 		container connection {
+					uses ccap-connection;
+				}
+    	 	}
+    	 	leaf response {
+        		type string;
+        	}
+			leaf timestamp {
+       			type yang:date-and-time;
+				description "RPC timestamp";
+	     	}
+    	 }
+    }
 
+	rpc qos-poll-gates {
+   		input {
+            leaf appId {
+            	type instance-identifier;
+           		ext:context-reference app-context;
+           	}
+           	leaf subscriberId {
+            	type string;
+            	description "Subscriber Identity -- must be a CM or CPE IP address";
+           	}
+           	leaf gateId {
+            	type string;
+            	description "Qos Gate Identity";
+           	}
+    	 }
+    	 output {
+			container gate {
+				uses gate-operational-attributes;
+			}
+			leaf response {
+        		type string;
+        	}
+			leaf timestamp {
+        		type yang:date-and-time;
+        		description "RPC timestamp";
+         	}
+    	 }
+    }
+}

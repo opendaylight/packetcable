@@ -197,18 +197,24 @@ public class COPSPepConnection extends COPSConnection {
                     return;
                 }
 
+
                 // Check message type
                 // TODO FIXME - Use of manager object could result in a NPE
                 if (decision.getFlag().equals(DecisionFlag.REQSTATE)) {
-                    if (decision.getCommand().equals(Command.REMOVE))
+                    if (decision.getCommand().equals(Command.REMOVE)) {
                         // Delete Request State
                         manager.processDeleteRequestState(dMsg);
-                    else
+                    } else if (decision.getCommand().equals(Command.INSTALL)) {
                         // Open new Request State
                         handleOpenNewRequestStateMsg(handle);
-                } else
+                    }
+                    else {
+                        logger.error("Unknown command");
+                    }
+                } else {
                     // Decision
                     manager.processDecision(dMsg);
+                }
             }
         }
     }

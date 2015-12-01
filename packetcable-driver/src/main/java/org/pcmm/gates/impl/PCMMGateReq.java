@@ -44,6 +44,9 @@ public class PCMMGateReq implements IPCMMGate {
     // synchronization purposes
     private IGateID gateID;
     private IPCMMError error;
+    private IGateState igateState;
+    private IGateTimeInfo gateTimeInfo;
+    private IGateUsageInfo gateUsageInfo;
 
     /**
      * Constructor
@@ -57,8 +60,9 @@ public class PCMMGateReq implements IPCMMGate {
      * @param error - the error
      */
     public PCMMGateReq(IAMID iamid, ISubscriberID subscriberID, ITransactionID transactionID,
-                       IGateSpec gateSpec, ITrafficProfile trafficProfile, List<IClassifier> classifiers, IGateID gateID,
-                       IPCMMError error) {
+                       IGateSpec gateSpec, ITrafficProfile trafficProfile, List<IClassifier> classifiers,
+                       IGateID gateID,IPCMMError error,IGateState igateState,
+                       IGateTimeInfo gateTimeInfo,IGateUsageInfo gateUsageInfo ) {
         // TODO - determine if and when this attribute should be used
         this.multicast = false;
 
@@ -70,6 +74,9 @@ public class PCMMGateReq implements IPCMMGate {
         this.classifiers = Lists.newArrayList(classifiers);
         this.gateID = gateID;
         this.error = error;
+        this.igateState = igateState;
+        this.gateTimeInfo = gateTimeInfo;
+        this.gateUsageInfo = gateUsageInfo;
     }
 
     /**
@@ -86,6 +93,10 @@ public class PCMMGateReq implements IPCMMGate {
         ITrafficProfile trafficProfile = null;
         List<IClassifier> classifiers = Lists.newArrayListWithExpectedSize(4);
         PCMMError error = null;
+        GateState gateState = null;
+        GateTimeInfo gateTimeInfo = null;
+        GateUsageInfo gateUsageInfo = null;
+        
 
         short offset = 0;
         while (offset + 5 < data.length) {
@@ -138,6 +149,20 @@ public class PCMMGateReq implements IPCMMGate {
                 case PCMM_ERROR:
                     error = PCMMError.parse(dataBuffer);
                     break;
+                //adding GATE_STATE    
+                case GATE_STATE:
+                	 gateState = GateState.parse(dataBuffer);
+                     break;
+                //adding GATE_TIME_INFO    
+                     case GATE_TIME_INFO:
+                  	 gateTimeInfo = GateTimeInfo.parse(dataBuffer);
+                  	logger.info("Gate Time Info: "+gateTimeInfo);
+                     break;
+                //adding GATE_TIME_INFO    
+                case GATE_USAGE_INFO:
+                	 gateUsageInfo = GateUsageInfo.parse(dataBuffer);
+                	 logger.info("Gate Usage Info: "+gateUsageInfo);
+                     break; 
             default:
                 logger.warn("Unhandled Object skept : S-NUM=" + sNum
                                    + "  S-TYPE=" + sType + "  LEN=" + len);
@@ -145,7 +170,8 @@ public class PCMMGateReq implements IPCMMGate {
             offset += len;
         }
 
-        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifiers, gateID, error);
+        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile,
+        		classifiers, gateID, error, gateState, gateTimeInfo,gateUsageInfo);
     }
 
     @Override
@@ -158,6 +184,11 @@ public class PCMMGateReq implements IPCMMGate {
     public void setGateID(IGateID gateid) {
         this.gateID = gateid;
 
+    }
+    
+    @Override
+    public void setGateState(IGateState gatestate) {
+        this.igateState = gatestate;
     }
 
     @Override
@@ -187,10 +218,27 @@ public class PCMMGateReq implements IPCMMGate {
     }
 
     @Override
+    public void setGateTimeInfo(IGateTimeInfo gateTimeInfo) {
+        this.gateTimeInfo = gateTimeInfo;
+    }
+    
+    @Override
+    public void setGateUsageInfo(IGateUsageInfo gateUsageInfo) {
+        this.gateUsageInfo = gateUsageInfo;
+    }
+    
+    
+    @Override
     public IGateID getGateID() {
         return gateID;
     }
 
+   @Override
+   public IGateState getGateState() {
+        return igateState;
+   }
+    
+    
     @Override
     public IAMID getAMID() {
         return iamid;
@@ -227,7 +275,17 @@ public class PCMMGateReq implements IPCMMGate {
     public IPCMMError getError() {
         return error;
     }
+    
+    @Override
+    public IGateTimeInfo getGateTimeInfo() {
+         return gateTimeInfo;
+    }
 
+    @Override
+    public IGateUsageInfo getGateUsageInfo() {
+         return gateUsageInfo;
+    }
+    
     public void setError(IPCMMError error) {
         this.error = error;
     }
@@ -257,6 +315,15 @@ public class PCMMGateReq implements IPCMMGate {
             for (IClassifier classifier : getClassifiers()) {
                 byteList.addAll(Bytes.asList(classifier.getAsBinaryArray()));
             }
+        }
+        if (getGateState() != null) {
+            byteList.addAll(Bytes.asList(getGateState().getAsBinaryArray()));
+        }
+        if (getGateTimeInfo() != null) {
+            byteList.addAll(Bytes.asList(getGateTimeInfo().getAsBinaryArray()));
+        }
+        if (getGateUsageInfo() != null) {
+            byteList.addAll(Bytes.asList(getGateUsageInfo().getAsBinaryArray()));
         }
         return Bytes.toArray(byteList);
     }
