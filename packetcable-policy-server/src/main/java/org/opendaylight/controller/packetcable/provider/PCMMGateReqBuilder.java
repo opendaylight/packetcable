@@ -39,6 +39,9 @@ import org.pcmm.gates.ITrafficProfile;
 import org.pcmm.gates.impl.AMID;
 import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.gates.impl.GateID;
+import org.pcmm.gates.impl.GateState;
+import org.pcmm.gates.impl.GateTimeInfo;
+import org.pcmm.gates.impl.GateUsageInfo;
 import org.pcmm.gates.impl.PCMMError;
 import org.pcmm.gates.impl.PCMMGateReq;
 import org.pcmm.gates.impl.SubscriberID;
@@ -61,9 +64,13 @@ public class PCMMGateReqBuilder {
     private ITrafficProfile trafficProfile = null;
     private final List<IClassifier> classifiers = Lists.newArrayListWithExpectedSize(4);
     private PCMMError error = null;
+    private GateState gateState = null;
+    private GateTimeInfo gateTimeInfo = null;
+    private GateUsageInfo gateUsageInfo = null;
 
     public PCMMGateReq build() {
-        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifiers, gateID, error);
+        return new PCMMGateReq(amid, subscriberID, transactionID, gateSpec, trafficProfile, classifiers,
+        		gateID, error, gateState, gateTimeInfo, gateUsageInfo);
     }
 
     public void setAmId(final AmId qosAmId) {

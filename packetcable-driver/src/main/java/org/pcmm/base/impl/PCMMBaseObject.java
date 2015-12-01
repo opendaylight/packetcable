@@ -123,7 +123,7 @@ public abstract class PCMMBaseObject implements IPCMMBaseObject {
 		USER_ID((byte) 20),
 		SHARED_RES_ID((byte) 21);
 
-		private byte value;
+		private final byte value;
 
 		SNum(byte value) {
 			this.value = value;

@@ -9,6 +9,9 @@
 package org.pcmm;
 
 import org.pcmm.gates.IGateID;
+import org.pcmm.gates.IGateState;
+import org.pcmm.gates.IGateTimeInfo;
+import org.pcmm.gates.IGateUsageInfo;
 import org.pcmm.gates.IPCMMError.ErrorCode;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.gates.ITransactionID;
@@ -125,8 +128,17 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                 logger.info("rtypemsg success");
                 _status = Status.ST_REPORT;
                 final IGateID gateID = gateMsg.getGateID();
-                logger.info("Setting gate ID on gate object - " + gateID);
+                //logger.info("Setting gate ID on gate object - " + gateID);
                 gate.setGateID(gateID);
+                
+                //setting the Gate State, Time Info and Usage Info
+                final IGateState igateState = gateMsg.getGateState();
+                gate.setGateState(igateState);
+                final IGateTimeInfo gateTimeInfo = gateMsg.getGateTimeInfo();
+                gate.setGateTimeInfo(gateTimeInfo);
+                final IGateUsageInfo gateUsageInfo = gateMsg.getGateUsageInfo();
+                gate.setGateUsageInfo(gateUsageInfo);
+                
                 if (_thisProcess != null)
                     _thisProcess.successReport(this, gateMsg);
             } else {
@@ -135,12 +147,17 @@ public class PCMMPdpReqStateMan extends COPSPdpReqStateMan {
                     cmdType = "GateDeleteAck";
                 } else if (trID.getGateCommandType().equals(GateCommandType.GATE_SET_ACK)) {
                     cmdType = "GateSetAck";
+                } else if (trID.getGateCommandType().equals(GateCommandType.GATE_INFO_ACK)) {
+                    cmdType = "GateInfoAck";
                 } else cmdType = null;
                 // capture the gateId from the response message
                 final IGateID gateID = gateMsg.getGateID();
                 logger.info("Setting gate ID on gate object - " + gateID);
                 gate.setGateID(gateID);
-
+                // capture the gate state from the response message
+                final IGateState igateState = gateMsg.getGateState();
+                logger.info("Setting gate ID on gate object - " + gateID);
+                gate.setGateState(igateState);
                 if (gateID != null) {
                     int gateIdInt = gateID.getGateID();
                     String gateIdHex = String.format("%08x", gateIdInt);
