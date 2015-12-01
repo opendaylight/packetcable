@@ -52,17 +52,17 @@ public class BEEnvelop {
     private final int maxTrafficBurst;
 
     /**
-     * Minimum Reserved Traffic Rate is a 4-byte unsigned integer field specifying the minimum rate, in bits/sec,
+     * Minimum RESERVED Traffic Rate is a 4-byte unsigned integer field specifying the minimum rate, in bits/sec,
      * reserved for this Service Flow. This field is fully defined in section C.2.2.5.4. A default Mini Rate of 0 SHOULD
-     * be used if a specific Minimum Reserved Traffic Rate is not required.
+     * be used if a specific Minimum RESERVED Traffic Rate is not required.
      */
     private final int minResTrafficRate;
 
     /**
-     * Assumed Minimum Reserved Traffic Rate Packet Size is a 2-byte unsigned integer field specifying an assumed
-     * minimum packet size, in bytes, for which the Minimum Reserved Traffic Rate will be provided for this flow. This
-     * field is fully defined in section C.2.2.5.5. A default Assumed Minimum Reserved Traffic Rate Packet Size of
-     * 0 SHOULD be used if a specific Assumed Minimum Reserved Traffic Rate Packet size is not required. Upon receip
+     * Assumed Minimum RESERVED Traffic Rate Packet Size is a 2-byte unsigned integer field specifying an assumed
+     * minimum packet size, in bytes, for which the Minimum RESERVED Traffic Rate will be provided for this flow. This
+     * field is fully defined in section C.2.2.5.5. A default Assumed Minimum RESERVED Traffic Rate Packet Size of
+     * 0 SHOULD be used if a specific Assumed Minimum RESERVED Traffic Rate Packet size is not required. Upon receip
      * of a value of 0 the CMTS MUST utilize its implementation-specific default size for this parameter, not 0 bytes.
      */
     private final short assumedMinConcatBurst;
@@ -144,8 +144,8 @@ public class BEEnvelop {
      * @param transPolicy - the Requested Transmission Policy
      * @param maxSusTrafficRate - the Maximum Sustained Traffic Rate
      * @param maxTrafficBurst - the Maximum Traffic Burst Rate
-     * @param minResTrafficRate - the Minimum Reserved Traffic Rate
-     * @param assumedMinConcatBurst - the Assumed Minimum Reserved Traffic Rate Packet Size
+     * @param minResTrafficRate - the Minimum RESERVED Traffic Rate
+     * @param assumedMinConcatBurst - the Assumed Minimum RESERVED Traffic Rate Packet Size
      * @param maxConcatBurst - the Maximum Concatenated Burst
      * @param upPeakTrafficRate - the Upstream Peak Traffic Rate
      * @param reqAttrMask - the Required Attribute Mask

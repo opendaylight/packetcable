@@ -20,8 +20,8 @@ import org.pcmm.base.IPCMMBaseObject;
  *
  * * SessionClassID
  * * Direction
- * * Authorized Timer
- * * Reserved Timer
+ * * AUTHORIZED Timer
+ * * RESERVED Timer
  * * Committed Timer
  * * Committed Recovery Timer
  * * DSCP/TOS Overwrite
@@ -36,10 +36,10 @@ import org.pcmm.base.IPCMMBaseObject;
  * MUST reserve and activate the DOCSIS flows accordingly. For Multicast Gates the CMTS needs to only support
  * flows or gates in the downstream direction.
  *
- * Authorized Timer limits the amount of time the authorization must remain valid before it is reserved (see
+ * AUTHORIZED Timer limits the amount of time the authorization must remain valid before it is reserved (see
  * Section 6.2).
  *
- * Reserved Timer limits the amount of time the reservation must remain valid before the resources are committed (see
+ * RESERVED Timer limits the amount of time the reservation must remain valid before the resources are committed (see
  * Section 6.2).
  *
  * Committed Timer limits the amount of time a committed service flow may remain idle.
@@ -129,7 +129,7 @@ public interface IGateSpec extends IPCMMBaseObject {
     Direction getDirection();
 
     /**
-     * Authorized Timer limits the amount of time the authorization must remain
+     * AUTHORIZED Timer limits the amount of time the authorization must remain
      * valid before it is reserved
      *
      * @return time in ms;
@@ -137,7 +137,7 @@ public interface IGateSpec extends IPCMMBaseObject {
     short getTimerT1();
 
     /**
-     * Reserved Timer limits the amount of time the reservation must remain
+     * RESERVED Timer limits the amount of time the reservation must remain
      * valid before the resources are committed
      *
      * @return time in ms;
