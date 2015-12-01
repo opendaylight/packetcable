@@ -1,13 +1,14 @@
 # The CMTS Emulator's communications port number
 port: 3918
+numberOfSupportedClassifiers: 4
 
-# The configured gates
-gates:
-  - type: UPSTREAM
+# The configured service class names
+serviceClassNames:
+  - direction: UPSTREAM
     names:
       - extrm_up
       - foo_up
-  - type: DOWNSTREAM
+  - direction: DOWNSTREAM
     names:
       - extrm_dn
       - foo_dn

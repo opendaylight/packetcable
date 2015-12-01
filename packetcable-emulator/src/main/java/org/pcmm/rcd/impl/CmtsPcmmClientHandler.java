@@ -8,6 +8,8 @@
 
 package org.pcmm.rcd.impl;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.pcmm.gates.IGateSpec.Direction;
 import org.pcmm.messages.impl.MessageFactory;
 import org.pcmm.rcd.IPCMMServer.IPCMMClientHandler;
@@ -30,7 +32,7 @@ import java.util.concurrent.Callable;
  */
 public class CmtsPcmmClientHandler extends AbstractPCMMClient implements IPCMMClientHandler {
 
-    private final static Logger logger = LoggerFactory.getLogger(CmtsPcmmClientHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CmtsPcmmClientHandler.class);
 
     /**
      * The thread accepting PEP COPS messages
@@ -38,40 +40,29 @@ public class CmtsPcmmClientHandler extends AbstractPCMMClient implements IPCMMCl
     private transient Thread thread;
 
     /**
-     * The configured gates
+     * Emulator configuration
      */
-    private final Map<Direction, Set<String>> gateConfig;
-
-    /**
-     * The connected cable modems and whether or not they are up
-     */
-    private final Map<String, Boolean> cmStatus;
+    private final CMTSConfig config;
 
     /**
      * Constructor when a socket connection has not been established
      * @param host - the host to connect
      * @param port - the port to connect
-     * @param gateConfig - the configured gates
-     * @param cmStatus - the configured cable modem and their state
+     * @param config - emulator configuration
      */
-    public CmtsPcmmClientHandler(final String host, final int port, final Map<Direction, Set<String>> gateConfig,
-                                 final Map<String, Boolean> cmStatus) {
+    public CmtsPcmmClientHandler(final String host, final int port, final CMTSConfig config) {
         super(host, port);
-        this.gateConfig = Collections.unmodifiableMap(gateConfig);
-        this.cmStatus = Collections.unmodifiableMap(cmStatus);
+        this.config = checkNotNull(config);
     }
 
     /**
      * Constructor with a connected socket.
      * @param socket - the socket connection
-     * @param gateConfig - the configured gates
-     * @param cmStatus - the configured cable modem and their state
+     * @param config - emulator configuration
      */
-    public CmtsPcmmClientHandler(final Socket socket, final Map<Direction, Set<String>> gateConfig,
-                                 final Map<String, Boolean> cmStatus) {
+    public CmtsPcmmClientHandler(final Socket socket, final CMTSConfig config) {
         super(socket);
-        this.gateConfig = Collections.unmodifiableMap(gateConfig);
-        this.cmStatus = Collections.unmodifiableMap(cmStatus);
+        this.config = checkNotNull(config);
     }
 
     public void stop() {
@@ -107,7 +98,7 @@ public class CmtsPcmmClientHandler extends AbstractPCMMClient implements IPCMMCl
                     final COPSKATimer kt = acceptMsg.getKATimer();
                     if (kt == null)
                         throw new COPSPepException("Mandatory COPS object missing (KA Timer)");
-                    short kaTimeVal = kt.getTimerVal();
+                    final short kaTimeVal = kt.getTimerVal();
 
                     // ACTimer
                     final COPSAcctTimer at = acceptMsg.getAcctTimer();
@@ -122,8 +113,7 @@ public class CmtsPcmmClientHandler extends AbstractPCMMClient implements IPCMMCl
                     sendRequest(reqMsg);
 
                     // Create the connection manager
-                    final PcmmCmtsConnection conn = new PcmmCmtsConnection(CLIENT_TYPE, getSocket(), gateConfig,
-                            cmStatus);
+                    final PcmmCmtsConnection conn = new PcmmCmtsConnection(CLIENT_TYPE, getSocket(), config);
                     conn.addRequestState(handle, new CmtsDataProcessor());
                     conn.setKaTimer(kaTimeVal);
                     conn.setAcctTimer(acctTimer);

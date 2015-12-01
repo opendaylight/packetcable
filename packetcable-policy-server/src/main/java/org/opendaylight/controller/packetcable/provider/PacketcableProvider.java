@@ -14,19 +14,28 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.Futures;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
@@ -38,11 +47,25 @@ import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.CcapsValidatorProviderFactory;
 import org.opendaylight.controller.packetcable.provider.validation.impl.QosValidatorProviderFactory;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Ipv4Prefix;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.DateAndTime;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.AppContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapPollConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapPollConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapPollConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapSetConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapSetConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapSetConnectionOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.PacketcableService;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.Qos;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.QosPollGatesInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.QosPollGatesOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.QosPollGatesOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceClassName;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirection;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.ConnectionBuilder;
@@ -65,6 +88,8 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.app
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.common.RpcResult;
+import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,9 +99,10 @@ import org.slf4j.LoggerFactory;
  * <p>
  * This class is responsible for processing messages received from ODL's restconf interface.
  * TODO - Remove some of these state maps and move some of this into the PCMMService
+ * TODO Don't implement PacketcableService, move that into an inner class
  */
 @ThreadSafe
-public class PacketcableProvider implements BindingAwareProvider, AutoCloseable {
+public class PacketcableProvider implements BindingAwareProvider, AutoCloseable, PacketcableService {
 
     private static final Logger logger = LoggerFactory.getLogger(PacketcableProvider.class);
 
@@ -105,6 +131,9 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
     private DataBroker dataBroker;
     private MdsalUtils mdsalUtils;
 
+    //Routed RPC Registration
+    private RoutedRpcRegistration<PacketcableService> rpcRegistration;
+
     // Data change listeners/registrations
     private final CcapsDataChangeListener ccapsDataChangeListener = new CcapsDataChangeListener();
     private final QosDataChangeListener qosDataChangeListener = new QosDataChangeListener();
@@ -129,13 +158,17 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
         mdsalUtils = new MdsalUtils(dataBroker);
 
-        ccapsDataChangeListenerRegistration = dataBroker
-                .registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, ccapsIID.child(Ccap.class),
+        ccapsDataChangeListenerRegistration =
+                dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, ccapsIID.child(Ccap.class),
                         ccapsDataChangeListener, DataBroker.DataChangeScope.SUBTREE);
 
-        qosDataChangeListenerRegistration = dataBroker
-                .registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, PacketcableProvider.qosIID.child(Apps.class).child(App.class),
-                        qosDataChangeListener, DataBroker.DataChangeScope.SUBTREE);
+        qosDataChangeListenerRegistration = dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
+                PacketcableProvider.qosIID.child(Apps.class).child(App.class), qosDataChangeListener,
+                DataBroker.DataChangeScope.SUBTREE);
+
+        rpcRegistration = session.addRoutedRpcImplementation(PacketcableService.class, this);
+        logger.info("onSessionInitiated().rpcRgistration: {}", rpcRegistration);
+
     }
 
     /**
@@ -294,44 +327,35 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
 
                 // type match between iid and badData is done at start of loop
-                @SuppressWarnings("unchecked")
-                final InstanceIdentifier<Ccap> ccapIID = (InstanceIdentifier<Ccap>) iid;
+                @SuppressWarnings("unchecked") final InstanceIdentifier<Ccap> ccapIID = (InstanceIdentifier<Ccap>) iid;
                 writeTransaction.put(LogicalDatastoreType.OPERATIONAL, ccapIID, opperationalCcap);
-            }
-            else if (badData instanceof Gate) {
+            } else if (badData instanceof Gate) {
                 final Gate gate = (Gate) badData;
 
                 final Gate operationalGate =
-                        new GateBuilder()
-                        .setGateId(gate.getGateId())
-                        .setError(exception.getErrorMessages())
-                        .build();
+                        new GateBuilder().setGateId(gate.getGateId()).setError(exception.getErrorMessages()).build();
 
-                final Gates operationalGates = new GatesBuilder()
-                        .setGate(Collections.singletonList(operationalGate))
-                        .build();
+                final Gates operationalGates =
+                        new GatesBuilder().setGate(Collections.singletonList(operationalGate)).build();
 
                 final SubscriberKey subscriberKey = InstanceIdentifier.keyOf(iid.firstIdentifierOf(Subscriber.class));
-                final Subscriber operationalSubscriber = new SubscriberBuilder()
-                        .setSubscriberId(subscriberKey.getSubscriberId())
-                        .setGates(operationalGates)
-                        .build();
+                final Subscriber operationalSubscriber =
+                        new SubscriberBuilder().setSubscriberId(subscriberKey.getSubscriberId())
+                                .setGates(operationalGates)
+                                .build();
 
-                final Subscribers operationalSubscribers = new SubscribersBuilder()
-                        .setSubscriber(Collections.singletonList(operationalSubscriber))
-                        .build();
+                final Subscribers operationalSubscribers =
+                        new SubscribersBuilder().setSubscriber(Collections.singletonList(operationalSubscriber))
+                                .build();
 
                 final InstanceIdentifier<App> appIID = iid.firstIdentifierOf(App.class);
                 final AppKey appKey = InstanceIdentifier.keyOf(appIID);
-                final App operationalApp = new AppBuilder()
-                        .setAppId(appKey.getAppId())
-                        .setSubscribers(operationalSubscribers)
-                        .build();
+                final App operationalApp =
+                        new AppBuilder().setAppId(appKey.getAppId()).setSubscribers(operationalSubscribers).build();
 
 
                 writeTransaction.put(LogicalDatastoreType.OPERATIONAL, appIID, operationalApp);
-            }
-            else {
+            } else {
                 // If you get here a developer forgot to add a type above
                 logger.error("Unexpected type requested for error saving: {}", badData);
                 throw new IllegalStateException("Unsupported type for error saving");
@@ -363,6 +387,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
             return ccaps.getCcap().isEmpty();
         }
     }
+
 
     /**
      * Removes Subscriber if all Gate instances are removed
@@ -401,6 +426,9 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
         @Override
         void postRemove(final InstanceIdentifier<App> appIID) {
+            //unregister app rpc path
+            logger.info("Un-Registering App Routed RPC Path...");
+            rpcRegistration.unregisterPath(AppContext.class, appIID);
             executor.execute(new AppsCleaner(appIID));
         }
     }
@@ -409,7 +437,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
     /**
      * Removes Apps if all App instances are removed.
      */
-    private class AppsCleaner extends  AbstractCleaner<Apps> {
+    private class AppsCleaner extends AbstractCleaner<Apps> {
 
         public AppsCleaner(InstanceIdentifier<App> removedAppIID) {
             super(removedAppIID, Apps.class, LogicalDatastoreType.OPERATIONAL);
@@ -424,12 +452,14 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
     /**
      * Helper class to do the heavy lifting in removing object. Lets subclasses decide with
-     *  {@link #shouldClean(DataObject)}. <br>
-     *
+     * {@link #shouldClean(DataObject)}. <br>
+     * <p>
      * Subclasses can react after an instance is removed by overriding {@link #postRemove(InstanceIdentifier)}
-     * @param <T> The type that will be removed
+     *
+     * @param <T>
+     *         The type that will be removed
      */
-    private abstract class AbstractCleaner <T extends DataObject> implements Runnable {
+    private abstract class AbstractCleaner<T extends DataObject> implements Runnable {
         final InstanceIdentifier<?> removedIID;
         final Class<T> tClass;
         final LogicalDatastoreType datastoreType;
@@ -450,30 +480,32 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
                     if (shouldClean(optional.get())) {
                         if (mdsalUtils.delete(datastoreType, tIID)) {
                             postRemove(tIID);
-                        }
-                        else {
+                        } else {
                             removeFailed(tIID);
                         }
                     }
 
                 }
-            }
-            else {
-                logger.error("Expected to find InstanceIdentifier<{}> but was not found: {}",
-                        tClass.getSimpleName(), removedIID);
+            } else {
+                logger.error("Expected to find InstanceIdentifier<{}> but was not found: {}", tClass.getSimpleName(),
+                        removedIID);
             }
         }
 
         /**
          * If returns true the object will be removed from the datastore
-         * @param object The object that might be removed.
+         *
+         * @param object
+         *         The object that might be removed.
          * @return true if it should be removed.
          */
         abstract boolean shouldClean(final T object);
 
         /**
          * Called after an instance is removed.
-         * @param tIID the InstanceIdentifier of the removed object
+         *
+         * @param tIID
+         *         the InstanceIdentifier of the removed object
          */
         void postRemove(InstanceIdentifier<T> tIID) {
 
@@ -548,12 +580,17 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
                     updateCcapMaps(ccap);
                     logger.info("Created CCAP: {}/{} : {}", iid, ccap, message);
                     logger.info("Created CCAP: {} : {}", iid, message);
+
                     connectionBuilder.setConnected(true).setError(Collections.<String>emptyList());
                 } else {
                     logger.error("Create CCAP Failed: {} : {}", iid, message);
 
                     connectionBuilder.setConnected(false).setError(Collections.singletonList(message));
                 }
+
+                //register rpc
+                logger.info("Registering CCAP Routed RPC Path...");
+                rpcRegistration.registerPath(CcapContext.class, iid);
 
                 Optional<Ccap> optionalCcap = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, iid);
 
@@ -594,6 +631,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
                 final Ccap originalCcap = originalCcaps.get(entry.getKey());
                 //final Ccap updatedCcap = entry.getValue();
 
+                //register rpc
+                logger.info("Registering CCAP Routed RPC Path...");
+                rpcRegistration.registerPath(CcapContext.class, entry.getKey());
+
                 // restore the original data
                 updateQueue.add(entry.getKey());
                 mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, entry.getKey(), originalCcap);
@@ -608,6 +649,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
             for (InstanceIdentifier<Ccap> iid : removedCcapPaths) {
                 final Ccap nukedCcap = originalCcaps.get(iid);
                 removeCcapFromAllMaps(nukedCcap);
+
+                //unregister ccap rpc path
+                logger.info("Un-Registering CCAP Routed RPC Path...");
+                rpcRegistration.unregisterPath(CcapContext.class, iid);
 
                 mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, iid);
 
@@ -660,6 +705,14 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
                 final String newGatePathStr = makeGatePathString(gateIID);
 
+                // if a new app comes along add RPC registration
+                final InstanceIdentifier<App> appIID = gateIID.firstIdentifierOf(App.class);
+                // TBD verify if App ID exists first
+
+                //register appID RPC path
+                logger.info("Registering App Routed RPC Path...");
+                rpcRegistration.registerPath(AppContext.class, appIID);
+
                 final InstanceIdentifier<Subscriber> subscriberIID = gateIID.firstIdentifierOf(Subscriber.class);
                 final SubscriberKey subscriberKey = InstanceIdentifier.keyOf(subscriberIID);
                 final InetAddress subscriberAddr = getInetAddress(subscriberKey.getSubscriberId());
@@ -683,8 +736,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
                 final ServiceClassName scn = newGate.getTrafficProfile().getServiceClassName();
                 final ServiceFlowDirection scnDirection = findScnOnCcap(scn, ccap);
                 if (scnDirection == null) {
-                    final String msg = String.format("SCN %s not found on CCAP %s for %s",
-                            scn, ccap.getCcapId(), newGatePathStr);
+                    final String msg =
+                            String.format("SCN %s not found on CCAP %s for %s", scn, ccap.getCcapId(), newGatePathStr);
                     logger.error(msg);
                     saveGateError(gateIID, newGatePathStr, msg);
                     continue;
@@ -692,14 +745,16 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
                 final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
                 if (pcmmService == null) {
-                    final String msg = String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s",
-                            ccap, subscriberKey.getSubscriberId());
+                    final String msg =
+                            String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s", ccap,
+                                    subscriberKey.getSubscriberId());
                     logger.error(msg);
                     saveGateError(gateIID, newGatePathStr, msg);
                     continue;
                 }
 
-                PCMMService.GateSetStatus status = pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate, scnDirection);
+                PCMMService.GateSendStatus status =
+                        pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate, scnDirection);
                 if (status.didSucceed()) {
                     gateMap.put(newGatePathStr, newGate);
                     gateCcapMap.put(newGatePathStr, ccap.getCcapId());
@@ -709,9 +764,34 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
                         .setGatePath(newGatePathStr)
                         .setCcapId(ccap.getCcapId())
                         .setCopsGateId(status.getCopsGateId())
-                        .setCopsState(status.didSucceed() ? "success" : "failure");
+                        .setCopsGateState("")
+                        .setTimestamp(getNowTimeStamp())
+                        .setCopsGateTimeInfo("")
+                        .setCopsGateUsageInfo("")
+                        .setTimestamp(getNowTimeStamp());
+
                 if (!status.didSucceed()) {
                     gateBuilder.setError(Collections.singletonList(status.getMessage()));
+                } else {
+                    PCMMService.GateSendStatus infoStatus = pcmmService.sendGateInfo(newGatePathStr);
+
+                    if (infoStatus.didSucceed()) {
+                        gateBuilder.setCopsGateState(
+                                infoStatus.getCopsGateState() + "/" + infoStatus.getCopsGateStateReason())
+                                .setCopsGateTimeInfo(infoStatus.getCopsGateTimeInfo())
+                                .setCopsGateUsageInfo(infoStatus.getCopsGateUsageInfo());
+                    } else {
+                        List<String> errors = new ArrayList<>(2);
+
+                        // Keep GateSetErrors
+                        if (gateBuilder.getError() != null) {
+                            errors.addAll(gateBuilder.getError());
+                        }
+
+                        errors.add(infoStatus.getMessage());
+                        gateBuilder.setError(errors);
+                    }
+
                 }
 
                 Gate operationalGate = gateBuilder.build();
@@ -731,9 +811,9 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
             gateBuilder.setGateId(InstanceIdentifier.keyOf(gateIID).getGateId())
                     .setGatePath(gatePathStr)
                     .setCopsGateId("")
-                    .setCopsState("N/A");
+                    .setCopsGateState("N/A");
 
-                gateBuilder.setError(Collections.singletonList(error));
+            gateBuilder.setError(Collections.singletonList(error));
 
             Gate operationalGate = gateBuilder.build();
 
@@ -782,21 +862,21 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
                 final String gatePathStr = makeGatePathString(removedGateIID);
 
-                    if (gateMap.containsKey(gatePathStr)) {
-                        final Gate thisGate = gateMap.remove(gatePathStr);
-                        final String gateId = thisGate.getGateId();
-                        final String ccapId = gateCcapMap.remove(gatePathStr);
-                        final Ccap thisCcap = ccapMap.get(ccapId);
-                        final PCMMService service = pcmmServiceMap.get(thisCcap.getCcapId());
-                        if (service != null) {
-                            service.sendGateDelete(gatePathStr);
-                            logger.info("onDataChanged(): removed QoS gate {} for {}/{}/{}: ", gateId, ccapId, gatePathStr,
-                                    thisGate);
-                        } else {
-                            logger.warn(
-                                    "Unable to send to locate PCMMService to send gate delete message with CCAP - " + thisCcap);
-                        }
+                if (gateMap.containsKey(gatePathStr)) {
+                    final Gate thisGate = gateMap.remove(gatePathStr);
+                    final String gateId = thisGate.getGateId();
+                    final String ccapId = gateCcapMap.remove(gatePathStr);
+                    final Ccap thisCcap = ccapMap.get(ccapId);
+                    final PCMMService service = pcmmServiceMap.get(thisCcap.getCcapId());
+                    if (service != null) {
+                        service.sendGateDelete(gatePathStr);
+                        logger.info("onDataChanged(): removed QoS gate {} for {}/{}/{}: ", gateId, ccapId, gatePathStr,
+                                thisGate);
+                    } else {
+                        logger.warn("Unable to send to locate PCMMService to send gate delete message with CCAP - "
+                                + thisCcap);
                     }
+                }
 
 
             }
@@ -812,10 +892,431 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable 
 
             final GateKey gateKey = InstanceIdentifier.keyOf(iid);
 
-            return appKey.getAppId()
-                    + "/" + subscriberKey.getSubscriberId()
-                    + "/" + gateKey.getGateId();
+            return appKey.getAppId() + "/" + subscriberKey.getSubscriberId() + "/" + gateKey.getGateId();
         }
     }
 
+
+    @Override
+    public Future<RpcResult<CcapSetConnectionOutput>> ccapSetConnection(CcapSetConnectionInput input) {
+        // TODO refactor this method into smaller parts
+
+        InstanceIdentifier<Ccap> ccapIid = (InstanceIdentifier<Ccap>) input.getCcapId();
+        List<String> outputError = new ArrayList<String>();
+        String rpcResponse = null;
+        Boolean inputIsConnected = input.getConnection().isConnected();
+        Boolean effectiveIsConnected = null;
+        String ccapId = input.getCcapId().firstIdentifierOf(Ccap.class).firstKeyOf(Ccap.class).getCcapId();
+        PCMMService pcmmService = pcmmServiceMap.get(ccapId);
+
+        if (!inputIsConnected) {
+            // set connected false
+            if (pcmmService.getPcmmPdpSocket()) {
+                outputError.add(ccapId + ": CCAP COPS socket is already closed");
+                effectiveIsConnected = false;
+            } else {
+                //if (!pcmmService.getPcmmCcapClientIsConnected()) {
+                outputError.add(ccapId + ": CCAP client is disconnected with error: "
+                        + pcmmService.getPcmmCcapClientConnectErrMsg());
+                //}
+                pcmmService.ccapClient.disconnect();
+                effectiveIsConnected = false;
+            }
+        } else {
+            // set connected true
+            if (!pcmmService.getPcmmPdpSocket() && pcmmService.getPcmmCcapClientIsConnected()) {
+                outputError.add(ccapId + ": CCAP COPS socket is already open");
+                outputError.add(ccapId + ": CCAP client is connected");
+                effectiveIsConnected = true;
+            } else {
+                if (pcmmService.getPcmmCcapClientIsConnected()) {
+                    pcmmService.ccapClient.disconnect();
+                }
+                pcmmService.ccapClient.connect();
+                if (pcmmService.getPcmmCcapClientIsConnected()) {
+                    effectiveIsConnected = true;
+                    outputError.add(ccapId + ": CCAP client is connected");
+                } else {
+                    effectiveIsConnected = false;
+                    outputError.add(ccapId + ": CCAP client is disconnected with error: "
+                            + pcmmService.getPcmmCcapClientConnectErrMsg());
+                }
+            }
+        }
+
+        DateAndTime connectionDateAndTime = getNowTimeStamp();
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.set.connection.output.ccap.ConnectionBuilder
+                connectionRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.set.connection.output.ccap.ConnectionBuilder()
+                        .setConnected(effectiveIsConnected)
+                        .setError(outputError)
+                        .setTimestamp(connectionDateAndTime);
+
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.set.connection.output.CcapBuilder().setCcapId(
+                        ccapId).setConnection(connectionRpcOutput.build());
+
+
+        ConnectionBuilder connectionOps = new ConnectionBuilder().setConnected(effectiveIsConnected)
+                .setError(outputError)
+                .setTimestamp(connectionDateAndTime);
+
+        CcapBuilder responseCcapBuilder = new CcapBuilder().setCcapId(ccapId).setConnection(connectionOps.build());
+
+
+        mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, ccapIid, responseCcapBuilder.build());
+
+
+        DateAndTime rpcDateAndTime = getNowTimeStamp();
+        rpcResponse = ccapId + ": CCAP set complete";
+        CcapSetConnectionOutputBuilder outputBuilder =
+                new CcapSetConnectionOutputBuilder().setCcap(ccapRpcOutput.build())
+                        .setResponse(rpcResponse)
+                        .setTimestamp(rpcDateAndTime);
+
+        return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+    }
+
+
+
+    @Override
+    public Future<RpcResult<CcapPollConnectionOutput>> ccapPollConnection(CcapPollConnectionInput input) {
+        // TODO refactor this method into smaller parts
+
+        InstanceIdentifier<Ccap> ccapIid = (InstanceIdentifier<Ccap>) input.getCcapId();
+        List<String> outputError = new ArrayList<String>();
+
+        String ccapId = input.getCcapId().firstIdentifierOf(Ccap.class).firstKeyOf(Ccap.class).getCcapId();
+        PCMMService pcmmService = pcmmServiceMap.get(ccapId);
+        Boolean effectiveIsConnected = true;
+        String response = null;
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.poll.connection.output.ccap.ConnectionBuilder
+                connectionRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.poll.connection.output.ccap.ConnectionBuilder();
+
+        if (pcmmService != null) {
+            if (pcmmService.getPcmmPdpSocket()) {
+                outputError.add(ccapId + ": CCAP Cops socket is closed");
+                if (!pcmmService.getPcmmCcapClientIsConnected()) {
+                    outputError.add(ccapId + ": CCAP client is disconnected with error: "
+                            + pcmmService.getPcmmCcapClientConnectErrMsg());
+                }
+                effectiveIsConnected = false;
+            } else {
+                //outputError.add(String.format(ccapId+": CCAP Cops socket is open"));
+                if (!pcmmService.getPcmmCcapClientIsConnected()) {
+                    outputError.add(ccapId + ": CCAP client is disconnected with error: "
+                            + pcmmService.getPcmmCcapClientConnectErrMsg());
+                    effectiveIsConnected = false;
+                } else {
+                    outputError.add(ccapId + ": CCAP client is connected");
+                }
+            }
+            DateAndTime connectionDateAndTime = getNowTimeStamp();
+
+
+            ConnectionBuilder connectionOps = new ConnectionBuilder().setConnected(effectiveIsConnected)
+                    .setError(outputError)
+                    .setTimestamp(connectionDateAndTime);
+
+            CcapBuilder responseCcapBuilder = new CcapBuilder().setCcapId(ccapId).setConnection(connectionOps.build());
+
+            connectionRpcOutput =
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.poll.connection.output.ccap.ConnectionBuilder()
+                            .setConnected(effectiveIsConnected)
+                            .setError(outputError)
+                            .setTimestamp(connectionDateAndTime);
+
+            mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, ccapIid, responseCcapBuilder.build());
+            response = ccapId + ": CCAP poll complete";
+        } else {
+            //pcmmService is null, do not poll
+            response = ccapId + ": CCAP connection null; no poll performed";
+        }
+
+        DateAndTime rpcDateAndTime = getNowTimeStamp();
+
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.poll.connection.output.CcapBuilder().setCcapId(
+                        ccapId).setConnection(connectionRpcOutput.build());
+
+        CcapPollConnectionOutputBuilder outputBuilder =
+                new CcapPollConnectionOutputBuilder().setCcap(ccapRpcOutput.build())
+                        .setResponse(response)
+                        .setTimestamp(rpcDateAndTime);
+
+        return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+    }
+
+
+
+    private App readAppFromOperationalDatastore(InstanceIdentifier<App> appIid) {
+        Optional<App> optionalApp = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, appIid);
+        AppBuilder thisAppBuilder = new AppBuilder(optionalApp.get());
+        App thisApp = thisAppBuilder.build();
+        logger.info("readAppFromConfigDatastore() retrived App: " + thisApp.getAppId());
+        return thisApp;
+    }
+
+    private Gate readGateFromOperationalDatastore(InstanceIdentifier<Gate> gateIid) {
+        Optional<Gate> optionalGate = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, gateIid);
+        if (optionalGate.isPresent()) {
+            GateBuilder gateBuilder = new GateBuilder(optionalGate.get());
+            Gate thisGate = gateBuilder.build();
+            return thisGate;
+        } else {
+            return null;
+        }
+    }
+
+    private Subscriber readSubscriberFromOperationalDatastore(InstanceIdentifier<Subscriber> subscriberIid) {
+        Optional<Subscriber> optionalSubscriber = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, subscriberIid);
+        if (optionalSubscriber.isPresent()) {
+            SubscriberBuilder subscriberBuilder = new SubscriberBuilder(optionalSubscriber.get());
+            Subscriber thisSubscriber = subscriberBuilder.build();
+            return thisSubscriber;
+        } else {
+            return null;
+        }
+    }
+
+
+
+    @Override
+    public Future<RpcResult<QosPollGatesOutput>> qosPollGates(QosPollGatesInput input) {
+        // TODO refactor this method into smaller parts
+
+        InstanceIdentifier<App> appIid = (InstanceIdentifier<App>) input.getAppId();
+        //logger.info("qospollgates appIid : "+appIid.toString());
+        App app = readAppFromOperationalDatastore(appIid);
+        //logger.info("qospollgates app : "+app.toString());
+        AppKey appKey = InstanceIdentifier.keyOf(appIid);
+        String inputSubscriberId = input.getSubscriberId();
+        String inputGateId = input.getGateId();
+        List<String> gateOutputError = Collections.emptyList();
+        String subscriberId = null;
+        String gateId = null;
+        String ccapId = null;
+        String gatePathStr = null;
+        String opsCopsGateId = null;
+        Gate opsGate = null;
+
+        String rpcResponse = null;
+
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.qos.poll.gates.output.GateBuilder();
+
+        GateBuilder gateBuilder = new GateBuilder();
+
+        if (inputSubscriberId != null) {
+            if (inputGateId != null) {
+                //Subscriber Id and Gate Id provided, only one gate to be poolled
+
+                //generate the gateiid
+                InstanceIdentifier<Gate> gateIid = appIid.builder()
+                        .child(Subscribers.class)
+                        .child(Subscriber.class, new SubscriberKey(inputSubscriberId))
+                        .child(Gates.class)
+                        .child(Gate.class, new GateKey(inputGateId))
+                        .build();
+
+
+                opsGate = readGateFromOperationalDatastore(gateIid);
+
+                //does the gate exists in the Operational DS?
+                if (opsGate == null) {
+                    gatePathStr = appKey.getAppId() + "/" + inputSubscriberId + "/" + inputGateId;
+                    rpcResponse = gatePathStr + ": gate does not exist in the system; gate poll not performed";
+                } else {
+                    opsCopsGateId = opsGate.getCopsGateId();
+                    gatePathStr = opsGate.getGatePath();
+
+                    if ((!Objects.equals(opsCopsGateId, "")) && (!Objects.equals(opsCopsGateId, null))) {
+                        ccapId = findCcapForSubscriberId(getInetAddress(inputSubscriberId)).getCcapId();
+                        PCMMService pcmmService = pcmmServiceMap.get(ccapId);
+                        //is the CCAP socket open?
+                        if (!pcmmService.getPcmmPdpSocket() && pcmmService.getPcmmCcapClientIsConnected()) {
+                            PCMMService.GateSendStatus status = pcmmService.sendGateInfo(gatePathStr);
+                            DateAndTime gateDateAndTime = getNowTimeStamp();
+                            //logger.info("qospollgates Gate Status : GateID/"+status.getCopsGateId());
+                            //logger.info("qospollgates Gate Status : Message/"+status.getMessage());
+                            //logger.info("qospollgates Gate Status : DidSucceed/"+status.didSucceed());
+                            gateOutputError = Collections.singletonList(status.getMessage());
+
+                            gateOutputBuilder.setGatePath(gatePathStr)
+                                    .setCcapId(ccapId)
+                                    .setCopsGateState(status.getCopsGateState() + "/" + status.getCopsGateStateReason())
+                                    .setCopsGateTimeInfo(status.getCopsGateTimeInfo())
+                                    .setCopsGateUsageInfo(status.getCopsGateUsageInfo())
+                                    .setCopsGateId(status.getCopsGateId())
+                                    .setError(gateOutputError)
+                                    .setTimestamp(gateDateAndTime);
+
+                            gateBuilder.setGateId(inputGateId)
+                                    .setGatePath(gatePathStr)
+                                    .setCcapId(ccapId)
+                                    .setCopsGateState(status.getCopsGateState() + "/" + status.getCopsGateStateReason())
+                                    .setCopsGateTimeInfo(status.getCopsGateTimeInfo())
+                                    .setCopsGateUsageInfo(status.getCopsGateUsageInfo())
+                                    .setCopsGateId(status.getCopsGateId())
+                                    .setError(gateOutputError)
+                                    .setTimestamp(gateDateAndTime);
+
+                            mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIid, gateBuilder.build());
+                            rpcResponse = gatePathStr + ": gate poll complete";
+                        } else {
+                            rpcResponse =
+                                    ccapId + ": CCAP socket is down or client disconnected; gate poll not performed";
+                        }
+                    } else {
+                        rpcResponse = gatePathStr + ": gate not active; gate poll not performed";
+                    }
+                }
+            } else {
+                //inputGateId is null; pool all gates for the subscriber if the sub exists
+
+                //generate active subIid
+                InstanceIdentifier<Subscriber> subIid = appIid.builder()
+                        .child(Subscribers.class)
+                        .child(Subscriber.class, new SubscriberKey(inputSubscriberId))
+                        .build();
+                //does the subscriber provided exists in the Operational Datastore?
+                Subscriber sub = readSubscriberFromOperationalDatastore(subIid);
+                if (sub != null) {
+                    //If Subscriber exsits poll all gates for the subscriber
+                    subscriberId = sub.getSubscriberId();
+                    List<Gate> gateList = sub.getGates().getGate();
+                    for (Gate gate : gateList) {
+                        //generate active gateIid
+                        gateId = gate.getGateId();
+                        InstanceIdentifier<Gate> gateIid =
+                                subIid.builder().child(Gates.class).child(Gate.class, new GateKey(gateId)).build();
+
+                        opsGate = readGateFromOperationalDatastore(gateIid);
+                        opsCopsGateId = opsGate.getCopsGateId();
+                        //generate active gatePathStr
+                        gatePathStr = appKey.getAppId() + "/" + subscriberId + "/" + gateId;
+
+                        if ((!Objects.equals(opsCopsGateId, "")) && (!Objects.equals(opsCopsGateId, null))) {
+                            ccapId = findCcapForSubscriberId(getInetAddress(subscriberId)).getCcapId();
+                            PCMMService pcmmService = pcmmServiceMap.get(ccapId);
+                            //is the CCAP socket open?
+                            if (!pcmmService.getPcmmPdpSocket() && pcmmService.getPcmmCcapClientIsConnected()) {
+                                PCMMService.GateSendStatus status = pcmmService.sendGateInfo(gatePathStr);
+                                DateAndTime gateDateAndTime = getNowTimeStamp();
+
+                                gateBuilder.setGateId(gateId)
+                                        .setGatePath(gatePathStr)
+                                        .setCcapId(ccapId)
+                                        .setCopsGateState(
+                                                status.getCopsGateState() + "/" + status.getCopsGateStateReason())
+                                        .setCopsGateTimeInfo(status.getCopsGateTimeInfo())
+                                        .setCopsGateUsageInfo(status.getCopsGateUsageInfo())
+                                        .setCopsGateId(status.getCopsGateId())
+                                        .setError(gateOutputError)
+                                        .setTimestamp(gateDateAndTime);
+
+                                mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIid, gateBuilder.build());
+                            } else {
+                                logger.info(
+                                        "qospollgates: {}: CCAP Cops socket is down or client disconnected; gate poll not performed",
+                                        ccapId);
+                            }
+                        } else {
+                            //TODO define what happens if a gate is not active.. is nothing ok?
+                            logger.info("qospollgates: {}: gate not active; gate poll not performed", gatePathStr);
+                        }
+                    } //for
+                    rpcResponse = inputSubscriberId + "/: subscriber subtree poll in progress";
+                } else {
+                    rpcResponse =
+                            inputSubscriberId + "/: subscriber is not defined in the system, gate poll not performed";
+                }
+            }
+        } //inputSubId if
+        else {
+            // inputSubId is null
+            if (inputGateId != null) {
+                gatePathStr = appKey.getAppId() + "/" + inputSubscriberId + "/" + inputGateId;
+                rpcResponse = gatePathStr + ": Subscriber ID not provided; gate poll not performed";
+            } else {
+                //poll all gates for the appId
+
+                Subscribers subs = app.getSubscribers();
+
+                logger.info("qospollgates subscribers: " + subs.toString());
+
+                List<Subscriber> subList = subs.getSubscriber();
+                logger.info("qospollgates subList: " + subList.toString());
+                for (Subscriber sub : subList) {
+
+                    //generate active subIid
+                    subscriberId = sub.getSubscriberId();
+                    InstanceIdentifier<Subscriber> subIid = appIid.builder()
+                            .child(Subscribers.class)
+                            .child(Subscriber.class, new SubscriberKey(subscriberId))
+                            .build();
+
+                    List<Gate> gateList = sub.getGates().getGate();
+                    for (Gate gate : gateList) {
+                        //logger.info("qospollgates active gate: "+gate);
+
+                        //generate active gateIid
+                        gateId = gate.getGateId();
+                        InstanceIdentifier<Gate> gateIid =
+                                subIid.builder().child(Gates.class).child(Gate.class, new GateKey(gateId)).build();
+
+                        opsGate = readGateFromOperationalDatastore(gateIid);
+                        opsCopsGateId = opsGate.getCopsGateId();
+                        //generate active gatePathStr
+                        gatePathStr = appKey.getAppId() + "/" + subscriberId + "/" + gateId;
+                        if ((!Objects.equals(opsCopsGateId, "")) && (!Objects.equals(opsCopsGateId, null))) {
+                            ccapId = findCcapForSubscriberId(getInetAddress(subscriberId)).getCcapId();
+                            PCMMService pcmmService = pcmmServiceMap.get(ccapId);
+                            //is the CCAP socket open?
+                            if (!pcmmService.getPcmmPdpSocket() && pcmmService.getPcmmCcapClientIsConnected()) {
+                                PCMMService.GateSendStatus status = pcmmService.sendGateInfo(gatePathStr);
+                                DateAndTime gateDateAndTime = getNowTimeStamp();
+                                gateOutputError = Collections.singletonList(status.getMessage());
+
+
+                                gateBuilder.setGateId(gateId)
+                                        .setGatePath(gatePathStr)
+                                        .setCcapId(ccapId)
+                                        .setCopsGateState(
+                                                status.getCopsGateState() + "/" + status.getCopsGateStateReason())
+                                        .setCopsGateTimeInfo(status.getCopsGateTimeInfo())
+                                        .setCopsGateUsageInfo(status.getCopsGateUsageInfo())
+                                        .setCopsGateId(status.getCopsGateId())
+                                        .setError(gateOutputError)
+                                        .setTimestamp(gateDateAndTime);
+
+                                mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIid, gateBuilder.build());
+                            } else {
+                                logger.info(
+                                        "qospollgates: {}: CCAP socket is down or client disconnected; gate poll not performed",
+                                        ccapId);
+                            }
+                        } else {
+                            //TODO define what happens if a gate is not active.. is nothing ok
+                            logger.info("qospollgates: {}: gate not active; gate poll not performed", gatePathStr);
+                        }
+                    }
+                }
+                rpcResponse = appKey.getAppId() + "/: gate subtree poll in progress";
+            }
+        }
+
+        DateAndTime rpcDateAndTime = getNowTimeStamp();
+
+        QosPollGatesOutputBuilder outputBuilder = new QosPollGatesOutputBuilder().setTimestamp(rpcDateAndTime)
+                .setResponse(rpcResponse)
+                .setGate(gateOutputBuilder.build());
+        return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+    }
+
+    private DateAndTime getNowTimeStamp() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        return new DateAndTime(dateFormat.format(new Date()));
+    }
 }

@@ -26,9 +26,9 @@ public interface IPCMMError extends IPCMMBaseObject {
 
 	/**
 	 * Returns the error sub-code
-	 * @return - not null (mostly will be NA)
+	 * @return - the sub error code
 	 */
-	ErrorCode getErrorSubcode();
+	short getErrorSubcode();
 
 	/**
 	 * Returns the error's description
