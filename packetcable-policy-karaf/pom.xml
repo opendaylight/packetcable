@@ -5,13 +5,13 @@
     <parent>
         <groupId>org.opendaylight.controller</groupId>
         <artifactId>karaf-parent</artifactId>
-        <version>1.5.3-Lithium-SR3</version>
+        <version>1.5.4-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>packetcable-policy-karaf</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
     <name>${project.artifactId}</name>
-    <version>1.2.3-Lithium-SR3</version>
+    <version>1.2.4-SNAPSHOT</version>
     <prerequisites>
         <maven>3.1.1</maven>
     </prerequisites>
