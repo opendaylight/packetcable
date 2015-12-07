@@ -1,6 +1,10 @@
 /*
- * Copyright (c) 2015 CableLabs.  All rights reserved.
- */
+###############################################################################
+##                                                                           ##
+## (c) 2014-2015 Cable Television Laboratories, Inc.  All rights reserved.   ##
+##                                                                           ##
+###############################################################################
+*/
 
 package org.umu.cops;
 
