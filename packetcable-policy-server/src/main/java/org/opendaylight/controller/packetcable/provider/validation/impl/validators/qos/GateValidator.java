@@ -22,7 +22,7 @@ public class GateValidator extends AbstractValidator<Gate> {
     private static final String TRAFFIC_PROFILE = "gate.traffic-profile";
     private static final String CLASSIFIERS = "gate.classifiers";
 
-//    private final GateSpecValidatator gateSpecValidatator = new GateSpecValidatator();
+//    private final GateSpecValidator gateSpecValidatator = new GateSpecValidator();
     private final TrafficProfileValidator trafficProfileValidator = new TrafficProfileValidator();
     private final ClassifiersValidator classifiersValidator = new ClassifiersValidator();
 

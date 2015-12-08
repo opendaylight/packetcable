@@ -14,7 +14,7 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec
 /**
  * @author rvail
  */
-public class GateSpecValidatator extends AbstractValidator<GateSpec> {
+public class GateSpecValidator extends AbstractValidator<GateSpec> {
 
     private static final String DIRECTION = "gate-spec.direction";
 

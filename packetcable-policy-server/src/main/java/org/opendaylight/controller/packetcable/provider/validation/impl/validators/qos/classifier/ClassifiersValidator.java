@@ -20,7 +20,7 @@ public class ClassifiersValidator extends AbstractValidator<Classifiers> {
 
     private static final String CLASSIFER_CONTAINER = "classifers.classifer-container";
 
-    private ClassifierContainerValidator classifierContainerValidator = new ClassifierContainerValidator();
+    private final ClassifierContainerValidator classifierContainerValidator = new ClassifierContainerValidator();
 
     @Override
     protected void doValidate(final Classifiers classifiers, final Extent extent) {

@@ -12,7 +12,7 @@ import org.opendaylight.controller.packetcable.provider.validation.ValidatorProv
 import org.opendaylight.controller.packetcable.provider.validation.ValidatorProviderFactory;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.AppValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.AppsValidator;
-import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.GateSpecValidatator;
+import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.GateSpecValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.GateValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.GatesValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.SubscriberValidator;
@@ -58,7 +58,7 @@ public class QosValidatorProviderFactory implements ValidatorProviderFactory {
 
         provider.put(Gates.class, new GatesValidator());
         provider.put(Gate.class, new GateValidator());
-        provider.put(GateSpec.class, new GateSpecValidatator());
+        provider.put(GateSpec.class, new GateSpecValidator());
 
         provider.put(TrafficProfile.class, new TrafficProfileValidator());
 
