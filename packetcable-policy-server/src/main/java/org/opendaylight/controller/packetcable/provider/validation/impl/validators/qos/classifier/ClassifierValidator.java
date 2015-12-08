@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.classifier.Classifier;
 
@@ -30,10 +29,10 @@ public class ClassifierValidator extends AbstractValidator<Classifier> {
     private static final String PROTOCOL = "classifer.protocol";
 
     @Override
-    public void validate(final Classifier classifier, final Extent extent) throws ValidationException {
-
+    protected void doValidate(final Classifier classifier, final Extent extent) {
         if (classifier == null) {
-            throw new ValidationException("classifer must exist");
+            getErrorMessages().add("classifer must exist");
+            return;
         }
 
         mustExist(classifier.getSrcIp(), SRC_IP);
@@ -46,7 +45,5 @@ public class ClassifierValidator extends AbstractValidator<Classifier> {
         mustExist(classifier.getTosMask(), TOS_MASK);
 
         mustExist(classifier.getProtocol(), PROTOCOL);
-
-        throwErrorsIfNeeded();
     }
 }

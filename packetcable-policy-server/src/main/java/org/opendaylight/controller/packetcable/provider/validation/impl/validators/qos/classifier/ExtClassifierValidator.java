@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.ext.classifier.ExtClassifier;
 
@@ -35,7 +34,11 @@ public class ExtClassifierValidator extends AbstractValidator<ExtClassifier> {
     private static final String DST_PORT_END = "ext-classifer.dstPort-end";
 
     @Override
-    public void validate(final ExtClassifier extClassifier, final Extent extent) throws ValidationException {
+    protected void doValidate(final ExtClassifier extClassifier, final Extent extent) {
+        if (extClassifier == null) {
+            getErrorMessages().add("ext-classifier must exist");
+            return;
+        }
 
         mustExist(extClassifier.getSrcIp(), SRC_IP);
         mustExist(extClassifier.getSrcIpMask(), SRC_MASK);
@@ -53,7 +56,5 @@ public class ExtClassifierValidator extends AbstractValidator<ExtClassifier> {
 
         mustExist(extClassifier.getDstPortStart(), DST_PORT_START);
         mustExist(extClassifier.getDstPortEnd(), DST_PORT_END);
-
-        throwErrorsIfNeeded();
     }
 }

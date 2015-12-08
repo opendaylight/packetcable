@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.AmId;
 
@@ -21,15 +20,13 @@ public class AmIdValidator extends AbstractValidator<AmId> {
     private static final String AM_TAG = "amId.am-tag";
 
     @Override
-    public void validate(final AmId amId, Extent extent) throws ValidationException {
-
+    protected void doValidate(final AmId amId, Extent extent) {
         if (amId == null) {
-            throw new ValidationException("amId must exist");
+            getErrorMessages().add("amId must exist");
+            return;
         }
 
         mustExist(amId.getAmTag(), AM_TAG);
         mustExist(amId.getAmType(), AM_TYPE);
-
-        throwErrorsIfNeeded();
     }
 }

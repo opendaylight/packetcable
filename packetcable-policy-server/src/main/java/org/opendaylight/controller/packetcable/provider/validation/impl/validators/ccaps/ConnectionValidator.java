@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.Connection;
 
@@ -21,17 +20,15 @@ public class ConnectionValidator extends AbstractValidator<Connection> {
     private static final String PORT = "connection.port";
 
     @Override
-    public void validate(final Connection connection, Extent extent) throws ValidationException {
+    protected void doValidate(final Connection connection, Extent extent) {
         if (connection == null) {
-            throw new ValidationException("connection must exist");
+           getErrorMessages().add("connection must exist");
+            return;
         }
 
         mustExist(connection.getIpAddress(), IP_ADDRESS);
 
         // Note PortNumber validates range on creation so only existence needs to be checked
         mustExist(connection.getPort(), PORT);
-
-
-        throwErrorsIfNeeded();
     }
 }

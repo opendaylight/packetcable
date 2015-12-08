@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.App;
 
@@ -23,9 +22,10 @@ public class AppValidator extends AbstractValidator<App> {
     private final SubscribersValidator subscribersValidator = new SubscribersValidator();
 
     @Override
-    public void validate(final App app, final Extent extent) throws ValidationException {
+    protected void doValidate(final App app, final Extent extent) {
         if (app == null) {
-            throw new ValidationException("app must exist");
+            getErrorMessages().add("app must exist");
+            return;
         }
 
         mustExist(app.getAppId(), APP_ID);
@@ -34,7 +34,5 @@ public class AppValidator extends AbstractValidator<App> {
         if (extent == Extent.NODE_AND_SUBTREE) {
             validateChild(subscribersValidator, app.getSubscribers());
         }
-
-        throwErrorsIfNeeded();
     }
 }
