@@ -8,6 +8,8 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -99,4 +101,15 @@ public abstract class AbstractValidator<T> implements Validator<T> {
             getErrorMessages().addAll(e.getErrorMessages());
         }
     }
+
+    @Override
+    public void validate(final T data, final Extent extent) throws ValidationException {
+        checkNotNull(extent);
+
+        doValidate(data, extent);
+
+        throwErrorsIfNeeded();
+    }
+
+    protected abstract void doValidate(final T data, final Extent extent);
 }

@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
@@ -25,9 +24,10 @@ public class ClassifierChoiceValidator extends AbstractValidator<ClassifierChoic
     private final Ipv6ClassifierValidator ipv6ClassifierValidator = new Ipv6ClassifierValidator();
 
     @Override
-    public void validate(final ClassifierChoice choice, final Extent extent) throws ValidationException {
+    protected void doValidate(final ClassifierChoice choice, final Extent extent) {
         if (choice == null) {
-            throw new ValidationException("classifier-choice must exist");
+            getErrorMessages().add("classifier-choice must exist");
+            return;
         }
 
         // Determine what type this choice is then validate it
@@ -43,8 +43,6 @@ public class ClassifierChoiceValidator extends AbstractValidator<ClassifierChoic
         else {
             throw new IllegalStateException("Unknown ClassifierChoice Type: " + choice.getClass().getName());
         }
-
-        throwErrorsIfNeeded();
     }
 
 }

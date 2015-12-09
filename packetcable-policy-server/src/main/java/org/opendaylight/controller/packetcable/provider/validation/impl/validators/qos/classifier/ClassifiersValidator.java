@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.Classifiers;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.ClassifierContainer;
@@ -24,9 +23,10 @@ public class ClassifiersValidator extends AbstractValidator<Classifiers> {
     private ClassifierContainerValidator classifierContainerValidator = new ClassifierContainerValidator();
 
     @Override
-    public void validate(final Classifiers classifiers, final Extent extent) throws ValidationException {
+    protected void doValidate(final Classifiers classifiers, final Extent extent) {
         if (classifiers == null) {
-            throw new ValidationException("classifiers must exist");
+            getErrorMessages().add("classifiers must exist");
+            return;
         }
 
         mustExistAndNotBeEmpty(classifiers.getClassifierContainer(), CLASSIFER_CONTAINER);
@@ -49,8 +49,6 @@ public class ClassifiersValidator extends AbstractValidator<Classifiers> {
                 validateChild(classifierContainerValidator, classifier);
             }
         }
-
-        throwErrorsIfNeeded();
     }
 
 }

@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.ipv6.classifier.Ipv6Classifier;
 
@@ -36,9 +35,10 @@ public class Ipv6ClassifierValidator extends AbstractValidator<Ipv6Classifier> {
     private static final String DST_PORT_END = "ipv6-classifer.dstPort-end";
 
     @Override
-    public void validate(final Ipv6Classifier ipv6Classifier, final Extent extent) throws ValidationException {
+    protected void doValidate(final Ipv6Classifier ipv6Classifier, final Extent extent) {
         if (ipv6Classifier == null) {
-            throw new ValidationException("ipv6-classifer must exist");
+            getErrorMessages().add("ipv6-classifer must exist");
+            return;
         }
 
         mustExist(ipv6Classifier.getSrcIp6(), SRC_IP6);
@@ -57,7 +57,5 @@ public class Ipv6ClassifierValidator extends AbstractValidator<Ipv6Classifier> {
 
         mustExist(ipv6Classifier.getDstPortStart(), DST_PORT_START);
         mustExist(ipv6Classifier.getDstPortEnd(), DST_PORT_END);
-
-        throwErrorsIfNeeded();
     }
 }

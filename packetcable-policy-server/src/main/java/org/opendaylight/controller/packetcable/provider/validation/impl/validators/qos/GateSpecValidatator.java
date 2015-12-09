@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec.GateSpec;
 
@@ -20,9 +19,9 @@ public class GateSpecValidatator extends AbstractValidator<GateSpec> {
     private static final String DIRECTION = "gate-spec.direction";
 
     @Override
-    public void validate(final GateSpec gateSpec, final Extent extent) throws ValidationException {
+    protected void doValidate(final GateSpec gateSpec, final Extent extent) {
         if (gateSpec == null) {
-            throw new ValidationException("gate-spec must exist");
+            getErrorMessages().add("gate-spec must exist");
         }
 
         // everything is optional
@@ -30,7 +29,6 @@ public class GateSpecValidatator extends AbstractValidator<GateSpec> {
 //        mustExist(gateSpec.getDirection(), DIRECTION);
 //
 //        // dscp-tos-overwrite & dscp-tos-mask are optional
-        throwErrorsIfNeeded();
     }
 
 }

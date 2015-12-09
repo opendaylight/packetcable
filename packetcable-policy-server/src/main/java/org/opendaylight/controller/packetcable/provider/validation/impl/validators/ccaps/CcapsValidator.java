@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.Ccaps;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
@@ -21,14 +20,17 @@ public class CcapsValidator extends AbstractValidator<Ccaps> {
     private final CcapValidator ccapValidator = new CcapValidator();
 
     @Override
-    public void validate(final Ccaps ccaps, Extent extent) throws ValidationException {
+    public void doValidate(final Ccaps ccaps, Extent extent) {
         if (ccaps == null) {
-            throw new ValidationException("ccaps must exist");
+            getErrorMessages().add("ccaps must exist");
+            return;
         }
 
         if (extent == Extent.NODE_AND_SUBTREE) {
-            for (Ccap ccap : ccaps.getCcap()) {
-                validateChild(ccapValidator, ccap);
+            if (ccaps.getCcap() != null) {
+                for (Ccap ccap : ccaps.getCcap()) {
+                    validateChild(ccapValidator, ccap);
+                }
             }
         }
     }

@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.traffic.profile.TrafficProfile;
 
@@ -20,14 +19,14 @@ public class TrafficProfileValidator extends AbstractValidator<TrafficProfile> {
     private static final String SCN = "service-class-name";
 
     @Override
-    public void validate(final TrafficProfile trafficProfile, final Extent extent) throws ValidationException {
-        if (trafficProfile == null) {
-            throw new ValidationException("traffic-profile must exist");
-        }
+    protected void doValidate(final TrafficProfile trafficProfile, final Extent extent) {
+       if (trafficProfile == null) {
+           getErrorMessages().add("traffic-profile must exist");
+           return;
+       }
 
         mustExist(trafficProfile.getServiceClassName(), SCN);
 
-        throwErrorsIfNeeded();
     }
 
 }

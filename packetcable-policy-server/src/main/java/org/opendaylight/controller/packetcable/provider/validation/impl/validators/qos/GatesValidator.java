@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
@@ -21,9 +20,10 @@ public class GatesValidator extends AbstractValidator<Gates> {
     private final GateValidator gateValidator = new GateValidator();
 
     @Override
-    public void validate(final Gates gates, final Extent extent) throws ValidationException {
+    protected void doValidate(final Gates gates, final Extent extent) {
         if (gates == null) {
-            throw new ValidationException("gates must exist");
+            getErrorMessages().add("gates must exist");
+            return;
         }
 
         if (extent == Extent.NODE_AND_SUBTREE) {
@@ -31,7 +31,5 @@ public class GatesValidator extends AbstractValidator<Gates> {
                 validateChild(gateValidator, gate);
             }
         }
-
-        throwErrorsIfNeeded();
     }
 }

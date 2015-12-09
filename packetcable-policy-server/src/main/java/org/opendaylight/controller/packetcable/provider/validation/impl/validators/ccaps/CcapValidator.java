@@ -8,7 +8,6 @@
 
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps;
 
-import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
 
@@ -27,9 +26,10 @@ public class CcapValidator extends AbstractValidator<Ccap> {
     private final ConnectionValidator connectionValidator = new ConnectionValidator();
 
     @Override
-    public void validate(final Ccap ccap, Extent extent) throws ValidationException {
+    protected void doValidate(final Ccap ccap, Extent extent) {
         if (ccap == null) {
-            throw new ValidationException("ccap must exist");
+            getErrorMessages().add("ccap must exist");
+            return;
         }
 
         mustExist(ccap.getCcapId(), CCAPID);
@@ -44,9 +44,6 @@ public class CcapValidator extends AbstractValidator<Ccap> {
             mustExist(ccap.getAmId(), AM_ID);
             mustExist(ccap.getConnection(), CONNECTION);
         }
-
-        throwErrorsIfNeeded();
     }
-
 
 }
