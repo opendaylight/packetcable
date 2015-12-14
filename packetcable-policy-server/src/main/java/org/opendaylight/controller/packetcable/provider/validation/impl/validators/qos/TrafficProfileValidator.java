@@ -20,7 +20,7 @@ public class TrafficProfileValidator extends AbstractValidator<TrafficProfile> {
 
     @Override
     protected void doValidate(final TrafficProfile trafficProfile, final Extent extent) {
-       if (trafficProfile == null) {
+        if (trafficProfile == null) {
            getErrorMessages().add("traffic-profile must exist");
            return;
        }

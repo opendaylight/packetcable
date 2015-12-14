@@ -27,8 +27,10 @@ public class GatesValidator extends AbstractValidator<Gates> {
         }
 
         if (extent == Extent.NODE_AND_SUBTREE) {
-            for (Gate gate : gates.getGate()) {
-                validateChild(gateValidator, gate);
+            if (gates.getGate() != null) {
+                for (Gate gate : gates.getGate()) {
+                    validateChild(gateValidator, gate);
+                }
             }
         }
     }

@@ -27,8 +27,10 @@ public class SubscribersValidator extends AbstractValidator<Subscribers> {
         }
 
         if (extent == Extent.NODE_AND_SUBTREE) {
-            for (Subscriber subscriber : subscribers.getSubscriber()) {
-                validateChild(subscriberValidator , subscriber);
+            if (subscribers.getSubscriber() != null) {
+                for (Subscriber subscriber : subscribers.getSubscriber()) {
+                    validateChild(subscriberValidator, subscriber);
+                }
             }
         }
     }
