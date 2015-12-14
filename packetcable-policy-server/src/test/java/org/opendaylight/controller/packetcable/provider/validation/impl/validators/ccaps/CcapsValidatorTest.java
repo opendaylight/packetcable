@@ -17,7 +17,6 @@ import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.Ccaps;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.CcapsBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.CcapBuilder;
 
 /**
  * @author rvail
@@ -61,13 +60,7 @@ public class CcapsValidatorTest {
 
     @Test
     public void testValid() throws ValidationException {
-        final Ccap ccap = new CcapBuilder().setCcapId("aCcapId").build();
-
-        final Ccaps ccaps = new CcapsBuilder()
-                .setCcap(Collections.singletonList(ccap))
-                .build();
-
-        validator.validate(ccaps, extentParams.getCurrentParam());
+        validator.validate(buildValidCcapsTree(), extentParams.getCurrentParam());
     }
 
     public static Ccaps buildValidCcapsTree() {

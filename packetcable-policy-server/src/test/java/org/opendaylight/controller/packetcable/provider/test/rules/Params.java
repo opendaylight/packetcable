@@ -8,6 +8,7 @@
 
 package org.opendaylight.controller.packetcable.provider.test.rules;
 
+import com.google.common.base.Optional;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -15,7 +16,6 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -77,7 +77,7 @@ public class Params<T> implements TestRule {
                     try {
                         base.evaluate();
                     } catch (Throwable t) {
-                        errorCollector.addError(new ParamsAssertionError(currentParam, t));
+                        errorCollector.addError(new ParamsAssertionError(currentParam.orNull(), t));
                     }
                 }
                 currentParam = null;
