@@ -57,6 +57,9 @@
 		<nexusproxy>http://nexus.opendaylight.org/content</nexusproxy>
 		<nexus.repository.snapshot>opendaylight.snapshot</nexus.repository.snapshot>
 		<nexus.repository.release>opendaylight.release</nexus.repository.release>
+
+        <!-- Disable Java 8 linter since umu/cops fails it -->
+        <additionalparam>-Xdoclint:none</additionalparam>
 	</properties>
 
 	<dependencies>
