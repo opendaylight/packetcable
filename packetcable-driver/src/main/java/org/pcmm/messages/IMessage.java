@@ -1,13 +1,17 @@
-/**
- @header@
+/*
+ * Copyright (c) 2014, 2015 Cable Television Laboratories, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
 package org.pcmm.messages;
 
 /**
  * This defines the messages exchanged between client and server.
- * 
- * 
+ *
+ *
  * <pre>
  * 1 = Request                 (REQ)
  * 2 = Decision                (DEC)
@@ -20,7 +24,7 @@ package org.pcmm.messages;
  * 9 = Keep-Alive              (KA)
  * 10= Synchronize Complete    (SSC)
  * </pre>
- * 
+ *
  */
 public interface IMessage {
 
