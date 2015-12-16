@@ -1,5 +1,9 @@
 /*
- * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
+ * Copyright (c) 2014, 2015 Cable Television Laboratories, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
 package org.pcmm.rcd;
@@ -19,8 +23,8 @@ import java.io.IOException;
  * service, and does not (cannot) request QoS resources directly from the MSO
  * access network.
  * </p>
- * 
- * 
+ *
+ *
  */
 public interface IPCMMClient {
 
@@ -31,7 +35,7 @@ public interface IPCMMClient {
 
 	/**
 	 * sends a message to the server.
-	 * 
+	 *
 	 * @param requestMessage
 	 *            request message.
 	 */
@@ -39,7 +43,7 @@ public interface IPCMMClient {
 
 	/**
 	 * Reads message from server
-	 * 
+	 *
 	 * @return COPS message
 	 */
 	COPSMsg readMessage();
@@ -52,20 +56,20 @@ public interface IPCMMClient {
 
 	/**
 	 * disconnects from server.
-	 * 
+	 *
 	 * @return disconnection status.
 	 */
 	boolean disconnect();
 
 	/**
-	 * 
+	 *
 	 * @return whether the client is connected to the server of not.
 	 */
 	boolean isConnected();
 
 	/**
 	 * gets the client handle
-	 * 
+	 *
 	 * @return client handle
 	 */
 	COPSHandle getClientHandle();

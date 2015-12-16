@@ -1,5 +1,9 @@
-/**
- @header@
+/*
+ * Copyright (c) 2014, 2015 Cable Television Laboratories, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
 package org.pcmm.rcd;
@@ -34,8 +38,8 @@ package org.pcmm.rcd;
  * The CMTS acts as a server (PS should send OPN message to CMTS to initiate
  * communication), and acts as a client for the rest of the exchange process.
  * </p>
- * 
- * 
+ *
+ *
  */
 public interface ICMTS extends IPCMMServer {
 
