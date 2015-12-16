@@ -1,6 +1,11 @@
-/**
- * 
+/*
+ * Copyright (c) 2014 Cable Television Laboratories, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
+
 package org.pcmm.concurrent.impl;
 
 import java.util.concurrent.Callable;
@@ -10,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class Worker implements IWorker {
 
@@ -29,7 +34,7 @@ public class Worker implements IWorker {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
@@ -45,7 +50,7 @@ public class Worker implements IWorker {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.threading.IWorker#task(java.util.concurrent.Callable)
 	 */
 	@Override
@@ -56,7 +61,7 @@ public class Worker implements IWorker {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.threading.IWorker#shouldWait(int)
 	 */
 	@Override
@@ -67,7 +72,7 @@ public class Worker implements IWorker {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.threading.IWorker#done()
 	 */
 	@Override

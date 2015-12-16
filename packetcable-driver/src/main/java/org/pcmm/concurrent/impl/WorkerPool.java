@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2014 Cable Television Laboratories, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
 package org.pcmm.concurrent.impl;
 
 import java.lang.ref.WeakReference;
@@ -19,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class WorkerPool implements IWorkerPool {
 
 	/**
-	 * 
+	 *
 	 */
 	private Map<Integer, WeakReference<IWorker>> workersMap;
 
@@ -38,7 +46,7 @@ public class WorkerPool implements IWorkerPool {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.threading.IWorkerPool#schedule(org.pcmm.threading.IWorker,
 	 * int)
 	 */
@@ -57,7 +65,7 @@ public class WorkerPool implements IWorkerPool {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.pcmm.concurrent.IWorkerPool#schedule(org.pcmm.concurrent.IWorker)
 	 */
@@ -68,7 +76,7 @@ public class WorkerPool implements IWorkerPool {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.concurrent.IWorkerPool#sendKillSignal(int)
 	 */
 	@Override
@@ -90,7 +98,7 @@ public class WorkerPool implements IWorkerPool {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.threading.IWorkerPool#killAll()
 	 */
 	@Override
@@ -109,7 +117,7 @@ public class WorkerPool implements IWorkerPool {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.pcmm.threading.IWorkerPool#recycle()
 	 */
 	@Override
