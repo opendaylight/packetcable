@@ -115,6 +115,14 @@
               <version>0.0.1-SNAPSHOT</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <excludes>
+              org/opendaylight/yang/gen/**,
+              **/protobuff/messages/**,
+              **/thrift/gen/*.java,
+              **/org/umu/cops/**
+            </excludes>
+          </configuration>
           <executions>
             <execution>
               <id>check-license</id>
