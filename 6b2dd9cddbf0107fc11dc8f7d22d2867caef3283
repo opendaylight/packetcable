@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_f3582afc",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 1078,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2015-12-21T17:36:13Z",
+      "side": 1,
+      "message": "Method is quite long...",
+      "revId": "6b2dd9cddbf0107fc11dc8f7d22d2867caef3283",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
