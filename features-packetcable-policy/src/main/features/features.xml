@@ -19,7 +19,7 @@
     </feature>
     <feature name='odl-packetcable-policy-model' version='${project.version}'
         description='OpenDaylight :: packetcable :: policy :: Model'>
-        <feature version='${yangtools.version}'>odl-mdsal-models</feature>
+        <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
         <bundle>mvn:org.opendaylight.packetcable/packetcable-policy-model/{{VERSION}}</bundle>
     </feature>
     <feature name='odl-packetcable-policy-server' version='${project.version}'
