@@ -5,16 +5,16 @@
     <parent>
         <groupId>org.opendaylight.controller</groupId>
         <artifactId>config-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.4.0-Beryllium</version>
         <relativePath />
     </parent>
     <artifactId>packetcable-policy-server</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
     <name>${project.artifactId}</name>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.3.0-Beryllium</version>
     <packaging>bundle</packaging>
     <properties>
-        <sal-binding-api.version>1.3.0-SNAPSHOT</sal-binding-api.version>
+        <sal-binding-api.version>1.3.0-Beryllium</sal-binding-api.version>
         <powermock.version>1.5.1</powermock.version>
     </properties>
     <dependencies>
@@ -48,7 +48,7 @@
         <dependency>
             <groupId>org.opendaylight.packetcable</groupId>
             <artifactId>packetcable-emulator</artifactId>
-            <version>1.3.0-SNAPSHOT</version>
+            <version>1.3.0-Beryllium</version>
             <scope>test</scope>
         </dependency>
         <dependency>
