@@ -53,7 +53,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<yangtools.version>0.7.5-SNAPSHOT</yangtools.version>
 		<salGeneratorPath>src/main/yang-gen-sal</salGeneratorPath>
-		<nexusproxy>http://nexus.opendaylight.org/content</nexusproxy>
 		<nexus.repository.snapshot>opendaylight.snapshot</nexus.repository.snapshot>
 		<nexus.repository.release>opendaylight.release</nexus.repository.release>
 	</properties>
