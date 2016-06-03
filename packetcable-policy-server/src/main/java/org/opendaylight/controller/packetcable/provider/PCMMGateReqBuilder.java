@@ -166,30 +166,35 @@ public class PCMMGateReqBuilder {
         Protocol protocol = null;
         byte tosOverwrite = 0;
         byte tosMask = (byte)0x0;
-        Inet4Address srcAddress = null;
-        Inet4Address dstAddress = null;
         short srcPort = (short) 0;
         short dstPort = (short) 0;
         byte priority = (byte) 64;
         //byte priority = index.byteValue();
         
-        
         // Legacy classifier
+        
+        // Protocol -- zero is match any
         if (qosClassifier.getProtocol() != null) {
             protocol = Protocol.valueOf(qosClassifier.getProtocol().getValue().shortValue());
+        } else {
+            protocol = Protocol.NONE;
         }
+        
+         // IP Addresss and mask wildcards - addr byte 0 for no match (or match anything)
+        
+        Inet4Address srcAddress = (Inet4Address) getByName("0.0.0.0");
+        
         if (qosClassifier.getSrcIp() != null) {
-            final InetAddress sip = getByName(qosClassifier.getSrcIp().getValue());
-            if (sip != null && sip instanceof Inet4Address) {
-                srcAddress = (Inet4Address) sip;
-            }
+        	srcAddress = (Inet4Address) getByName(qosClassifier.getSrcIp().getValue());
         }
+        
+        Inet4Address dstAddress = (Inet4Address) getByName("0.0.0.0");
+        
         if (qosClassifier.getDstIp() != null) {
-            final InetAddress dip = getByName(qosClassifier.getDstIp().getValue());
-            if (dip != null && dip instanceof Inet4Address) {
-                dstAddress = (Inet4Address) dip;
-            }
+            dstAddress = (Inet4Address) getByName(qosClassifier.getDstIp().getValue());
         }
+        
+        
         if (qosClassifier.getSrcPort() != null) {
             srcPort = qosClassifier.getSrcPort().getValue().shortValue();
         }
@@ -209,7 +214,7 @@ public class PCMMGateReqBuilder {
         classifiers.add(new org.pcmm.gates.impl.Classifier(protocol, tosOverwrite, tosMask, srcAddress, dstAddress, srcPort,
                         dstPort, priority));
     }
-
+    
     private void addExtClassifier(final Short index, final ExtClassifier qosExtClassifier) {
         // Extended classifier
         final byte priority = (byte) 64;
@@ -233,7 +238,7 @@ public class PCMMGateReqBuilder {
             if (qosExtClassifier.getSrcPortEnd() != null) {
                 srcEndPort = qosExtClassifier.getSrcPortEnd().getValue().shortValue();
             }
-            if (srcStartPort > srcEndPort) {
+            if ((int)(srcStartPort & 0xffff) > (int) (srcEndPort & 0xffff)) {
                 logger.warn("Start port %d > End port %d in ext-classifier source port range -- forcing to same",
                         srcStartPort, srcEndPort);
                 srcEndPort = srcStartPort;
@@ -250,7 +255,7 @@ public class PCMMGateReqBuilder {
             if (qosExtClassifier.getDstPortEnd() != null) {
                 dstEndPort = qosExtClassifier.getDstPortEnd().getValue().shortValue();
             }
-            if (dstStartPort > dstEndPort) {
+            if ((int)(dstStartPort & 0xffff) > (int)(dstEndPort & 0xffff)) {
                 logger.warn("Start port %d > End port %d in ext-classifier destination port range -- forcing to same",
                         dstStartPort, dstEndPort);
                 dstEndPort = dstStartPort;
@@ -272,6 +277,29 @@ public class PCMMGateReqBuilder {
             }
         }
 
+        // IP Addresss and mask wildcards - addr byte 0 for no match (or match anything) and mask is 255.255.255.255 by default
+        Inet4Address srcIpAddr = (Inet4Address) getByName("0.0.0.0");
+
+        if (qosExtClassifier.getSrcIp() != null) {
+        	srcIpAddr = getInet4Address(qosExtClassifier.getSrcIp());
+        }
+        
+        Inet4Address dstIpAddr = (Inet4Address) getByName("0.0.0.0");
+        if (qosExtClassifier.getDstIp() != null) {
+        	dstIpAddr = getInet4Address(qosExtClassifier.getDstIp());
+        }
+        
+        //mask
+        Inet4Address srcIpMask = (Inet4Address) getByName("255.255.255.255");
+        if (qosExtClassifier.getSrcIpMask() != null) {
+        	srcIpMask = getInet4Address(qosExtClassifier.getSrcIpMask());
+        }
+        
+        Inet4Address dstIpMask = (Inet4Address) getByName("255.255.255.255");
+        if (qosExtClassifier.getDstIpMask() != null) {
+        	dstIpMask = getInet4Address(qosExtClassifier.getDstIpMask());
+        }
+        
         // TODO - find out what the classifier ID should really be. It was never getting set previously
         final short classifierId = (short)index;
 
@@ -280,9 +308,8 @@ public class PCMMGateReqBuilder {
 
         // push the extended classifier to the gate request
         classifiers.add(new org.pcmm.gates.impl.ExtendedClassifier(protocol, tosOverwrite, tosMask,
-                getInet4Address(qosExtClassifier.getSrcIp()), getInet4Address(qosExtClassifier.getDstIp()),
-                srcStartPort, dstStartPort, priority, getInet4Address(qosExtClassifier.getSrcIpMask()),
-                getInet4Address(qosExtClassifier.getDstIpMask()), srcEndPort, dstEndPort, classifierId, activationState,
+                srcIpAddr, dstIpAddr,
+                srcStartPort, dstStartPort, priority, srcIpMask, dstIpMask, srcEndPort, dstEndPort, classifierId, activationState,
                 action));
     }
 
@@ -311,7 +338,8 @@ public class PCMMGateReqBuilder {
         // Source IPv6 address & prefix len
         // TODO - try to make these two variables immutable
         byte srcPrefixLen = (byte) 128;
-        Inet6Address srcAddress = null;
+        Inet6Address srcAddress = (Inet6Address) getByName("0::0");
+        
         if (qosIpv6Classifier.getSrcIp6() != null) {
             String[] parts = qosIpv6Classifier.getSrcIp6().getValue().split("/");
             String Ipv6AddressStr = parts[0];
@@ -325,7 +353,8 @@ public class PCMMGateReqBuilder {
         }
 
         // TODO - try to make these two variables immutable
-        Inet6Address dstAddress = null;
+        Inet6Address dstAddress = (Inet6Address) getByName("0::0");
+
         byte dstPrefLen = (byte) 128;
         // Destination IPv6 address & prefix len
         if (qosIpv6Classifier.getDstIp6() != null) {
@@ -346,7 +375,7 @@ public class PCMMGateReqBuilder {
             if (qosIpv6Classifier.getSrcPortEnd() != null) {
                 srcPortEnd = qosIpv6Classifier.getSrcPortEnd().getValue().shortValue();
             }
-            if (srcPortBegin > srcPortEnd) {
+            if ((int)(srcPortBegin & 0xffff) > (int)(srcPortEnd & 0xffff)) {
                 logger.warn("Start port %d > End port %d in ipv6-classifier source port range -- forcing to same",
                         srcPortBegin, srcPortEnd);
                 srcPortEnd = srcPortBegin;
@@ -363,7 +392,7 @@ public class PCMMGateReqBuilder {
             if (qosIpv6Classifier.getDstPortEnd() != null) {
                 dstPortEnd = qosIpv6Classifier.getDstPortEnd().getValue().shortValue();
             }
-            if (dstPortBegin > dstPortEnd) {
+            if ( (int)(dstPortBegin & 0xffff) > (int)(dstPortEnd & 0xffff)) {
                 logger.warn("Start port %d > End port %d in ipv6-classifier destination port range -- forcing to same",
                         dstPortBegin, dstPortEnd);
                 dstPortEnd = dstPortBegin;
@@ -385,6 +414,15 @@ public class PCMMGateReqBuilder {
             tcMask = qosIpv6Classifier.getTcHigh().getValue().byteValue();
         else if (qosIpv6Classifier.getTcLow() != null) tcMask = (byte) 0xff;
         else tcMask = (byte) 0x00;
+        
+        FlowLabel flowLabelFlag = FlowLabel.IRRELEVANT;
+        int flowLabelId = 0;
+        
+        if (qosIpv6Classifier.getFlowLabel() != null) {
+        	flowLabelFlag = FlowLabel.VALID;
+        	flowLabelId = qosIpv6Classifier.getFlowLabel().intValue();
+        }
+        
 
         // TODO - find out what the classifier ID should really be. It was never getting set previously
         final short classifierId = (short)index;
@@ -395,7 +433,7 @@ public class PCMMGateReqBuilder {
         // push the IPv6 classifier to the gate request
         classifiers.add(
                 new org.pcmm.gates.impl.IPv6Classifier(srcAddress, dstAddress, srcPortBegin, dstPortBegin, (byte) 64,
-                        srcPortEnd, dstPortEnd, classifierId, ActivationState.ACTIVE, action, FlowLabel.VALID, tcLow,
-                        tcHigh, tcMask, qosIpv6Classifier.getFlowLabel().intValue(), nextHdr, srcPrefixLen, dstPrefLen));
+                        srcPortEnd, dstPortEnd, classifierId, ActivationState.ACTIVE, action, flowLabelFlag, tcLow,
+                        tcHigh, tcMask, flowLabelId, nextHdr, srcPrefixLen, dstPrefLen));
     }
 }

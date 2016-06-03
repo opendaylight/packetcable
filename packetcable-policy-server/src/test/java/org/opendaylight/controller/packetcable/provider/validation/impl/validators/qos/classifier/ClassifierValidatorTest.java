@@ -42,7 +42,7 @@ public class ClassifierValidatorTest {
         validator.validate(buildValidClassifierTree(), null);
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcIp() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setSrcIp(null)
@@ -51,7 +51,7 @@ public class ClassifierValidatorTest {
         validator.validate(classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
      public void nullSrcPort() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setSrcPort(null)
@@ -60,7 +60,7 @@ public class ClassifierValidatorTest {
         validator.validate(classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstIp() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setDstIp(null)
@@ -69,7 +69,7 @@ public class ClassifierValidatorTest {
         validator.validate(classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstPort() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setDstPort(null)
@@ -78,7 +78,7 @@ public class ClassifierValidatorTest {
         validator.validate(classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullProtocol() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setProtocol(null)
@@ -87,7 +87,7 @@ public class ClassifierValidatorTest {
         validator.validate(classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullTosByte() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setTosByte(null)
@@ -96,7 +96,7 @@ public class ClassifierValidatorTest {
         validator.validate(classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
      public void nullTosMask() throws ValidationException {
         Classifier classifier = new ClassifierBuilder(buildValidClassifierTree())
                 .setTosMask(null)

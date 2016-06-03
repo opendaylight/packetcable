@@ -40,21 +40,7 @@ public class ExtClassifierValidator extends AbstractValidator<ExtClassifier> {
             return;
         }
 
-        mustExist(extClassifier.getSrcIp(), SRC_IP);
-        mustExist(extClassifier.getSrcIpMask(), SRC_MASK);
+        // all values are optional and have defaults
 
-        mustExist(extClassifier.getDstIp(), DST_IP);
-        mustExist(extClassifier.getDstIpMask(), DST_MASK);
-
-        mustExist(extClassifier.getTosByte(), TOS_BYTE);
-        mustExist(extClassifier.getTosMask(), TOS_MASK);
-
-        mustExist(extClassifier.getProtocol(), PROTOCOL);
-
-        mustExist(extClassifier.getSrcPortStart(), SRC_PORT_START);
-        mustExist(extClassifier.getSrcPortEnd(), SRC_PORT_END);
-
-        mustExist(extClassifier.getDstPortStart(), DST_PORT_START);
-        mustExist(extClassifier.getDstPortEnd(), DST_PORT_END);
     }
 }

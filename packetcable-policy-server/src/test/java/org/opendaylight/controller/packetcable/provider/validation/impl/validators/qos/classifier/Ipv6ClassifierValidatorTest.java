@@ -41,14 +41,14 @@ public class Ipv6ClassifierValidatorTest {
         validator.validate(buildValidIpv6Classifier(), null);
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcIp6() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setSrcIp6(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcPortStart() throws ValidationException {
         Ipv6Classifier ipv6Classifier =
                 new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setSrcPortStart(null).build();
@@ -56,7 +56,7 @@ public class Ipv6ClassifierValidatorTest {
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcPortEnd() throws ValidationException {
         Ipv6Classifier ipv6Classifier =
                 new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setSrcPortEnd(null).build();
@@ -64,14 +64,14 @@ public class Ipv6ClassifierValidatorTest {
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstIp6() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setDstIp6(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstPortStart() throws ValidationException {
         Ipv6Classifier ipv6Classifier =
                 new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setDstPortStart(null).build();
@@ -79,7 +79,7 @@ public class Ipv6ClassifierValidatorTest {
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstPortEnd() throws ValidationException {
         Ipv6Classifier ipv6Classifier =
                 new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setDstPortEnd(null).build();
@@ -87,35 +87,35 @@ public class Ipv6ClassifierValidatorTest {
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullFlowLabel() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setFlowLabel(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullNextHdr() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setNextHdr(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullTcHigh() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setTcHigh(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullTcLow() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setTcLow(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullTcMask() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setTcMask(null).build();
 

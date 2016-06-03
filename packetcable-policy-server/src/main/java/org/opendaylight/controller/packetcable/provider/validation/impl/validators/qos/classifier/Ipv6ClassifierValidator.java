@@ -41,21 +41,6 @@ public class Ipv6ClassifierValidator extends AbstractValidator<Ipv6Classifier> {
             return;
         }
 
-        mustExist(ipv6Classifier.getSrcIp6(), SRC_IP6);
-        mustExist(ipv6Classifier.getDstIp6(), DST_IP6);
-
-        mustExist(ipv6Classifier.getTcLow(), TC_LOW);
-        mustExist(ipv6Classifier.getTcHigh(), TC_HIGH);
-        mustExist(ipv6Classifier.getTcMask(), TC_MASK);
-
-        mustExist(ipv6Classifier.getNextHdr(), NEXT_HEADER);
-
-        mustExist(ipv6Classifier.getFlowLabel(), FLOW_LABEL);
-
-        mustExist(ipv6Classifier.getSrcPortStart(), SRC_PORT_START);
-        mustExist(ipv6Classifier.getSrcPortEnd(), SRC_PORT_END);
-
-        mustExist(ipv6Classifier.getDstPortStart(), DST_PORT_START);
-        mustExist(ipv6Classifier.getDstPortEnd(), DST_PORT_END);
+        // all values are optional
     }
 }

@@ -41,7 +41,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(buildValidExtClassifier(), null);
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcIp() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setSrcIp(null)
@@ -50,7 +50,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcPortStart() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setSrcPortStart(null)
@@ -59,7 +59,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullSrcPortEnd() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setSrcPortEnd(null)
@@ -68,7 +68,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstIp() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setDstIp(null)
@@ -77,7 +77,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstPortStart() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setDstPortStart(null)
@@ -86,7 +86,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullDstPortEnd() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setDstPortEnd(null)
@@ -95,7 +95,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullProtocol() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setProtocol(null)
@@ -104,7 +104,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullTosByte() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setTosByte(null)
@@ -113,7 +113,7 @@ public class ExtClassifierValidatorTest {
         validator.validate(extClassifier, extentParams.getCurrentParam());
     }
 
-    @Test(expected = ValidationException.class)
+    @Test
     public void nullTosMask() throws ValidationException {
         ExtClassifier extClassifier = new ExtClassifierBuilder(buildValidExtClassifier())
                 .setTosMask(null)
