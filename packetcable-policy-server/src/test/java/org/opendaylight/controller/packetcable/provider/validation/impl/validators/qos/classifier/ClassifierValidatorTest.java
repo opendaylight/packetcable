@@ -36,7 +36,7 @@ public class ClassifierValidatorTest {
         validator.validate(null, extentParams.getCurrentParam());
     }
 
-    @Params.DoNotUseParams
+    /* @Params.DoNotUseParams
     @Test(expected = NullPointerException.class)
     public void nullExtent() throws ValidationException {
         validator.validate(buildValidClassifierTree(), null);
@@ -103,7 +103,7 @@ public class ClassifierValidatorTest {
                 .build();
 
         validator.validate(classifier, extentParams.getCurrentParam());
-    }
+    } */
 
     @Test
     public void valid() throws ValidationException {

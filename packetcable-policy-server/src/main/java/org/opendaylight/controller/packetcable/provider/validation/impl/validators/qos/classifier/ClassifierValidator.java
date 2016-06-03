@@ -35,15 +35,15 @@ public class ClassifierValidator extends AbstractValidator<Classifier> {
             return;
         }
 
-        mustExist(classifier.getSrcIp(), SRC_IP);
-        mustExist(classifier.getSrcPort(), SRC_PORT);
+        //mustExist(classifier.getSrcIp(), SRC_IP);
+        //mustExist(classifier.getSrcPort(), SRC_PORT);
 
-        mustExist(classifier.getDstIp(), DST_IP);
-        mustExist(classifier.getDstPort(), DST_PORT);
+        //mustExist(classifier.getDstIp(), DST_IP);
+        //mustExist(classifier.getDstPort(), DST_PORT);
 
-        mustExist(classifier.getTosByte(), TOS_BYTE);
-        mustExist(classifier.getTosMask(), TOS_MASK);
+        //mustExist(classifier.getTosByte(), TOS_BYTE);
+        //mustExist(classifier.getTosMask(), TOS_MASK);
 
-        mustExist(classifier.getProtocol(), PROTOCOL);
+        //mustExist(classifier.getProtocol(), PROTOCOL);
     }
 }

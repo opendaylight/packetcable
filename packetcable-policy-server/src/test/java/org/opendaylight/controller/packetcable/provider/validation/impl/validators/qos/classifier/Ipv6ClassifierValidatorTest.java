@@ -41,7 +41,7 @@ public class Ipv6ClassifierValidatorTest {
         validator.validate(buildValidIpv6Classifier(), null);
     }
 
-    @Test(expected = ValidationException.class)
+    /* @Test(expected = ValidationException.class)
     public void nullSrcIp6() throws ValidationException {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setSrcIp6(null).build();
 
@@ -120,7 +120,7 @@ public class Ipv6ClassifierValidatorTest {
         Ipv6Classifier ipv6Classifier = new Ipv6ClassifierBuilder(buildValidIpv6Classifier()).setTcMask(null).build();
 
         validator.validate(ipv6Classifier, extentParams.getCurrentParam());
-    }
+    } */
 
     @Test
     public void valid() throws ValidationException {

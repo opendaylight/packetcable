@@ -319,22 +319,18 @@ module packetcable
         leaf srcPort-start {
             type inet:port-number;
             description "TCP/UDP source port range start.";
-            mandatory true;
         }
         leaf srcPort-end {
             type inet:port-number;
             description "TCP/UDP source port range end.";
-            mandatory true;
         }
         leaf dstPort-start {
             type inet:port-number;
             description "TCP/UDP destination port range start.";
-            mandatory true;
         }
         leaf dstPort-end {
             type inet:port-number;
             description "TCP/UDP destination port range end.";
-            mandatory true;
         }
     }
 
@@ -343,37 +339,30 @@ module packetcable
             leaf srcIp {
                 type inet:ipv4-address;
                 description "Source IPv4 address (exact match)";
-                mandatory true;
             }
             leaf dstIp {
                 type inet:ipv4-address;
                 description "Destination IPv4 address (exact match)";
-                mandatory true;
             }
              leaf tos-byte {
                  type tos-byte;
                  description "TOS/DSCP match";
-                 mandatory true;
              }
              leaf tos-mask {
                  type tos-byte;
                  description "TOS/DSCP mask";
-                 mandatory true;
              }
              leaf protocol {
                 type tp-protocol;
                 description "IPv4 transport protocol";
-                mandatory true;
             }
              leaf srcPort {
                 type inet:port-number;
                 description "TCP/UDP source port (exact match).";
-                mandatory true;
                }
              leaf dstPort {
                 type inet:port-number;
                 description "TCP/UDP destination port (exact match).";
-                mandatory true;
                }
            }
     }
@@ -383,37 +372,30 @@ module packetcable
             leaf srcIp {
                 type inet:ipv4-address;
                 description "Source IPv4 address match";
-                mandatory true;
             }
             leaf srcIpMask {
                 type inet:ipv4-address;
                 description "Source IPv4 mask";
-                mandatory true;
             }
             leaf dstIp {
                 type inet:ipv4-address;
                 description "Destination IPv4 address match";
-                mandatory true;
             }
             leaf dstIpMask {
                 type inet:ipv4-address;
                 description "Destination IPv4 mask";
-                mandatory true;
             }
              leaf tos-byte {
                  type tos-byte;
                  description "TOS/DSCP match";
-                 mandatory true;
              }
              leaf tos-mask {
                  type tos-byte;
                  description "TOS/DSCP mask";
-                 mandatory true;
              }
              leaf protocol {
                 type tp-protocol;
                 description "IPv4 transport protocol";
-                mandatory true;
             }
             uses tp-port-match-ranges;
            }
@@ -424,39 +406,32 @@ module packetcable
             leaf srcIp6 {
                 type inet:ipv6-prefix;
                 description "Source IPv6 prefix match in  'address/len' notation";
-                mandatory true;
             }
             leaf dstIp6 {
                 type inet:ipv6-prefix;
                 description "Destination IPv6 prefix match in 'address/len' notation";
-                mandatory true;
             }
              leaf tc-low {
                  type tos-byte;
                  description "TC low range match";
-                 mandatory true;
              }
              leaf tc-high {
                  type tos-byte;
                  description "TC high range match";
-                 mandatory true;
              }
              leaf tc-mask {
                  type tos-byte;
                  description "TC mask";
-                 mandatory true;
              }
              leaf next-hdr {
                 type tp-protocol;
                 description "IPv6 Next Header";
-                mandatory true;
             }
             leaf flow-label {
                 type uint32 {
                     range "0 .. 1048575";
                 }
                 description "IPv6 Flow Label (20 bits)";
-                mandatory true;
             }
                uses tp-port-match-ranges;
            }
