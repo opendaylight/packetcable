@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_35ce545b",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/validation/impl/validators/qos/classifier/ClassifierValidator.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2016-06-06T14:31:57Z",
+      "side": 1,
+      "message": "I think these lines should be removed instead of commented out.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 8
+      },
+      "revId": "b77c156c2fb373ba19658dfa65a81c4221c3602d",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_f5033c71",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/validation/impl/validators/qos/classifier/ExtClassifierValidator.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2016-06-06T14:31:57Z",
+      "side": 1,
+      "message": "I think these lines should be removed.",
+      "revId": "b77c156c2fb373ba19658dfa65a81c4221c3602d",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_55f8287c",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/validation/impl/validators/qos/classifier/Ipv6ClassifierValidator.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2016-06-06T14:31:57Z",
+      "side": 1,
+      "message": "I think these lines should be removed.",
+      "revId": "b77c156c2fb373ba19658dfa65a81c4221c3602d",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_95f2c098",
+        "filename": "packetcable-policy-server/src/test/java/org/opendaylight/controller/packetcable/provider/validation/impl/validators/qos/classifier/ClassifierValidatorTest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2016-06-06T14:31:57Z",
+      "side": 1,
+      "message": "I think these tests should either be removed or fixed if indeed broken.",
+      "revId": "b77c156c2fb373ba19658dfa65a81c4221c3602d",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_d52b98e9",
+        "filename": "packetcable-policy-server/src/test/java/org/opendaylight/controller/packetcable/provider/validation/impl/validators/qos/classifier/ExtClassifierValidatorTest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2016-06-06T14:31:57Z",
+      "side": 1,
+      "message": "I think these lines should either be removed or fixed.",
+      "revId": "b77c156c2fb373ba19658dfa65a81c4221c3602d",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_f5117cad",
+        "filename": "packetcable-policy-server/src/test/java/org/opendaylight/controller/packetcable/provider/validation/impl/validators/qos/classifier/Ipv6ClassifierValidatorTest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 3588
+      },
+      "writtenOn": "2016-06-06T14:31:57Z",
+      "side": 1,
+      "message": "I think these tests should either be removed or fixed.",
+      "revId": "b77c156c2fb373ba19658dfa65a81c4221c3602d",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
