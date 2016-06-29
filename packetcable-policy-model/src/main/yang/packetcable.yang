@@ -3,8 +3,8 @@ module packetcable
     namespace "urn:packetcable";
     prefix "pcmm";
 
-    import ietf-yang-types     { prefix yang;  revision-date "2010-09-24"; }
-    import ietf-inet-types     { prefix inet; revision-date "2010-09-24"; }
+    import ietf-yang-types     { prefix yang;  revision-date "2013-07-15"; }
+    import ietf-inet-types     { prefix inet; revision-date "2013-07-15"; }
     import yang-ext { prefix ext; revision-date "2013-07-09"; }
 
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
