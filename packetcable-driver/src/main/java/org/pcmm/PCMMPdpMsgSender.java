@@ -52,7 +52,7 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
 
     public final static Logger logger = LoggerFactory.getLogger(PCMMPdpMsgSender.class);
 
-    protected final short _transactionID;
+    protected short _transactionID;
     protected final short _classifierID;
 
     // XXX - this does not need to be here
@@ -95,13 +95,15 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
      */
     public void sendGateSet(final IPCMMGate gate) throws COPSPdpException {
         // set transaction ID to gate set
+    	// generate a new TransactionID
+    	_transactionID = (short) (Math.random() * hashCode());
         final ITransactionID trID = new TransactionID(_transactionID, GateCommandType.GATE_SET);
-
+    	
         gate.setTransactionID(trID);
         // retain the transactitrIDnumonId to gate request mapping for gateID recovery after response
         // see PCMMPdpReqStateMan.processReport()
         final Short trIDnum = trID.getTransactionIdentifier();
-        logger.info("Adding gate to cache - " + gate + " with key - " + trIDnum);
+        logger.info("Adding gate to cache - " + gate + " with key - " + (int) (trIDnum & 0xffff));
         PCMMGlobalConfig.transactionGateMap.put(trIDnum, gate);
 
         // new pcmm specific clientsi
@@ -162,8 +164,11 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
      */
     public void sendGateDelete(final IPCMMGate gate) throws COPSPdpException {
         // set transaction ID to gate set
+        // generate a new TransactionID
+    	short _transactionID = (short) (Math.random() * hashCode());
         final ITransactionID trID = new TransactionID(_transactionID, GateCommandType.GATE_DELETE);
-        gate.setTransactionID(trID);
+        
+    	gate.setTransactionID(trID);
 
         Short trIDnum = trID.getTransactionIdentifier();
         PCMMGlobalConfig.transactionGateMap.put(trIDnum, gate);
@@ -232,13 +237,17 @@ public class PCMMPdpMsgSender extends COPSMsgSender {
          * <Gate-Info> ::= <Common Header> [<Client Handle>] [<Integrity>]
          */
     	
-    	// added 
-        final ITransactionID trID = new TransactionID(_transactionID, GateCommandType.GATE_INFO);
+    	// added
+        // generate a new TransactionID
+    	short _transactionID = (short) (Math.random() * hashCode());
+    	final ITransactionID trID = new TransactionID(_transactionID, GateCommandType.GATE_INFO);
+        
+        
         gate.setTransactionID(trID);
         // retain the transactionId to gate request mapping for gateID recovery after response
         // see PCMMPdpReqStateMan.processReport()
         final Short trIDnum = trID.getTransactionIdentifier();
-        logger.info("Adding gate to cache - " + gate + " with key - " + trIDnum);
+        logger.info("Adding gate to cache - " + gate + " with key - " + (int) (trIDnum & 0xffff));
         PCMMGlobalConfig.transactionGateMap.put(trIDnum, gate);
         
         // gateDelete only requires AMID, subscriberID, and gateID
