@@ -168,8 +168,8 @@ public class PCMMGateReqBuilder {
         byte tosMask = (byte)0x0;
         short srcPort = (short) 0;
         short dstPort = (short) 0;
-        byte priority = (byte) 64;
-        //byte priority = index.byteValue();
+	    //byte priority = (byte) 64;
+	    byte priority = (byte) (64+index);
         
         // Legacy classifier
         
@@ -217,7 +217,7 @@ public class PCMMGateReqBuilder {
     
     private void addExtClassifier(final Short index, final ExtClassifier qosExtClassifier) {
         // Extended classifier
-        final byte priority = (byte) 64;
+        final byte priority = (byte) (index+64);
         final ActivationState activationState = ActivationState.ACTIVE;
         // Protocol -- zero is match any
         final Protocol protocol;
@@ -432,7 +432,7 @@ public class PCMMGateReqBuilder {
 
         // push the IPv6 classifier to the gate request
         classifiers.add(
-                new org.pcmm.gates.impl.IPv6Classifier(srcAddress, dstAddress, srcPortBegin, dstPortBegin, (byte) 64,
+                new org.pcmm.gates.impl.IPv6Classifier(srcAddress, dstAddress, srcPortBegin, dstPortBegin, (byte) (index+64),
                         srcPortEnd, dstPortEnd, classifierId, ActivationState.ACTIVE, action, flowLabelFlag, tcLow,
                         tcHigh, tcMask, flowLabelId, nextHdr, srcPrefixLen, dstPrefLen));
     }
