@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a6b29fe_ca0b057c",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/IGateSpec.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-10-06T20:21:14Z",
+      "side": 1,
+      "message": "getDirection return the enum type Direction. Why is setDirection(..) take in a byte and not the enum?",
+      "range": {
+        "startLine": 135,
+        "startChar": 4,
+        "endLine": 135,
+        "endChar": 38
+      },
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_8a78edf9",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMService.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-10-06T20:21:14Z",
+      "side": 1,
+      "message": "remove extra ;",
+      "range": {
+        "startLine": 149,
+        "startChar": 61,
+        "endLine": 149,
+        "endChar": 62
+      },
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_0a25fd09",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-10-06T20:21:14Z",
+      "side": 1,
+      "message": "No need to check twice, combine the if statements.",
+      "range": {
+        "startLine": 802,
+        "startChar": 1,
+        "endLine": 810,
+        "endChar": 43
+      },
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_4a1ff5b7",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-10-06T20:21:14Z",
+      "side": 1,
+      "message": "duplicate of line 793",
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
