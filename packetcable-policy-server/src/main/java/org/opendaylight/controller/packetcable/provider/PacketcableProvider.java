@@ -71,6 +71,8 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirecti
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.ConnectionBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.CcapBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec.GateSpecBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.Apps;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.App;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.AppBuilder;
@@ -90,6 +92,7 @@ import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -732,16 +735,6 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                     continue;
                 }
 
-                final ServiceClassName scn = newGate.getTrafficProfile().getServiceClassName();
-                final ServiceFlowDirection scnDirection = findScnOnCcap(scn, ccap);
-                if (scnDirection == null) {
-                    final String msg =
-                            String.format("SCN %s not found on CCAP %s for %s", scn, ccap.getCcapId(), newGatePathStr);
-                    logger.error(msg);
-                    saveGateError(gateIID, newGatePathStr, msg);
-                    continue;
-                }
-
                 final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
                 if (pcmmService == null) {
                     final String msg =
@@ -752,33 +745,86 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                     continue;
                 }
 
-                PCMMService.GateSendStatus status =
-                        pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate, scnDirection);
-                if (status.didSucceed()) {
-                    gateMap.put(newGatePathStr, newGate);
-                    gateCcapMap.put(newGatePathStr, ccap.getCcapId());
-                }
+                //
+                // set up gate builder with known fields (and some empty ones)
+                //
                 final GateBuilder gateBuilder = new GateBuilder();
                 gateBuilder.setGateId(newGate.getGateId())
                         .setGatePath(newGatePathStr)
                         .setCcapId(ccap.getCcapId())
-                        .setCopsGateId(status.getCopsGateId())
+                        .setTrafficProfile(newGate.getTrafficProfile())
+                        .setClassifiers(newGate.getClassifiers())
+                        .setGateSpec(newGate.getGateSpec())
                         .setCopsGateState("")
-                        .setTimestamp(getNowTimeStamp())
                         .setCopsGateTimeInfo("")
-                        .setCopsGateUsageInfo("")
-                        .setTimestamp(getNowTimeStamp());
+                        .setCopsGateUsageInfo("");
 
+                //
+                // Right now only ServiceClassName traffic Profile is supported. This logic needs to
+                // be updated when the yang traffic-profile is extended to support new types
+                // Override requested Direction using the Ccap configuration information about SCNs and
+                // their configured direction.
+                //
+                final ServiceClassName scn = newGate.getTrafficProfile().getServiceClassName();
+                final ServiceFlowDirection scnDirection = findScnOnCcap(scn, ccap);
+                if (scnDirection == null) {
+                    final String msg =
+                        String.format("SCN %s not found on CCAP %s for %s", scn, ccap.getCcapId(), newGatePathStr);
+                    logger.error(msg);
+                    saveGateError(gateIID, newGatePathStr, msg);
+                    continue;
+                }
+                
+                //
+                // since we may be modifying the contents of the original request GateSpec
+                // to update flow direction (based on the ccap SCN configuration) we need to
+                // rebuild the requested gate spec and replace the existing one in the gate builder
+                //
+                final GateSpecBuilder gateSpecBuilder = new GateSpecBuilder();
+                gateSpecBuilder.setDirection(scnDirection);
+                gateSpecBuilder.setDscpTosMask(newGate.getGateSpec().getDscpTosMask());
+                gateSpecBuilder.setDscpTosOverwrite(newGate.getGateSpec().getDscpTosOverwrite());
+                final GateSpec gateSpec = gateSpecBuilder.build();
+                gateBuilder.setGateSpec(gateSpec);
+
+                //
+                // build the gate to be requested
+                //
+                gateBuilder.setTimestamp(getNowTimeStamp());
+
+                final Gate requestGate = gateBuilder.build();
+
+                //
+                // send gate request to Ccap
+                //
+                PCMMService.GateSendStatus status =
+                        pcmmService.sendGateSet(newGatePathStr, subscriberAddr, requestGate);
+                if (status.didSucceed()) {
+                    gateMap.put(newGatePathStr, requestGate);
+                    gateCcapMap.put(newGatePathStr, ccap.getCcapId());
+                }
+
+                //
+                // check if the transmission was sent successfully at a protocol level
+                //
                 if (!status.didSucceed()) {
                     gateBuilder.setError(Collections.singletonList(status.getMessage()));
                 } else {
+
+                    //
+                    // inquire as to the status, and implementation info of the requested gate
+                    //
                     PCMMService.GateSendStatus infoStatus = pcmmService.sendGateInfo(newGatePathStr);
 
                     if (infoStatus.didSucceed()) {
+                        //
+                        // update builder with info for operational storage
+                        //
                         gateBuilder.setCopsGateState(
                                 infoStatus.getCopsGateState() + "/" + infoStatus.getCopsGateStateReason())
                                 .setCopsGateTimeInfo(infoStatus.getCopsGateTimeInfo())
-                                .setCopsGateUsageInfo(infoStatus.getCopsGateUsageInfo());
+                                .setCopsGateUsageInfo(infoStatus.getCopsGateUsageInfo())
+                                .setCopsGateId(status.getCopsGateId());
                     } else {
                         List<String> errors = new ArrayList<>(2);
 
@@ -792,6 +838,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                     }
 
                 }
+
+                gateBuilder.setTimestamp(getNowTimeStamp());
 
                 Gate operationalGate = gateBuilder.build();
 

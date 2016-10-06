@@ -21,7 +21,7 @@ public class GateSpec extends PCMMBaseObject implements IGateSpec {
     /**
      * The gate's direction
      */
-    private final Direction direction;
+    private Direction direction;
 
     /**
      * The DSCP/TOS Overwrite is a 1-byte bit field [8] defined by the following alternative structures, depending upon
@@ -105,6 +105,11 @@ public class GateSpec extends PCMMBaseObject implements IGateSpec {
     @Override
     public Direction getDirection() {
         return direction;
+    }
+
+    @Override
+    public void setDirection(byte direction) {
+        this.direction = Direction.valueOf(direction);
     }
 
     @Override
