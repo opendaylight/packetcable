@@ -136,8 +136,7 @@ public class PCMMService {
         }
     }
 
-    public GateSendStatus sendGateSet(final String gatePathStr, final InetAddress subId, final Gate qosGate,
-            final ServiceFlowDirection scnDir) {
+    public GateSendStatus sendGateSet(final String gatePathStr, final InetAddress subId, final Gate qosGate) {
 
         GateSendStatus status = new GateSendStatus();
 
@@ -147,17 +146,8 @@ public class PCMMService {
         final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
         gateBuilder.setAmId(ccap.getAmId());
         gateBuilder.setSubscriberId(subId);
-
-        // force gateSpec.Direction to align with SCN direction
-        final ServiceClassName scn = qosGate.getTrafficProfile().getServiceClassName();
-        if (scn != null) {
-            gateBuilder.setGateSpec(qosGate.getGateSpec(), scnDir);
-        } else {
-            // not an SCN gate
-            gateBuilder.setGateSpec(qosGate.getGateSpec(), null);
-        }
+        gateBuilder.setGateSpec(qosGate.getGateSpec(), null);;
         gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
-
         gateBuilder.setClassifiers(qosGate.getClassifiers().getClassifierContainer());
 
         // assemble the final gate request

@@ -366,7 +366,7 @@ public class PCMMServiceTest {
 //        Assert.assertTrue(gateSetMsg, gateSetMsg.startsWith(expGateSetMsgStart));
 
         // TODO update this method for the new GateSendStatus object
-        PCMMService.GateSendStatus status = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
+        PCMMService.GateSendStatus status = service.sendGateSet(gatePath, cmAddrInet, gate);
         Assert.assertNotNull(status);
         assertThat(status.getMessage(), startsWith(expGateSetMsgStart));
 
