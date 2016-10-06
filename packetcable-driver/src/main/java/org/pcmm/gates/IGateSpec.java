@@ -129,6 +129,12 @@ public interface IGateSpec extends IPCMMBaseObject {
     Direction getDirection();
 
     /**
+     *
+     * sets the flow direction.
+     */
+    void setDirection(Direction direction);
+
+    /**
      * AUTHORIZED Timer limits the amount of time the authorization must remain
      * valid before it is reserved
      *

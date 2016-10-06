@@ -10,6 +10,9 @@ module packetcable
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2016-10-17 {
+        description "Modified service-flow-direction values to match the PCMM Spec";
+    }
     revision 2015-11-01 {
         description "Extended gates to support multiple classifiers.";
     }
@@ -28,13 +31,13 @@ module packetcable
     }
     typedef service-flow-direction {
         type enumeration {
+              enum ds {
+                value "0";
+                description "Downstream service flow.";
+              }
               enum us {
                 value "1";
                 description "Upstream service flow.";
-              }
-              enum ds {
-                value "2";
-                description "Downstream service flow.";
               }
           }
         description "This value represents the service flow direction.";

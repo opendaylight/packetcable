@@ -31,20 +31,20 @@ import org.junit.Test;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.Classifiers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.classifier.attributes.Classifiers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.traffic.profile.TrafficProfile;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.rcd.IPCMMClient;
@@ -366,7 +366,7 @@ public class PCMMServiceTest {
 //        Assert.assertTrue(gateSetMsg, gateSetMsg.startsWith(expGateSetMsgStart));
 
         // TODO update this method for the new GateSendStatus object
-        PCMMService.GateSendStatus status = service.sendGateSet(gatePath, cmAddrInet, gate, direction);
+        PCMMService.GateSendStatus status = service.sendGateSet(gatePath, cmAddrInet, gate);
         Assert.assertNotNull(status);
         assertThat(status.getMessage(), startsWith(expGateSetMsgStart));
 
