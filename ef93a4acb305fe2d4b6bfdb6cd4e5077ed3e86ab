@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_2ae1d99a",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/IGateSpec.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-10-11T20:56:23Z",
+      "side": 1,
+      "message": "There seemed to be an enum mapping issue here. The pcmm-spec-compliant  IGateSpec internal enum Direction defines UPSTREAM\u003d1 and DOWNSTREAM\u003d0. The Yang model generates a definition in ServiceFlowDirection.java which is upstream\u003d1 and downstream\u003d2. \n\nI was uneasy changing the Yang model since it may affect other users of the API.\n\nSo given that IGateSpec was difficult to reference from PacketcableProvider.java and the constant numeric values do not match, I felt that was the best alternative.",
+      "parentUuid": "7a6b29fe_ca0b057c",
+      "range": {
+        "startLine": 135,
+        "startChar": 4,
+        "endLine": 135,
+        "endChar": 38
+      },
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_8a78edf9",
         "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMService.java",
         "patchSetId": 2
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_6a647149",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-10-11T20:56:23Z",
+      "side": 1,
+      "message": "I\u0027ll invert the logic and pull the else block on line 812 into the 802-805 case.",
+      "parentUuid": "7a6b29fe_0a25fd09",
+      "range": {
+        "startLine": 802,
+        "startChar": 1,
+        "endLine": 810,
+        "endChar": 43
+      },
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_4a1ff5b7",
         "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
         "patchSetId": 2
@@ -82,6 +130,24 @@
       "writtenOn": "2016-10-06T20:21:14Z",
       "side": 1,
       "message": "duplicate of line 793",
+      "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_8a5f4d75",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-10-11T20:56:23Z",
+      "side": 1,
+      "message": "Both setTimestamp() operations immediately precede a gateBuilder.build() operation. I thought that due to response latency on the sendGateSet() operation and the sendGateInfo operations that it might be good to update.",
+      "parentUuid": "7a6b29fe_4a1ff5b7",
       "revId": "ef93a4acb305fe2d4b6bfdb6cd4e5077ed3e86ab",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
