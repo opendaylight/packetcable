@@ -9,7 +9,7 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gate.spec.GateSpec;
 
 /**
  * @author rvail

@@ -9,7 +9,7 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.ipv6.classifier.Ipv6Classifier;
 
 /**
  * @author rvail

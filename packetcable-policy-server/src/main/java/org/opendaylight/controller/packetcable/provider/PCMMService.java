@@ -13,10 +13,10 @@ import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev151101.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.PCMMPdpDataProcess;
 import org.pcmm.PCMMPdpMsgSender;
@@ -146,7 +146,7 @@ public class PCMMService {
         final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
         gateBuilder.setAmId(ccap.getAmId());
         gateBuilder.setSubscriberId(subId);
-        gateBuilder.setGateSpec(qosGate.getGateSpec(), null);;
+        gateBuilder.setGateSpec(qosGate.getGateSpec(), null);
         gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
         gateBuilder.setClassifiers(qosGate.getClassifiers().getClassifierContainer());
 

@@ -108,8 +108,8 @@ public class GateSpec extends PCMMBaseObject implements IGateSpec {
     }
 
     @Override
-    public void setDirection(byte direction) {
-        this.direction = Direction.valueOf(direction);
+    public void setDirection(Direction direction) {
+        this.direction = direction;
     }
 
     @Override

@@ -132,7 +132,7 @@ public interface IGateSpec extends IPCMMBaseObject {
      *
      * sets the flow direction.
      */
-    void setDirection(byte direction);
+    void setDirection(Direction direction);
 
     /**
      * AUTHORIZED Timer limits the amount of time the authorization must remain
