@@ -10,6 +10,9 @@ module packetcable
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2016-11-07 {
+        description "Added priority field to all classifiers";
+    }
     revision 2016-10-17 {
         description "Modified service-flow-direction values to match the PCMM Spec";
     }
@@ -367,6 +370,11 @@ module packetcable
                 type inet:port-number;
                 description "TCP/UDP destination port (exact match).";
                }
+             leaf priority {
+               type uint8;
+               description "Priority";
+               default 64;
+             }
            }
     }
 
@@ -401,6 +409,11 @@ module packetcable
                 description "IPv4 transport protocol";
             }
             uses tp-port-match-ranges;
+            leaf priority {
+              type uint8;
+              description "Priority";
+              default 64;
+            }
            }
     }
 
@@ -436,7 +449,12 @@ module packetcable
                 }
                 description "IPv6 Flow Label (20 bits)";
             }
-               uses tp-port-match-ranges;
+            uses tp-port-match-ranges;
+            leaf priority {
+              type uint8;
+              description "Priority";
+              default 64;
+            }
            }
     }
 
