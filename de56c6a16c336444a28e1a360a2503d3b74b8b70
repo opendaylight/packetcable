@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a65312a_13ffdf68",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMGateReqBuilder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-11-07T22:29:33Z",
+      "side": 1,
+      "message": "this line in the comment does not add any value. I would vote to remove it.",
+      "range": {
+        "startLine": 212,
+        "startChar": 8,
+        "endLine": 212,
+        "endChar": 53
+      },
+      "revId": "de56c6a16c336444a28e1a360a2503d3b74b8b70",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a65312a_b309cb97",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMGateReqBuilder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-11-07T22:29:33Z",
+      "side": 1,
+      "message": "Unboxing is unneeded, getPriority() returns a Short.",
+      "range": {
+        "startLine": 218,
+        "startChar": 54,
+        "endLine": 218,
+        "endChar": 67
+      },
+      "revId": "de56c6a16c336444a28e1a360a2503d3b74b8b70",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
