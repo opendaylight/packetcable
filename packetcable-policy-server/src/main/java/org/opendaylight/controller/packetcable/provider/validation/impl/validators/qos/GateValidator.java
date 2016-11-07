@@ -10,7 +10,7 @@ package org.opendaylight.controller.packetcable.provider.validation.impl.validat
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier.ClassifiersValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
 
 /**
  * @author rvail

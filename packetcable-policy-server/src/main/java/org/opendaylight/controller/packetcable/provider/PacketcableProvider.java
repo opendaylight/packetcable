@@ -52,41 +52,41 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.DateAndTime;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.AppContext;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapContext;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapPollConnectionInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapPollConnectionOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapPollConnectionOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapSetConnectionInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapSetConnectionOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.CcapSetConnectionOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.PacketcableService;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.Qos;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.QosPollGatesInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.QosPollGatesOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.QosPollGatesOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.attributes.ConnectionBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccaps.CcapBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gate.spec.GateSpecBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.Apps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.App;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.AppBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.AppKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.Subscribers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.SubscribersBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.Subscriber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.AppContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapPollConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapPollConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapPollConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapSetConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapSetConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.CcapSetConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.PacketcableService;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.Qos;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.QosPollGatesInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.QosPollGatesOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.QosPollGatesOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.attributes.ConnectionBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccaps.CcapBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gate.spec.GateSpecBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.Apps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.App;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.AppBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.AppKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.Subscribers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.SubscribersBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -983,15 +983,15 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         }
 
         DateAndTime connectionDateAndTime = getNowTimeStamp();
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.set.connection.output.ccap.ConnectionBuilder
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.set.connection.output.ccap.ConnectionBuilder
                 connectionRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.set.connection.output.ccap.ConnectionBuilder()
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.set.connection.output.ccap.ConnectionBuilder()
                         .setConnected(effectiveIsConnected)
                         .setError(outputError)
                         .setTimestamp(connectionDateAndTime);
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.set.connection.output.CcapBuilder().setCcapId(
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.set.connection.output.CcapBuilder().setCcapId(
                         ccapId).setConnection(connectionRpcOutput.build());
 
 
@@ -1028,9 +1028,9 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         PCMMService pcmmService = pcmmServiceMap.get(ccapId);
         Boolean effectiveIsConnected = true;
         String response = null;
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.poll.connection.output.ccap.ConnectionBuilder
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.poll.connection.output.ccap.ConnectionBuilder
                 connectionRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.poll.connection.output.ccap.ConnectionBuilder();
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.poll.connection.output.ccap.ConnectionBuilder();
 
         if (pcmmService != null) {
             if (pcmmService.getPcmmPdpSocket()) {
@@ -1060,7 +1060,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             CcapBuilder responseCcapBuilder = new CcapBuilder().setCcapId(ccapId).setConnection(connectionOps.build());
 
             connectionRpcOutput =
-                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.poll.connection.output.ccap.ConnectionBuilder()
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.poll.connection.output.ccap.ConnectionBuilder()
                             .setConnected(effectiveIsConnected)
                             .setError(outputError)
                             .setTimestamp(connectionDateAndTime);
@@ -1074,8 +1074,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         DateAndTime rpcDateAndTime = getNowTimeStamp();
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.ccap.poll.connection.output.CcapBuilder().setCcapId(
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.poll.connection.output.CcapBuilder().setCcapId(
                         ccapId).setConnection(connectionRpcOutput.build());
 
         CcapPollConnectionOutputBuilder outputBuilder =
@@ -1141,8 +1141,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         String rpcResponse = null;
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.qos.poll.gates.output.GateBuilder gateOutputBuilder =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.qos.poll.gates.output.GateBuilder();
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.qos.poll.gates.output.GateBuilder();
 
         GateBuilder gateBuilder = new GateBuilder();
 
@@ -1306,8 +1306,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         @Override
         public void run() {
 
-            org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.qos.poll.gates.output.GateBuilder gateOutputBuilder =
-                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.qos.poll.gates.output.GateBuilder();
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.qos.poll.gates.output.GateBuilder();
 
             GateBuilder gateBuilder = new GateBuilder();
 

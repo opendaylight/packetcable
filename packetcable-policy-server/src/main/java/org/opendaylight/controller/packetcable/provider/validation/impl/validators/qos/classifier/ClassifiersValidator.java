@@ -9,9 +9,9 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.classifier.attributes.Classifiers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161017.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.Classifiers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
 
 /**
  * @author rvail
