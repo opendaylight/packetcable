@@ -36,14 +36,11 @@ import java.util.concurrent.Future;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
+import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.packetcable.provider.validation.DataValidator;
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
-import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.CcapsValidatorProviderFactory;
 import org.opendaylight.controller.packetcable.provider.validation.impl.QosValidatorProviderFactory;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
@@ -139,11 +136,11 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
     private RoutedRpcRegistration<PacketcableService> rpcRegistration;
 
     // Data change listeners/registrations
-    private final CcapsDataChangeListener ccapsDataChangeListener = new CcapsDataChangeListener();
-    private final QosDataChangeListener qosDataChangeListener = new QosDataChangeListener();
+    private final CcapsDataTreeChangeListener ccapsDataTreeChangeListener = new CcapsDataTreeChangeListener();
+    private final QosDataTreeChangeListener qosDataTreeChangeListener = new QosDataTreeChangeListener();
 
-    private ListenerRegistration<DataChangeListener> ccapsDataChangeListenerRegistration;
-    private ListenerRegistration<DataChangeListener> qosDataChangeListenerRegistration;
+    private ListenerRegistration<DataTreeChangeListener> ccapsDataTreeChangeListenerRegistration;
+    private ListenerRegistration<DataTreeChangeListener> qosDataTreeChangeListenerRegistration;
 
     /**
      * Constructor
@@ -160,14 +157,17 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         dataBroker = session.getSALService(DataBroker.class);
 
         mdsalUtils = new MdsalUtils(dataBroker);
+        final DataTreeIdentifier<Ccap> ccapsDataTreeIid =
+                new DataTreeIdentifier<>(LogicalDatastoreType.CONFIGURATION, ccapsIID.child(Ccap.class));
 
-        ccapsDataChangeListenerRegistration =
-                dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION, ccapsIID.child(Ccap.class),
-                        ccapsDataChangeListener, DataBroker.DataChangeScope.SUBTREE);
+        final DataTreeIdentifier<Gate> appDataTreeIid =
+                new DataTreeIdentifier<>(LogicalDatastoreType.CONFIGURATION,
+                        qosIID.child(Apps.class).child(App.class).child(Subscribers.class).child(Subscriber.class).child(Gates.class).child(Gate.class));
 
-        qosDataChangeListenerRegistration = dataBroker.registerDataChangeListener(LogicalDatastoreType.CONFIGURATION,
-                PacketcableProvider.qosIID.child(Apps.class).child(App.class), qosDataChangeListener,
-                DataBroker.DataChangeScope.SUBTREE);
+        ccapsDataTreeChangeListenerRegistration =
+                dataBroker.registerDataTreeChangeListener(ccapsDataTreeIid, new CcapsDataTreeChangeListener());
+
+        qosDataTreeChangeListenerRegistration = dataBroker.registerDataTreeChangeListener(appDataTreeIid, new QosDataTreeChangeListener());
 
         rpcRegistration = session.addRoutedRpcImplementation(PacketcableService.class, this);
         logger.info("onSessionInitiated().rpcRgistration: {}", rpcRegistration);
@@ -179,12 +179,12 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
      */
     @Override
     public void close() throws ExecutionException, InterruptedException {
-        if (ccapsDataChangeListenerRegistration != null) {
-            ccapsDataChangeListenerRegistration.close();
+        if (ccapsDataTreeChangeListenerRegistration != null) {
+            ccapsDataTreeChangeListenerRegistration.close();
         }
 
-        if (qosDataChangeListenerRegistration != null) {
-            qosDataChangeListenerRegistration.close();
+        if (qosDataTreeChangeListenerRegistration != null) {
+            qosDataTreeChangeListenerRegistration.close();
         }
     }
 
@@ -523,322 +523,256 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
     /**
      * Listener for the packetcable:ccaps tree
      */
-    private class CcapsDataChangeListener extends AbstractDataChangeListener<Ccap> {
+    private class CcapsDataTreeChangeListener extends AbstractDataTreeChangeListener<Ccap> {
 
         private final DataValidator ccapsDataValidator = new DataValidator(new CcapsValidatorProviderFactory().build());
 
         private final Set<InstanceIdentifier<Ccap>> updateQueue = Sets.newConcurrentHashSet();
 
-        public CcapsDataChangeListener() {
+        public CcapsDataTreeChangeListener() {
             super(Ccap.class);
         }
 
         @Override
-        protected void handleCreatedData(final Map<InstanceIdentifier<Ccap>, Ccap> createdCcaps) {
-            if (createdCcaps.isEmpty()) {
+        protected void handleCreatedData(final DataTreeModification<Ccap> change) {
+            final Ccap ccap = change.getRootNode().getDataAfter();
+            InstanceIdentifier<Ccap> iid = change.getRootPath().getRootIdentifier();
+
+            // add service
+            if (pcmmServiceMap.containsKey(ccap.getCcapId())) {
+                logger.error("Already monitoring CCAP - " + ccap);
+                return;
+            }
+            final PCMMService pcmmService = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
+            // TODO - may want to use the AMID but for the client type but probably not???
+/*
+                    final PCMMService pcmmService = new PCMMService(
+                            thisCcap.getAmId().getAmType().shortValue(), thisCcap);
+*/
+            ConnectionBuilder connectionBuilder = new ConnectionBuilder();
+            String message = pcmmService.addCcap();
+            if (message.contains("200 OK")) {
+                pcmmServiceMap.put(ccap.getCcapId(), pcmmService);
+                ccapMap.put(ccap.getCcapId(), ccap);
+                updateCcapMaps(ccap);
+                logger.info("Created CCAP: {}/{} : {}", iid, ccap, message);
+                logger.info("Created CCAP: {} : {}", iid, message);
+
+                connectionBuilder.setConnected(true).setError(Collections.<String>emptyList());
+            } else {
+                logger.error("Create CCAP Failed: {} : {}", iid, message);
+
+                connectionBuilder.setConnected(false).setError(Collections.singletonList(message));
+            }
+
+            //register rpc
+            logger.info("Registering CCAP Routed RPC Path...");
+            rpcRegistration.registerPath(CcapContext.class, iid);
+
+            Optional<Ccap> optionalCcap = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, iid);
+
+            final CcapBuilder responseCcapBuilder;
+            if (optionalCcap.isPresent()) {
+                responseCcapBuilder = new CcapBuilder(optionalCcap.get());
+            } else {
+                responseCcapBuilder = new CcapBuilder();
+                responseCcapBuilder.setCcapId(ccap.getCcapId());
+            }
+
+            responseCcapBuilder.setConnection(connectionBuilder.build());
+
+            mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, iid, responseCcapBuilder.build());
+        }
+
+        @Override
+        protected void handleUpdatedData(final DataTreeModification<Ccap> change) {
+            //final Ccap ccap = (Ccap) change.getRootNode().getIdentifier();
+            InstanceIdentifier<Ccap> iid = change.getRootPath().getRootIdentifier();
+            // TODO actually support updates
+            // update operation not allowed -- restore the original config object and complain
+
+            // If this notification is coming from our modification ignore it.
+            if (updateQueue.contains(iid)) {
+                updateQueue.remove(iid);
                 return;
             }
 
-            final Map<InstanceIdentifier<Ccap>, ValidationException> errorMap =
-                    ccapsDataValidator.validateOneType(createdCcaps, Validator.Extent.NODE_AND_SUBTREE);
+            final Ccap originalCcap = change.getRootNode().getDataBefore();
+            //final Ccap updatedCcap = entry.getValue();
 
-            // validate all new objects an update operational datastore
-            if (!errorMap.isEmpty()) {
-                // bad data write errors to operational datastore
-                saveErrors(errorMap, createdCcaps);
-            }
+            //register rpc
+            logger.info("Registering CCAP Routed RPC Path...");
+            rpcRegistration.registerPath(CcapContext.class, iid);
 
-            if (createdCcaps.size() > errorMap.size()) {
-                final Map<InstanceIdentifier<Ccap>, Ccap> goodData =
-                        Maps.newHashMapWithExpectedSize(createdCcaps.size() - errorMap.size());
-                for (InstanceIdentifier<Ccap> iid : createdCcaps.keySet()) {
-                    if (!errorMap.containsKey(iid)) {
-                        goodData.put(iid, createdCcaps.get(iid));
-                    }
-                }
-                addNewCcaps(goodData);
-            }
-        }
-
-        private void addNewCcaps(final Map<InstanceIdentifier<Ccap>, Ccap> goodData) {
-            for (InstanceIdentifier<Ccap> iid : goodData.keySet()) {
-                final Ccap ccap = goodData.get(iid);
-
-                // add service
-                if (pcmmServiceMap.containsKey(ccap.getCcapId())) {
-                    logger.error("Already monitoring CCAP - " + ccap);
-                    continue;
-                }
-                final PCMMService pcmmService = new PCMMService(IPCMMClient.CLIENT_TYPE, ccap);
-                // TODO - may want to use the AMID but for the client type but probably not???
-/*
-                            final PCMMService pcmmService = new PCMMService(
-                                    thisCcap.getAmId().getAmType().shortValue(), thisCcap);
-*/
-                ConnectionBuilder connectionBuilder = new ConnectionBuilder();
-                String message = pcmmService.addCcap();
-                if (message.contains("200 OK")) {
-                    pcmmServiceMap.put(ccap.getCcapId(), pcmmService);
-                    ccapMap.put(ccap.getCcapId(), ccap);
-                    updateCcapMaps(ccap);
-                    logger.info("Created CCAP: {}/{} : {}", iid, ccap, message);
-                    logger.info("Created CCAP: {} : {}", iid, message);
-
-                    connectionBuilder.setConnected(true).setError(Collections.<String>emptyList());
-                } else {
-                    logger.error("Create CCAP Failed: {} : {}", iid, message);
-
-                    connectionBuilder.setConnected(false).setError(Collections.singletonList(message));
-                }
-
-                //register rpc
-                logger.info("Registering CCAP Routed RPC Path...");
-                rpcRegistration.registerPath(CcapContext.class, iid);
-
-                Optional<Ccap> optionalCcap = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, iid);
-
-                final CcapBuilder responseCcapBuilder;
-                if (optionalCcap.isPresent()) {
-                    responseCcapBuilder = new CcapBuilder(optionalCcap.get());
-                } else {
-                    responseCcapBuilder = new CcapBuilder();
-                    responseCcapBuilder.setCcapId(ccap.getCcapId());
-                }
-
-                responseCcapBuilder.setConnection(connectionBuilder.build());
-
-                mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, iid, responseCcapBuilder.build());
-            }
-
+            // restore the original data
+            updateQueue.add(iid);
+            mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, iid, originalCcap);
+            logger.error("CCAP update not permitted {}", iid);
         }
 
         @Override
-        protected void handleUpdatedData(final Map<InstanceIdentifier<Ccap>, Ccap> updatedCcaps,
-                                         final Map<InstanceIdentifier<Ccap>, Ccap> originalCcaps) {
+        protected void handleRemovedData(final DataTreeModification<Ccap> change) {
 
-            // TODO actually support updates
+            InstanceIdentifier<Ccap> iid = change.getRootPath().getRootIdentifier();
+            final Ccap nukedCcap = change.getRootNode().getDataBefore();
+            removeCcapFromAllMaps(nukedCcap);
 
-            // update operation not allowed -- restore the original config object and complain
-            for (final Map.Entry<InstanceIdentifier<Ccap>, Ccap> entry : updatedCcaps.entrySet()) {
-                if (!originalCcaps.containsKey(entry.getKey())) {
-                    logger.error("No original data found for supposedly updated data: {}", entry.getValue());
-                    continue;
-                }
+            //unregister ccap rpc path
+            logger.info("Un-Registering CCAP Routed RPC Path...");
+            rpcRegistration.unregisterPath(CcapContext.class, iid);
 
-                // If this notification is coming from our modification ignore it.
-                if (updateQueue.contains(entry.getKey())) {
-                    updateQueue.remove(entry.getKey());
-                    continue;
-                }
+            mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, iid);
 
-                final Ccap originalCcap = originalCcaps.get(entry.getKey());
-                //final Ccap updatedCcap = entry.getValue();
-
-                //register rpc
-                logger.info("Registering CCAP Routed RPC Path...");
-                rpcRegistration.registerPath(CcapContext.class, entry.getKey());
-
-                // restore the original data
-                updateQueue.add(entry.getKey());
-                mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, entry.getKey(), originalCcap);
-                logger.error("CCAP update not permitted {}", entry.getKey());
-            }
+            // clean up ccaps level if it is now empty
+            executor.execute(new CcapsCleaner(iid));
         }
 
-        @Override
-        protected void handleRemovedData(final Set<InstanceIdentifier<Ccap>> removedCcapPaths,
-                                         final Map<InstanceIdentifier<Ccap>, Ccap> originalCcaps) {
-
-            for (InstanceIdentifier<Ccap> iid : removedCcapPaths) {
-                final Ccap nukedCcap = originalCcaps.get(iid);
-                removeCcapFromAllMaps(nukedCcap);
-
-                //unregister ccap rpc path
-                logger.info("Un-Registering CCAP Routed RPC Path...");
-                rpcRegistration.unregisterPath(CcapContext.class, iid);
-
-                mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, iid);
-
-                // clean up ccaps level if it is now empty
-                executor.execute(new CcapsCleaner(iid));
-            }
-
-        }
     }
 
-
-    private class QosDataChangeListener extends AbstractDataChangeListener<Gate> {
+    private class QosDataTreeChangeListener extends AbstractDataTreeChangeListener<Gate> {
 
         private final DataValidator qosDataValidator = new DataValidator(new QosValidatorProviderFactory().build());
         private final Set<InstanceIdentifier<Gate>> updateQueue = Sets.newConcurrentHashSet();
 
-        public QosDataChangeListener() {
+        public QosDataTreeChangeListener() {
             super(Gate.class);
         }
 
         @Override
-        protected void handleCreatedData(final Map<InstanceIdentifier<Gate>, Gate> createdData) {
+        protected void handleCreatedData(final DataTreeModification<Gate> change) {
+            InstanceIdentifier<Gate> gateIID = change.getRootPath().getRootIdentifier();
+            final Gate newGate = change.getRootNode().getDataAfter();
 
-            final Map<InstanceIdentifier<Gate>, ValidationException> errorMap =
-                    qosDataValidator.validateOneType(createdData, Validator.Extent.NODE_AND_SUBTREE);
+            final String newGatePathStr = makeGatePathString(gateIID);
 
-            // validate all new objects an update operational datastore
-            if (!errorMap.isEmpty()) {
-                // bad data write errors to operational datastore
-                saveErrors(errorMap, createdData);
+            // if a new app comes along add RPC registration
+            final InstanceIdentifier<App> appIID = gateIID.firstIdentifierOf(App.class);
+            // TBD verify if App ID exists first
+
+            //register appID RPC path
+            logger.info("Registering App Routed RPC Path...");
+            rpcRegistration.registerPath(AppContext.class, appIID);
+
+            final InstanceIdentifier<Subscriber> subscriberIID = gateIID.firstIdentifierOf(Subscriber.class);
+            final SubscriberKey subscriberKey = InstanceIdentifier.keyOf(subscriberIID);
+            final InetAddress subscriberAddr = getInetAddress(subscriberKey.getSubscriberId());
+            if (subscriberAddr == null) {
+                final String msg = String.format("subscriberId must be a valid ipaddress: %s",
+                        subscriberKey.getSubscriberId());
+                logger.error(msg);
+                saveGateError(gateIID, newGatePathStr, msg);
+                return;
             }
 
-            if (createdData.size() > errorMap.size()) {
-                final Map<InstanceIdentifier<Gate>, Gate> goodData =
-                        Maps.newHashMapWithExpectedSize(createdData.size() - errorMap.size());
-                for (InstanceIdentifier<Gate> iid : createdData.keySet()) {
-                    if (!errorMap.containsKey(iid)) {
-                        goodData.put(iid, createdData.get(iid));
-                    }
-                }
-                addNewGates(goodData);
+            final Ccap ccap = findCcapForSubscriberId(subscriberAddr);
+            if (ccap == null) {
+                final String msg = String.format("Unable to find Ccap for subscriber %s: @ %s",
+                        subscriberKey.getSubscriberId(), newGatePathStr);
+                logger.error(msg);
+                saveGateError(gateIID, newGatePathStr, msg);
+                return;
             }
 
-        }
+            final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
+            if (pcmmService == null) {
+                final String msg =
+                        String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s", ccap,
+                                subscriberKey.getSubscriberId());
+                logger.error(msg);
+                saveGateError(gateIID, newGatePathStr, msg);
+                return;
+            }
 
-        private void addNewGates(final Map<InstanceIdentifier<Gate>, Gate> createdGates) {
+            //
+            // set up gate builder with known fields (and some empty ones)
+            //
+            final GateBuilder gateBuilder = new GateBuilder();
+            gateBuilder.setGateId(newGate.getGateId())
+                    .setGatePath(newGatePathStr)
+                    .setCcapId(ccap.getCcapId())
+                    .setTrafficProfile(newGate.getTrafficProfile())
+                    .setClassifiers(newGate.getClassifiers())
+                    .setGateSpec(newGate.getGateSpec())
+                    .setCopsGateState("")
+                    .setCopsGateTimeInfo("")
+                    .setCopsGateUsageInfo("");
 
-            for (InstanceIdentifier<Gate> gateIID : createdGates.keySet()) {
-                final Gate newGate = createdGates.get(gateIID);
-
-                final String newGatePathStr = makeGatePathString(gateIID);
-
-                // if a new app comes along add RPC registration
-                final InstanceIdentifier<App> appIID = gateIID.firstIdentifierOf(App.class);
-                // TBD verify if App ID exists first
-
-                //register appID RPC path
-                logger.info("Registering App Routed RPC Path...");
-                rpcRegistration.registerPath(AppContext.class, appIID);
-
-                final InstanceIdentifier<Subscriber> subscriberIID = gateIID.firstIdentifierOf(Subscriber.class);
-                final SubscriberKey subscriberKey = InstanceIdentifier.keyOf(subscriberIID);
-                final InetAddress subscriberAddr = getInetAddress(subscriberKey.getSubscriberId());
-                if (subscriberAddr == null) {
-                    final String msg = String.format("subscriberId must be a valid ipaddress: %s",
-                            subscriberKey.getSubscriberId());
-                    logger.error(msg);
-                    saveGateError(gateIID, newGatePathStr, msg);
-                    continue;
-                }
-
-                final Ccap ccap = findCcapForSubscriberId(subscriberAddr);
-                if (ccap == null) {
-                    final String msg = String.format("Unable to find Ccap for subscriber %s: @ %s",
-                            subscriberKey.getSubscriberId(), newGatePathStr);
-                    logger.error(msg);
-                    saveGateError(gateIID, newGatePathStr, msg);
-                    continue;
-                }
-
-                final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
-                if (pcmmService == null) {
-                    final String msg =
-                            String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s", ccap,
-                                    subscriberKey.getSubscriberId());
-                    logger.error(msg);
-                    saveGateError(gateIID, newGatePathStr, msg);
-                    continue;
-                }
-
-                //
-                // set up gate builder with known fields (and some empty ones)
-                //
-                final GateBuilder gateBuilder = new GateBuilder();
-                gateBuilder.setGateId(newGate.getGateId())
-                        .setGatePath(newGatePathStr)
-                        .setCcapId(ccap.getCcapId())
-                        .setTrafficProfile(newGate.getTrafficProfile())
-                        .setClassifiers(newGate.getClassifiers())
-                        .setGateSpec(newGate.getGateSpec())
-                        .setCopsGateState("")
-                        .setCopsGateTimeInfo("")
-                        .setCopsGateUsageInfo("");
-
-                //
-                // Right now only ServiceClassName traffic Profile is supported. This logic needs to
-                // be updated when the yang traffic-profile is extended to support new types
-                // Override requested Direction using the Ccap configuration information about SCNs and
-                // their configured direction.
-                //
-                final ServiceClassName scn = newGate.getTrafficProfile().getServiceClassName();
-                final ServiceFlowDirection scnDirection = findScnOnCcap(scn, ccap);
-                if (scnDirection == null) {
-                    final String msg =
+            //
+            // Right now only ServiceClassName traffic Profile is supported. This logic needs to
+            // be updated when the yang traffic-profile is extended to support new types
+            // Override requested Direction using the Ccap configuration information about SCNs and
+            // their configured direction.
+            //
+            final ServiceClassName scn = newGate.getTrafficProfile().getServiceClassName();
+            final ServiceFlowDirection scnDirection = findScnOnCcap(scn, ccap);
+            if (scnDirection == null) {
+                final String msg =
                         String.format("SCN %s not found on CCAP %s for %s", scn, ccap.getCcapId(), newGatePathStr);
-                    logger.error(msg);
-                    saveGateError(gateIID, newGatePathStr, msg);
-                    continue;
-                }
-                
-                //
-                // since we may be modifying the contents of the original request GateSpec
-                // to update flow direction (based on the ccap SCN configuration) we need to
-                // rebuild the requested gate spec and replace the existing one in the gate builder
-                //
-                final GateSpecBuilder gateSpecBuilder = new GateSpecBuilder();
-                gateSpecBuilder.setDirection(scnDirection);
-                gateSpecBuilder.setDscpTosMask(newGate.getGateSpec().getDscpTosMask());
-                gateSpecBuilder.setDscpTosOverwrite(newGate.getGateSpec().getDscpTosOverwrite());
-                final GateSpec gateSpec = gateSpecBuilder.build();
-                gateBuilder.setGateSpec(gateSpec);
-
-                //
-                // build the gate to be requested
-                //
-                gateBuilder.setTimestamp(getNowTimeStamp());
-
-                final Gate requestGate = gateBuilder.build();
-
-                //
-                // send gate request to Ccap
-                //
-                PCMMService.GateSendStatus status =
-                        pcmmService.sendGateSet(newGatePathStr, subscriberAddr, requestGate);
-                if (status.didSucceed()) {
-                    gateMap.put(newGatePathStr, requestGate);
-                    gateCcapMap.put(newGatePathStr, ccap.getCcapId());
-
-                    //
-                    // inquire as to the status, and implementation info of the requested gate
-                    //
-                    PCMMService.GateSendStatus infoStatus = pcmmService.sendGateInfo(newGatePathStr);
-
-                    if (infoStatus.didSucceed()) {
-                        //
-                        // update builder with info for operational storage
-                        //
-                        gateBuilder.setCopsGateState(
-                                infoStatus.getCopsGateState() + "/" + infoStatus.getCopsGateStateReason())
-                                .setCopsGateTimeInfo(infoStatus.getCopsGateTimeInfo())
-                                .setCopsGateUsageInfo(infoStatus.getCopsGateUsageInfo())
-                                .setCopsGateId(status.getCopsGateId());
-                    } else {
-                        List<String> errors = new ArrayList<>(2);
-
-                        // Keep GateSetErrors
-                        if (gateBuilder.getError() != null) {
-                            errors.addAll(gateBuilder.getError());
-                        }
-
-                        errors.add(infoStatus.getMessage());
-                        gateBuilder.setError(errors);
-                    }
-                }
-                else {
-                    gateBuilder.setError(Collections.singletonList(status.getMessage()));
-                }
-
-                Gate operationalGate = gateBuilder.build();
-
-                mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIID, operationalGate);
+                logger.error(msg);
+                saveGateError(gateIID, newGatePathStr, msg);
+                return;
             }
 
+            //
+            // since we may be modifying the contents of the original request GateSpec
+            // to update flow direction (based on the ccap SCN configuration) we need to
+            // rebuild the requested gate spec and replace the existing one in the gate builder
+            //
+            final GateSpecBuilder gateSpecBuilder = new GateSpecBuilder();
+            gateSpecBuilder.setDirection(scnDirection);
+            gateSpecBuilder.setDscpTosMask(newGate.getGateSpec().getDscpTosMask());
+            gateSpecBuilder.setDscpTosOverwrite(newGate.getGateSpec().getDscpTosOverwrite());
+            final GateSpec gateSpec = gateSpecBuilder.build();
+            gateBuilder.setGateSpec(gateSpec);
+
+            //
+            // build the gate to be requested
+            //
+            gateBuilder.setTimestamp(getNowTimeStamp());
+
+            final Gate requestGate = gateBuilder.build();
+
+            //
+            // send gate request to Ccap
+            //
+            PCMMService.GateSendStatus status =
+                    pcmmService.sendGateSet(newGatePathStr, subscriberAddr, requestGate);
+            if (status.didSucceed()) {
+                gateMap.put(newGatePathStr, requestGate);
+                gateCcapMap.put(newGatePathStr, ccap.getCcapId());
+
+                //
+                // inquire as to the status, and implementation info of the requested gate
+                //
+                PCMMService.GateSendStatus infoStatus = pcmmService.sendGateInfo(newGatePathStr);
+
+                if (infoStatus.didSucceed()) {
+                    //
+                    // update builder with info for operational storage
+                    //
+                    gateBuilder.setCopsGateState(
+                            infoStatus.getCopsGateState() + "/" + infoStatus.getCopsGateStateReason())
+                            .setCopsGateTimeInfo(infoStatus.getCopsGateTimeInfo())
+                            .setCopsGateUsageInfo(infoStatus.getCopsGateUsageInfo())
+                            .setCopsGateId(status.getCopsGateId());
+                } else {
+                    List<String> errors = new ArrayList<>(2);
+
+                    // Keep GateSetErrors
+                    if (gateBuilder.getError() != null) {
+                        errors.addAll(gateBuilder.getError());
+                    }
+
+                    errors.add(infoStatus.getMessage());
+                    gateBuilder.setError(errors);
+                }
+            }
+            else {
+                gateBuilder.setError(Collections.singletonList(status.getMessage()));
+            }
+
+            Gate operationalGate = gateBuilder.build();
+            mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIID, operationalGate);
         }
 
         private void saveGateError(@Nonnull final InstanceIdentifier<Gate> gateIID, @Nonnull final String gatePathStr,
@@ -860,63 +794,51 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         }
 
         @Override
-        protected void handleUpdatedData(final Map<InstanceIdentifier<Gate>, Gate> updatedData,
-                                         final Map<InstanceIdentifier<Gate>, Gate> originalData) {
+        protected void handleUpdatedData(final DataTreeModification<Gate> change) {
+            InstanceIdentifier<Gate> gateIID = change.getRootPath().getRootIdentifier();
+            //final Gate newGate = (Gate) change.getRootNode().getIdentifier();
             // TODO actually support updates
 
             // update operation not allowed -- restore the original config object and complain
-            for (final Map.Entry<InstanceIdentifier<Gate>, Gate> entry : updatedData.entrySet()) {
-                if (!originalData.containsKey(entry.getKey())) {
-                    logger.error("No original data found for supposedly updated data: {}", entry.getValue());
-                    continue;
-                }
 
-                // If this notification is coming from our modification ignore it.
-                if (updateQueue.contains(entry.getKey())) {
-                    updateQueue.remove(entry.getKey());
-                    continue;
-                }
-
-                final Gate originalGate = originalData.get(entry.getKey());
-
-                // restores the original data
-                updateQueue.add(entry.getKey());
-                mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, entry.getKey(), originalGate);
-                logger.error("Update not permitted {}", entry.getKey());
-
+            // If this notification is coming from our modification ignore it.
+            if (updateQueue.contains(gateIID)) {
+                updateQueue.remove(gateIID);
+                return;
             }
+
+            final Gate originalGate = change.getRootNode().getDataBefore();
+
+            // restores the original data
+            updateQueue.add(gateIID);
+            mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, gateIID, originalGate);
+            logger.error("Update not permitted {}", gateIID);
         }
 
-
-
         @Override
-        protected void handleRemovedData(final Set<InstanceIdentifier<Gate>> removedPaths,
-                                         final Map<InstanceIdentifier<Gate>, Gate> originalData) {
+        protected void handleRemovedData(final DataTreeModification<Gate> change) {
+            InstanceIdentifier<Gate> removedGateIID = change.getRootPath().getRootIdentifier();
+            final Gate newGate = change.getRootNode().getDataBefore();
 
-            for (final InstanceIdentifier<Gate> removedGateIID : removedPaths) {
+            mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, removedGateIID);
 
-                mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, removedGateIID);
+            executor.execute(new SubscriberCleaner(removedGateIID));
 
-                executor.execute(new SubscriberCleaner(removedGateIID));
+            final String gatePathStr = makeGatePathString(removedGateIID);
 
-                final String gatePathStr = makeGatePathString(removedGateIID);
-
-                if (gateMap.containsKey(gatePathStr)) {
-                    final Gate thisGate = gateMap.remove(gatePathStr);
-                    final String gateId = thisGate.getGateId();
-                    final String ccapId = gateCcapMap.remove(gatePathStr);
-                    final Ccap thisCcap = ccapMap.get(ccapId);
-                    final PCMMService service = pcmmServiceMap.get(thisCcap.getCcapId());
-                    if (service != null) {
-                        service.sendGateDelete(gatePathStr);
-                        logger.info("onDataChanged(): removed QoS gate {} for {}/{}/{}: ", gateId, ccapId, gatePathStr,thisGate);
-                    } else {
-                        logger.warn("Unable to send to locate PCMMService to send gate delete message with CCAP - "
-                                + thisCcap);
-                    }
+            if (gateMap.containsKey(gatePathStr)) {
+                final Gate thisGate = gateMap.remove(gatePathStr);
+                final String gateId = thisGate.getGateId();
+                final String ccapId = gateCcapMap.remove(gatePathStr);
+                final Ccap thisCcap = ccapMap.get(ccapId);
+                final PCMMService service = pcmmServiceMap.get(thisCcap.getCcapId());
+                if (service != null) {
+                    service.sendGateDelete(gatePathStr);
+                    logger.info("onDataChanged(): removed QoS gate {} for {}/{}/{}: ", gateId, ccapId, gatePathStr,thisGate);
+                } else {
+                    logger.warn("Unable to send to locate PCMMService to send gate delete message with CCAP - "
+                            + thisCcap);
                 }
-
-
             }
 
         }
@@ -933,7 +855,6 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             return appKey.getAppId() + "/" + subscriberKey.getSubscriberId() + "/" + gateKey.getGateId();
         }
     }
-
 
     @Override
     public Future<RpcResult<CcapSetConnectionOutput>> ccapSetConnection(CcapSetConnectionInput input) {
@@ -1378,7 +1299,6 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                 }
             }
         }
-
     }
 
 
