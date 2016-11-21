@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a65312a_cbc9047b",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-11-21T21:10:48Z",
+      "side": 1,
+      "message": "This comment doesn\u0027t make sense anymore. There is no longer a specific check for the type and the name has changed. Perhaps delete it altogether.",
+      "range": {
+        "startLine": 330,
+        "startChar": 16,
+        "endLine": 330,
+        "endChar": 78
+      },
+      "revId": "55cd2d820bfa318ac619b4cbe9fa10b5c4c7b6cb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a65312a_0b45bcb2",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-11-21T21:10:48Z",
+      "side": 1,
+      "message": "We are listening for a single change? The previous version handled a Map of changes, \u0027Gate\u0027 is a member of a List of \u0027Gates\u0027 in the yang schema. I ask the same question below for update and remover operations. Perhaps there is a detail in DataTreeChangeListener that I\u0027m missing. Does it call these methods for each gate that is added now?\n\nThe examples in the ODL documentation show Collections being returned..",
+      "range": {
+        "startLine": 642,
+        "startChar": 41,
+        "endLine": 642,
+        "endChar": 80
+      },
+      "revId": "55cd2d820bfa318ac619b4cbe9fa10b5c4c7b6cb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a65312a_2b4a38c5",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-11-21T21:10:48Z",
+      "side": 1,
+      "message": "We are listening for a single change? The previous version handled a Map of changes, \u0027Gate\u0027 is a member of a List of \u0027Gates\u0027 in the yang schema.",
+      "range": {
+        "startLine": 798,
+        "startChar": 41,
+        "endLine": 798,
+        "endChar": 80
+      },
+      "revId": "55cd2d820bfa318ac619b4cbe9fa10b5c4c7b6cb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a65312a_cb3aa433",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 4041
+      },
+      "writtenOn": "2016-11-21T21:10:48Z",
+      "side": 1,
+      "message": "We are listening for a single change? The previous version handled a Set of changes, \u0027Gate\u0027 is a member of a List of \u0027Gates\u0027 in the yang schema.",
+      "range": {
+        "startLine": 820,
+        "startChar": 41,
+        "endLine": 820,
+        "endChar": 80
+      },
+      "revId": "55cd2d820bfa318ac619b4cbe9fa10b5c4c7b6cb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
