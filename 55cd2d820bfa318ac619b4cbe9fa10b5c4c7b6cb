@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3a65312a_042be994",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 4772
+      },
+      "writtenOn": "2016-11-22T18:22:48Z",
+      "side": 1,
+      "message": "I will remove this.",
+      "parentUuid": "3a65312a_cbc9047b",
+      "range": {
+        "startLine": 330,
+        "startChar": 16,
+        "endLine": 330,
+        "endChar": 78
+      },
+      "revId": "55cd2d820bfa318ac619b4cbe9fa10b5c4c7b6cb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a65312a_0b45bcb2",
         "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2016-11-21T21:10:48Z",
       "side": 1,
       "message": "We are listening for a single change? The previous version handled a Map of changes, \u0027Gate\u0027 is a member of a List of \u0027Gates\u0027 in the yang schema. I ask the same question below for update and remover operations. Perhaps there is a detail in DataTreeChangeListener that I\u0027m missing. Does it call these methods for each gate that is added now?\n\nThe examples in the ODL documentation show Collections being returned..",
+      "range": {
+        "startLine": 642,
+        "startChar": 41,
+        "endLine": 642,
+        "endChar": 80
+      },
+      "revId": "55cd2d820bfa318ac619b4cbe9fa10b5c4c7b6cb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a65312a_6419fd87",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PacketcableProvider.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 4772
+      },
+      "writtenOn": "2016-11-22T18:22:48Z",
+      "side": 1,
+      "message": "Yes, It calls this method for each gate. The actual loop is in the AbstractDataTreeChangeListener File. Same goes for Update and remove functions.",
+      "parentUuid": "3a65312a_0b45bcb2",
       "range": {
         "startLine": 642,
         "startChar": 41,
