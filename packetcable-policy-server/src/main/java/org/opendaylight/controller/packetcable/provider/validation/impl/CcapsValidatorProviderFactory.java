@@ -14,10 +14,10 @@ import org.opendaylight.controller.packetcable.provider.validation.impl.validato
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps.CcapValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps.CcapsValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps.ConnectionValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccaps.Ccap;
 
 /**
  * A ValidatorProviderFactory that can provide validators for types under packetcable:ccaps.
