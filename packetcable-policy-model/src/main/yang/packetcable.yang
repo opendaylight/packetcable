@@ -10,6 +10,9 @@ module packetcable
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2016-11-28 {
+        description "Added support for activation-state, session-class-id and inactivity-timer";
+    }
     revision 2016-11-07 {
         description "Added priority field to all classifiers";
     }
@@ -45,6 +48,22 @@ module packetcable
           }
         description "This value represents the service flow direction.";
       }
+    
+      typedef classifier-activation-state {
+        type enumeration {
+          enum inactive {
+            value 0;
+            description "Inactive";
+          }
+          enum active {
+            value 1;
+            description "Active";
+          }
+        }
+        description "Instructs the CMTS to either activate or inactivate the classifier";
+      }
+     
+
      typedef tp-protocol {
          type uint16 {range "0..257";}
         description "This value represents the IP transport protocol (or Next Header) where 256 is any protocol and 257 is TCP or UDP";
@@ -308,6 +327,15 @@ module packetcable
                 type tos-byte;
                 description "Optional DSCP/TOS overwrite AND mask";
             }
+            leaf inactivity-timer {
+                type uint32;
+                description "Service Flow inactivity timeout";
+            }
+            leaf session-class-id {
+                type uint8;
+                description "Identifies the proper admission control policy or parameters to be applied for this Gate";
+                default 0;
+            }
         }
     }
 
@@ -414,6 +442,12 @@ module packetcable
               description "Priority";
               default 64;
             }
+            leaf activation-state {
+              type classifier-activation-state;
+              description "Activation state";
+              default active;
+            }
+
            }
     }
 
@@ -454,6 +488,11 @@ module packetcable
               type uint8;
               description "Priority";
               default 64;
+            }
+            leaf activation-state {
+              type classifier-activation-state;
+              description "Activation state";
+              default active;
             }
            }
     }

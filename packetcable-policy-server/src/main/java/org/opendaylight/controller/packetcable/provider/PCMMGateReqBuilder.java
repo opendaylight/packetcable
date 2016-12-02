@@ -16,19 +16,19 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.traffic.profile.TrafficProfile;
 import org.pcmm.gates.IClassifier;
 import org.pcmm.gates.IClassifier.Protocol;
 import org.pcmm.gates.IExtendedClassifier;
@@ -44,6 +44,7 @@ import org.pcmm.gates.impl.GateTimeInfo;
 import org.pcmm.gates.impl.GateUsageInfo;
 import org.pcmm.gates.impl.PCMMError;
 import org.pcmm.gates.impl.PCMMGateReq;
+import org.pcmm.gates.impl.SessionClassID;
 import org.pcmm.gates.impl.SubscriberID;
 import org.pcmm.gates.impl.TransactionID;
 import org.slf4j.Logger;
@@ -120,7 +121,22 @@ public class PCMMGateReqBuilder {
             dscptos = 0;
             gateTosMask = 0;
         }
-        gateSpec = new org.pcmm.gates.impl.GateSpec(gateDir, dscptos, gateTosMask);
+
+        java.lang.Short scid = qosGateSpec.getSessionClassId();
+        byte bscid = 0;
+        if (scid != null) {
+            bscid = (byte)(qosGateSpec.getSessionClassId() & 255);
+        }
+
+        java.lang.Long inactivity = qosGateSpec.getInactivityTimer();
+        short sinactivity = 300;
+        if (inactivity != null) {
+            sinactivity = inactivity.shortValue();
+        }
+
+        gateSpec = new org.pcmm.gates.impl.GateSpec(gateDir, dscptos, gateTosMask,
+                                                    new SessionClassID(bscid),
+                                                    (short)1, (short)300, sinactivity, (short)0);
     }
 
     public void setTrafficProfile(final TrafficProfile qosTrafficProfile) {
@@ -225,7 +241,6 @@ public class PCMMGateReqBuilder {
 
     private void addExtClassifier(final Short index, final ExtClassifier qosExtClassifier) {
         // Extended classifier
-        final ActivationState activationState = ActivationState.ACTIVE;
         // Protocol -- zero is match any
         final Protocol protocol;
         if (qosExtClassifier.getProtocol() != null) {
@@ -312,6 +327,14 @@ public class PCMMGateReqBuilder {
 
         // TODO - find out what the action value should really be. It was never getting set previously
         final IExtendedClassifier.Action action = IExtendedClassifier.Action.ADD;
+
+        //
+        // Convert from Enum to byte for serialization
+        //
+        ActivationState activationState = ActivationState.ACTIVE;
+        if (qosExtClassifier.getActivationState() != null) {
+            activationState = ActivationState.valueOf((byte)qosExtClassifier.getActivationState().getIntValue());
+        }
 
         //
         // The packetcable.yang models priority as an uint8 which means the java generated
@@ -448,6 +471,14 @@ public class PCMMGateReqBuilder {
         final IExtendedClassifier.Action action = IExtendedClassifier.Action.ADD;
 
         //
+        // Convert from Enum to byte for serialization
+        //
+        ActivationState activationState = ActivationState.ACTIVE;
+        if (qosIpv6Classifier.getActivationState() != null) {
+            activationState = ActivationState.valueOf((byte)qosIpv6Classifier.getActivationState().getIntValue());
+        }
+
+        //
         // The packetcable.yang models priority as an uint8 which means the java generated
         // implementation saves the value in a short, so we mask it back into a byte
         //
@@ -460,7 +491,7 @@ public class PCMMGateReqBuilder {
         // push the IPv6 classifier to the gate request
         classifiers.add(
                 new org.pcmm.gates.impl.IPv6Classifier(srcAddress, dstAddress, srcPortBegin, dstPortBegin, priority,
-                        srcPortEnd, dstPortEnd, classifierId, ActivationState.ACTIVE, action, flowLabelFlag, tcLow,
+                        srcPortEnd, dstPortEnd, classifierId, activationState, action, flowLabelFlag, tcLow,
                         tcHigh, tcMask, flowLabelId, nextHdr, srcPrefixLen, dstPrefLen));
     }
 }

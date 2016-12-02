@@ -16,8 +16,8 @@ import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.ccap.attributes.ConnectionBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.ConnectionBuilder;
 
 /**
  * @author rvail

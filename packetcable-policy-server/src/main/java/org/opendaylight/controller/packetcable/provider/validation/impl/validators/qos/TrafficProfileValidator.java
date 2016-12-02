@@ -9,7 +9,7 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.traffic.profile.TrafficProfile;
 
 /**
  * @author rvail

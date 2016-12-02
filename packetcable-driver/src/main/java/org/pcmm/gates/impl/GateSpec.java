@@ -82,7 +82,7 @@ public class GateSpec extends PCMMBaseObject implements IGateSpec {
      * @param timer3 - timer3 in seconds
      * @param timer4 - timer4 in seconds
      */
-    protected GateSpec(final Direction direction, final byte tosOverwrite, final byte tosMask,
+    public GateSpec(final Direction direction, final byte tosOverwrite, final byte tosMask,
                     final SessionClassID sessionClassID, final short timer1, final short timer2, final short timer3,
                     final short timer4) {
 

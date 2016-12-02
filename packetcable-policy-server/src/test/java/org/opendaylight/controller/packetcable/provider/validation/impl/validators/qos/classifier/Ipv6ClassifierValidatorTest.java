@@ -15,10 +15,11 @@ import org.opendaylight.controller.packetcable.provider.validation.ValidationExc
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv6Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161107.pcmm.qos.ipv6.classifier.Ipv6ClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ClassifierActivationState;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ipv6.classifier.Ipv6ClassifierBuilder;
 
 /**
  * @author rvail
@@ -141,6 +142,7 @@ public class Ipv6ClassifierValidatorTest {
                 .setTcHigh(new TosByte((short) 0xc0))
                 .setTcLow(new TosByte((short) 0x01))
                 .setTcMask(new TosByte((short) 0xe0))
+                .setActivationState(ClassifierActivationState.Active)
                 .build();
     }
 }
