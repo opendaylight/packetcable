@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a622d24_a0585c57",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMGateReqBuilder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-12-07T17:01:08Z",
+      "side": 1,
+      "message": "This code works but I feel it could be improved.\n\n1) java.lang.Short is auto imported and does not need to be fully qualified.\n2) scid is a poor varaible name. Unless you come back to this line you do not know what scid stands for.\n3)scid is only used to check if the value is null. Keeping it as a local is pointless and forces you to uses bscid on the next line.\n\nI recommend something like this:\nbyte sessionClassId \u003d 0;\nif (qosGateSpec.getSessionClassId() !\u003d null) {\n   sessionClassId \u003d (byte)(qosGateSpec.getSessionClassId() \u0026 255);\n}",
+      "range": {
+        "startLine": 125,
+        "startChar": 8,
+        "endLine": 129,
+        "endChar": 9
+      },
+      "revId": "7408bb697e97a61a2c0f107cf1dd9f926990db54",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_e031b40c",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMGateReqBuilder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2016-12-07T17:01:08Z",
+      "side": 1,
+      "message": "same comments as scid above",
+      "range": {
+        "startLine": 131,
+        "startChar": 8,
+        "endLine": 135,
+        "endChar": 9
+      },
+      "revId": "7408bb697e97a61a2c0f107cf1dd9f926990db54",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
