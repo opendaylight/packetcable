@@ -8,6 +8,7 @@
 
 package org.pcmm.rcd.impl;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.pcmm.PCMMConstants;
 import org.pcmm.PCMMProperties;
 import org.pcmm.concurrent.IWorkerPool;
@@ -32,123 +33,155 @@ import java.util.concurrent.Executors;
  */
 public abstract class AbstractPCMMServer implements IPCMMServer {
 
-	private static final Logger logger = LoggerFactory.getLogger(AbstractPCMMServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractPCMMServer.class);
 
-	/*
-	 * A ServerSocket to accept messages ( OPN requests)
-	 */
-	private transient ServerSocket serverSocket;
+    /*
+     * A ServerSocket to accept messages ( OPN requests)
+     */
+    private transient ServerSocket serverSocket;
 
-	private volatile boolean keepAlive;
+    private volatile boolean keepAlive;
 
-	/**
-	 * The port number on which to start the server.
-	 */
-	private final int port;
+    /*
+     * This object is used to signal when the server is ready to accept connections.
+     * It is used in signaling and therefore must be final.
+     */
+    private final AtomicBoolean isReadyFlag = new AtomicBoolean(false);
 
-	IWorkerPool pool;
+    /**
+     * The port number on which to start the server.
+     */
+    private final int port;
 
-	/**
-	 * The thread pool executor
-	 */
-	private final ExecutorService executorService;
+    IWorkerPool pool;
 
-	/**
-	 * Constructor to use the port number contained within the PCMMProperties static object
-	 */
-	protected AbstractPCMMServer() {
-		this(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class));
-	}
+    /**
+     * The thread pool executor
+     */
+    private final ExecutorService executorService;
 
-	/**
-	 * Constructor for starting the server to a pre-defined port number. When 0 is used, the server socket will
-	 * assign one for you. To determine which port is being used, call getPort() after startServer() is called.
-	 * @param port - the port number on which to start the server
-	 */
-	protected AbstractPCMMServer(int port) {
-		// XXX - Assert.assertTrue(port >= 0 && port <= 65535);
-		this.port = port;
-		keepAlive = true;
-		int poolSize = PCMMProperties.get(PCMMConstants.PS_POOL_SIZE, Integer.class);
-		pool = new WorkerPool(poolSize);
-		executorService = Executors.newSingleThreadExecutor();
-	}
+    /**
+     * Constructor to use the port number contained within the PCMMProperties static object
+     */
+    protected AbstractPCMMServer() {
+        this(PCMMProperties.get(PCMMConstants.PCMM_PORT, Integer.class));
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see pcmm.rcd.IPCMMServer#startServer()
-	 */
-	public void startServer() throws IOException {
-		if (serverSocket != null)
-			return;
+    /**
+     * Constructor for starting the server to a pre-defined port number. When 0 is used, the server socket will
+     * assign one for you. To determine which port is being used, call getPort() after startServer() is called.
+     * @param port - the port number on which to start the server
+     */
+    protected AbstractPCMMServer(int port) {
+        // XXX - Assert.assertTrue(port >= 0 && port <= 65535);
+        this.port = port;
+        keepAlive = true;
+        int poolSize = PCMMProperties.get(PCMMConstants.PS_POOL_SIZE, Integer.class);
+        pool = new WorkerPool(poolSize);
+        executorService = Executors.newSingleThreadExecutor();
+    }
 
-		serverSocket = new ServerSocket(port);
-		logger.info("Server started and listening on port :" + port);
+    /*
+     * (non-Javadoc)
+     *
+     * @see pcmm.rcd.IPCMMServer#startServer()
+     */
+    public void startServer() throws IOException {
+        if (serverSocket != null)
+            return;
 
-		// execute this in a single thread executor
-		executorService.execute(new Runnable() {
-			public void run() {
-				while (keepAlive) {
-					try {
-						Socket socket = serverSocket.accept();
-						logger.info("Accepted a new connection from :" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-						if (keepAlive) {
-							pool.schedule(getPCMMClientHandler(socket));
-							logger.info("Handler attached tp : " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-						} else {
-							logger.info("connection to be closed : " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-							socket.close();
-						}
-					} catch (IOException e) {
-						logger.error(e.getMessage());
-					}
-				}
-				stopServer();
-			}
-		});
-	}
+        serverSocket = new ServerSocket(port);
+        logger.info("Server started and listening on port :" + port);
 
-	/**
-	 * This client is used to handle requests from within the Application
-	 * Manager
-	 *
-	 * @param socket - the connection to the PCMM server
-	 * @return client handler
-	 */
-	protected abstract IPCMMClientHandler getPCMMClientHandler(Socket socket) throws IOException;
+        // execute this in a single thread executor
+        executorService.execute(new Runnable() {
+            public void run() {
 
-	@Override
-	public void stopServer() {
-		// set to stop
-		keepAlive = false;
-		executorService.shutdownNow();
-		try {
-			if (serverSocket != null) {
-				serverSocket.close();
-			}
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-		pool.killAll();
-	}
+                synchronized (isReadyFlag) {
+                    isReadyFlag.set(true);
+                    isReadyFlag.notify();
+                }
 
-	@Override
-	public void recordState() {
-		// TODO - implement me
-	}
+                while (keepAlive) {
+                    try {
+                        Socket socket = serverSocket.accept();
+                        logger.info("Accepted a new connection from :" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                        if (keepAlive) {
+                            pool.schedule(getPCMMClientHandler(socket));
+                            logger.info("Handler attached tp : " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                        } else {
+                            logger.info("connection to be closed : " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                            socket.close();
+                        }
+                    } catch (IOException e) {
+                        logger.error(e.getMessage());
+                    }
+                }
 
-	@Override
-	public IState getRecoredState() {
-		return null;
-	}
+                synchronized (isReadyFlag) {
+                    isReadyFlag.set(false);
+                }
+                stopServer();
 
-	/**
-	 * @return the port
-	 */
-	public int getPort() {
-		if (serverSocket != null && serverSocket.isBound()) return serverSocket.getLocalPort();
-		else return this.port;
-	}
+            }
+        });
+
+        synchronized (isReadyFlag) {
+            // block until the server thread is ready to go
+            while (!isReadyFlag.get()) {
+                try {
+                    isReadyFlag.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    public boolean isReady() {
+        return isReadyFlag.get();
+    }
+
+    /**
+     * This client is used to handle requests from within the Application
+     * Manager
+     *
+     * @param socket - the connection to the PCMM server
+     * @return client handler
+     */
+    protected abstract IPCMMClientHandler getPCMMClientHandler(Socket socket) throws IOException;
+
+    @Override
+    public void stopServer() {
+        // set to stop
+        keepAlive = false;
+        executorService.shutdownNow();
+        try {
+            if (serverSocket != null) {
+                serverSocket.close();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        pool.killAll();
+    }
+
+    @Override
+    public void recordState() {
+        // TODO - implement me
+    }
+
+    @Override
+    public IState getRecoredState() {
+        return null;
+    }
+
+    /**
+     * @return the port
+     */
+    public int getPort() {
+        if (serverSocket != null && serverSocket.isBound()) return serverSocket.getLocalPort();
+        else return this.port;
+    }
 
 }
