@@ -1,5 +1,9 @@
 /*
  * (c) 2015 Cable Television Laboratories, Inc.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
 package org.opendaylight.controller.packetcable.provider;
@@ -31,20 +35,28 @@ import org.junit.Test;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.Classifiers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.Classifiers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.gates.IPCMMGate;
 import org.pcmm.rcd.IPCMMClient;
@@ -437,10 +449,16 @@ public class PCMMServiceTest {
         when(gateSpec.getDirection()).thenReturn(direction);
         // TODO - make sure to write a test when this value is not null
         when(gateSpec.getDscpTosOverwrite()).thenReturn(null);
+
+        // TODO - refactor to add flowspec profile testing as well
         final TrafficProfile trafficProfile = mock(TrafficProfile.class);
-        final ServiceClassName scn = mock(ServiceClassName.class);
-        when(scn.getValue()).thenReturn(scnValue);
-        when(trafficProfile.getServiceClassName()).thenReturn(scn);
+        final ServiceClassNameChoice serviceClassNameChoice = mock(ServiceClassNameChoice.class);
+        final ServiceClassNameProfile serviceClassNameProfile = mock(ServiceClassNameProfile.class);
+        final ServiceClassName serviceClassName = mock(ServiceClassName.class);
+        when(serviceClassName.getValue()).thenReturn(scnValue);
+        when(serviceClassNameProfile.getServiceClassName()).thenReturn(serviceClassName);
+        when(serviceClassNameChoice.getServiceClassNameProfile()).thenReturn(serviceClassNameProfile);
+        when(trafficProfile.getTrafficProfileChoice()).thenReturn(serviceClassNameChoice);
         when(gate.getTrafficProfile()).thenReturn(trafficProfile);
 
         // TODO - write tests when this is null and ExtClassifier or Ipv6Classifier objects are not null
@@ -485,7 +503,8 @@ public class PCMMServiceTest {
         gateBuilder.setAmId(ccap.getAmId());
         gateBuilder.setSubscriberId(addrSubId);
         // force gateSpec.Direction to align with SCN direction
-        final ServiceClassName scn = gateReq.getTrafficProfile().getServiceClassName();
+        final ServiceClassName scn =
+            ((ServiceClassNameChoice)gateReq.getTrafficProfile().getTrafficProfileChoice()).getServiceClassNameProfile().getServiceClassName();
         if (scn != null) {
             gateBuilder.setGateSpec(gateReq.getGateSpec(), direction);
         } else {

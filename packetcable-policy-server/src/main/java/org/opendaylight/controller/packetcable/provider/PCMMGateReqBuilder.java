@@ -16,19 +16,21 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.flow.spec.profile.FlowSpecProfile;
 import org.pcmm.gates.IClassifier;
 import org.pcmm.gates.IClassifier.Protocol;
 import org.pcmm.gates.IExtendedClassifier;
@@ -38,6 +40,7 @@ import org.pcmm.gates.IIPv6Classifier.FlowLabel;
 import org.pcmm.gates.ITrafficProfile;
 import org.pcmm.gates.impl.AMID;
 import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
+import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
 import org.pcmm.gates.impl.GateID;
 import org.pcmm.gates.impl.GateState;
 import org.pcmm.gates.impl.GateTimeInfo;
@@ -49,7 +52,11 @@ import org.pcmm.gates.impl.SubscriberID;
 import org.pcmm.gates.impl.TransactionID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+ 
 /**
  * Build PCMM gate requests from API QoS Gate objects
  */
@@ -138,9 +145,24 @@ public class PCMMGateReqBuilder {
    }
 
     public void setTrafficProfile(final TrafficProfile qosTrafficProfile) {
-        if (qosTrafficProfile.getServiceClassName() != null) {
-            trafficProfile =
-                    new DOCSISServiceClassNameTrafficProfile(qosTrafficProfile.getServiceClassName().getValue());
+        TrafficProfileChoice choice = qosTrafficProfile.getTrafficProfileChoice();
+
+        if (choice instanceof ServiceClassNameChoice) {
+            ServiceClassNameProfile scnp = ((ServiceClassNameChoice)choice).getServiceClassNameProfile();
+            trafficProfile = new DOCSISServiceClassNameTrafficProfile(scnp.getServiceClassName().getValue());
+        }
+        else if (choice instanceof FlowSpecChoice) {
+            FlowSpecProfile fsp = ((FlowSpecChoice)choice).getFlowSpecProfile();
+            trafficProfile = new DOCSISFlowSpecTrafficProfile(fsp.getTokenBucketRate(),
+                                                              fsp.getTokenBucketSize(),
+                                                              fsp.getPeakDataRate(),
+                                                              fsp.getMinimumPolicedUnit(),
+                                                              fsp.getMaximumPacketSize(),
+                                                              fsp.getRate(),
+                                                              fsp.getSlackTerm());     
+        }
+        else {
+            logger.debug("PCMMGateReq().setTrafficProfile() Unsupported Traffic Profile: " + choice.getClass().getName());
         }
     }
 

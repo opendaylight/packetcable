@@ -35,6 +35,7 @@ import org.pcmm.gates.ISubscriberID;
 import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.AMID;
 import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
+import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
 import org.pcmm.gates.impl.GateID;
 import org.pcmm.gates.impl.GateSpec;
 import org.pcmm.gates.impl.GateState;
@@ -259,6 +260,9 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
             case GATE_INFO:
                 processGateInfo(gateReq, socket);
                 break;
+            case GATE_DELETE:
+                processGateDelete(gateReq, socket);
+                break;
             default:
                 logger.error("Emulator does not support gate command: {}",
                         gateReq.getTransactionID().getGateCommandType());
@@ -340,9 +344,15 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
             }
         }
         else {
-            // Traffic profile
-
-            if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
+            // Traffic profile type check
+            if (!(gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) &&
+                !(gateReq.getTrafficProfile() instanceof DOCSISFlowSpecTrafficProfile)) {
+                logger.error("Currently only DOCSIS Service Class Name and Flow Spec Traffic Profiles are supported: attempted ",
+                        gateReq.getTrafficProfile().getClass().getName());
+                return new PCMMError(ErrorCode.OTHER_UNSPECIFIED);
+            }
+            // ServiceClassName match check
+            else if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
                 final DOCSISServiceClassNameTrafficProfile scnTrafficProfile =
                         (DOCSISServiceClassNameTrafficProfile) gateReq.getTrafficProfile();
 
@@ -355,11 +365,6 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
                 if (!directionSCNs.contains(scnTrafficProfile.getScnName())) {
                     return new PCMMError(ErrorCode.UNDEF_SCN_NAME);
                 }
-            } else {
-                // TODO remote this after other profiles are supported
-                logger.error("Currently only DOCSIS Service Class Name Traffic Profiles are supported: attempted {}",
-                        gateReq.getTrafficProfile().getClass().getName());
-                return new PCMMError(ErrorCode.OTHER_UNSPECIFIED);
             }
 
             // number of classifiers
@@ -367,8 +372,6 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
                 return new PCMMError(ErrorCode.NUM_CLASSIFIERS, config.getNumberOfSupportedClassifiers());
             }
         }
-
-
 
         // SubscriberID
         String subId = gateReq.getSubscriberID().getSourceIPAddress().getHostAddress();
@@ -387,9 +390,6 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
             }
         }
 
-
-
-
         return null;
     }
 
@@ -406,7 +406,6 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
             return error;
         }
 
-
         return null;
     }
 
@@ -416,10 +415,15 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
         final Direction gateDir = gateReq.getGateSpec().getDirection();
 
         final String serviceClassName;
-        if ((gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile)) {
-            serviceClassName = ((DOCSISServiceClassNameTrafficProfile) gateReq.getTrafficProfile()).getScnName();
+        if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
+            serviceClassName = ((DOCSISServiceClassNameTrafficProfile)gateReq.getTrafficProfile()).getScnName();
+            logger.info("Processing ServiceClassName[" + serviceClassName + "] gate set with direction [" + gateDir + ']');
+        } else if (gateReq.getTrafficProfile() instanceof DOCSISFlowSpecTrafficProfile) {
+            serviceClassName = null;
+            logger.info("Processing FlowSpec gate set with direction [" + gateDir + ']');
         } else {
             serviceClassName = null;
+            logger.error("Unknown Traffic Profile type: " + gateReq.getTrafficProfile().getClass().getName());
         }
 
         final IPCMMError error = getGateError(gateReq);
@@ -529,6 +533,36 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
         final byte[] csiArr = Bytes.toArray(data);
         COPSClientSI copsClientSI = new COPSClientSI(CNum.CSI, CType.DEF, new COPSData(csiArr, 0, csiArr.length));
 
+        sendReport(reportType, copsClientSI, socket);
+    }
+
+    private void processGateDelete(final PCMMGateReq gateReq, final Socket socket) throws COPSException {
+        logger.info("GateDelete");
+
+        final TransactionID transactionID;
+        final ReportType reportType;
+        transactionID = new TransactionID(gateReq.getTransactionID().getTransactionIdentifier(),
+                                              ITransactionID.GateCommandType.GATE_DELETE_ACK);
+        reportType = ReportType.SUCCESS;
+
+        final List<Byte> data = new ArrayList<>();
+        addBytesToList(transactionID.getAsBinaryArray(), data);
+        addBytesToList(gateReq.getAMID().getAsBinaryArray(), data);
+        addBytesToList(gateReq.getSubscriberID().getAsBinaryArray(), data);
+        addBytesToList(gateReq.getGateID().getAsBinaryArray(), data);
+
+        GateMetaData exisitingGate = gateStateMap.get(gateReq.getGateID());
+        gateStateMap.remove(gateReq.getGateID());
+
+        GateState gateState = new GateState(IGateState.GateStateType.COMMITTED,
+                                                IGateState.GateStateReasonType.OTHER);
+        addBytesToList(gateState.getAsBinaryArray(), data);
+
+        logger.info("Deleting " + reportType + " for gate delete request on gate " + exisitingGate.getGateReq().getGateID() );
+
+        final byte[] csiArr = Bytes.toArray(data);
+        COPSClientSI copsClientSI = new COPSClientSI(CNum.CSI, CType.DEF, new COPSData(csiArr, 0, csiArr.length));
+        
         sendReport(reportType, copsClientSI, socket);
     }
 

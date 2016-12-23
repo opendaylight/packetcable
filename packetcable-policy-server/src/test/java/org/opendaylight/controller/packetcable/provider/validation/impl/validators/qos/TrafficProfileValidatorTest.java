@@ -13,9 +13,13 @@ import org.junit.Test;
 import org.opendaylight.controller.packetcable.provider.test.rules.Params;
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
 
 /**
  * @author rvail
@@ -39,12 +43,12 @@ public class TrafficProfileValidatorTest {
         validator.validate(buildValidTrafficProfile(), null);
     }
 
-    @Test
+    @Test(expected = ValidationException.class)
     public void nullServiceClassName() throws ValidationException {
-        final TrafficProfile trafficProfile = new TrafficProfileBuilder(buildValidTrafficProfile())
-                .setServiceClassName(null)
-                .build();
-        validator.validate(buildValidTrafficProfile(), extentParams.getCurrentParam());
+        final ServiceClassNameProfile serviceClassNameProfile = new ServiceClassNameProfileBuilder().setServiceClassName(null).build();
+        final TrafficProfile trafficProfile =
+            new TrafficProfileBuilder().setTrafficProfileChoice(new ServiceClassNameChoiceBuilder().setServiceClassNameProfile(serviceClassNameProfile).build()).build();
+        validator.validate(trafficProfile, extentParams.getCurrentParam());
     }
 
     @Test
@@ -54,8 +58,7 @@ public class TrafficProfileValidatorTest {
 
 
     public static TrafficProfile buildValidTrafficProfile() {
-        return new TrafficProfileBuilder()
-                .setServiceClassName(new ServiceClassName("unit-test-scn"))
-                .build();
+        final ServiceClassNameProfile serviceClassNameProfile = new ServiceClassNameProfileBuilder().setServiceClassName(new ServiceClassName("unit-test-scn")).build();
+        return new TrafficProfileBuilder().setTrafficProfileChoice(new ServiceClassNameChoiceBuilder().setServiceClassNameProfile(serviceClassNameProfile).build()).build();
     }
 }

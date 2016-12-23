@@ -9,7 +9,7 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.Connection;
 
 /**
  * @author rvail

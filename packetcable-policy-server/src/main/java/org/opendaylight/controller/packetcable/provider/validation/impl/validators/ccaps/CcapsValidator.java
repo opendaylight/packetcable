@@ -9,8 +9,8 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.Ccap;
 
 /**
  * @author rvail

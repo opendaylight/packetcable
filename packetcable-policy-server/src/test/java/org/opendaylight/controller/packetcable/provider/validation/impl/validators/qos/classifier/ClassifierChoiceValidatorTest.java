@@ -13,12 +13,12 @@ import org.junit.Test;
 import org.opendaylight.controller.packetcable.provider.test.rules.Params;
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoiceBuilder;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 
 /**
