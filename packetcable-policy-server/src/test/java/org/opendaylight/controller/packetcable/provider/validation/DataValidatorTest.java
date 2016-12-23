@@ -21,7 +21,7 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import org.junit.Test;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps.CcapValidatorTest;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.Ccap;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 

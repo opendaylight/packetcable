@@ -12,7 +12,23 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
 import java.util.Collections;
 import org.pcmm.base.impl.PCMMBaseObject.SNum;
-import org.pcmm.gates.*;
+import org.pcmm.gates.IAMID;
+import org.pcmm.gates.IClassifier;
+import org.pcmm.gates.ISubscriberID;
+import org.pcmm.gates.ITransactionID;
+import org.pcmm.gates.IGateSpec;
+import org.pcmm.gates.IGateTimeInfo;
+import org.pcmm.gates.ITrafficProfile;
+import org.pcmm.gates.IPCMMError;
+import org.pcmm.gates.IPCMMGate;
+import org.pcmm.gates.IGateID;
+import org.pcmm.gates.IExtendedClassifier;
+import org.pcmm.gates.IIPv6Classifier;
+import org.pcmm.gates.IGateState;
+import org.pcmm.gates.IGateUsageInfo;
+import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
+import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
+import org.pcmm.gates.impl.BestEffortService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,64 +124,67 @@ public class PCMMGateReq implements IPCMMGate {
             final int dataIndx = offset + 4;
             byte[] dataBuffer = Arrays.copyOfRange(data, dataIndx, dataIndx + len - 4);
             switch (sNum) {
-                case GATE_ID:
-                    gateID = GateID.parse(dataBuffer);
+            case GATE_ID:
+                gateID = GateID.parse(dataBuffer);
+                break;
+            case AMID:
+                amid = AMID.parse(dataBuffer);
+                break;
+            case SUBSCRIBER_ID:
+                subscriberID = SubscriberID.parse(dataBuffer);
+                break;
+            case TRANSACTION_ID:
+                transactionID = TransactionID.parse(dataBuffer);
+                break;
+            case GATE_SPEC:
+                gateSpec = GateSpec.parse(dataBuffer);
+                break;
+            case TRAFFIC_PROFILE:
+                switch (sType) {
+                case DOCSISServiceClassNameTrafficProfile.STYPE:
+                    trafficProfile = DOCSISServiceClassNameTrafficProfile.parse(dataBuffer);
                     break;
-                case AMID:
-                    amid = AMID.parse(dataBuffer);
+                case DOCSISFlowSpecTrafficProfile.STYPE:
+                    trafficProfile = DOCSISFlowSpecTrafficProfile.parse(dataBuffer);
                     break;
-                case SUBSCRIBER_ID:
-                    subscriberID = SubscriberID.parse(dataBuffer);
+                case BestEffortService.STYPE:
+                    trafficProfile = BestEffortService.parse(dataBuffer);
                     break;
-                case TRANSACTION_ID:
-                    transactionID = TransactionID.parse(dataBuffer);
+                }
+                break;
+            case CLASSIFIERS:
+                switch (sType) {
+                case IClassifier.STYPE:
+                    classifiers.add(Classifier.parse(dataBuffer));
                     break;
-                case GATE_SPEC:
-                    gateSpec = GateSpec.parse(dataBuffer);
+                case IExtendedClassifier.STYPE:
+                    classifiers.add(ExtendedClassifier.parse(dataBuffer));
                     break;
-                case TRAFFIC_PROFILE:
-                    switch (sType) {
-                        case DOCSISServiceClassNameTrafficProfile.STYPE:
-                            trafficProfile = DOCSISServiceClassNameTrafficProfile.parse(dataBuffer);
-                            break;
-                        case BestEffortService.STYPE:
-                            trafficProfile = BestEffortService.parse(dataBuffer);
-                            break;
-                    }
+                case IIPv6Classifier.STYPE:
+                    classifiers.add(IPv6Classifier.parse(dataBuffer));
                     break;
-                case CLASSIFIERS:
-                    switch (sType) {
-                        case IClassifier.STYPE:
-                            classifiers.add(Classifier.parse(dataBuffer));
-                            break;
-                        case IExtendedClassifier.STYPE:
-                            classifiers.add(ExtendedClassifier.parse(dataBuffer));
-                            break;
-                        case IIPv6Classifier.STYPE:
-                            classifiers.add(IPv6Classifier.parse(dataBuffer));
-                            break;
-                    }
-                    break;
-                case PCMM_ERROR:
-                    error = PCMMError.parse(dataBuffer);
-                    break;
+                }
+                break;
+            case PCMM_ERROR:
+                error = PCMMError.parse(dataBuffer);
+                break;
                 //adding GATE_STATE
-                case GATE_STATE:
-                	 gateState = GateState.parse(dataBuffer);
-                     break;
+            case GATE_STATE:
+                gateState = GateState.parse(dataBuffer);
+                break;
                 //adding GATE_TIME_INFO
-                     case GATE_TIME_INFO:
-                  	 gateTimeInfo = GateTimeInfo.parse(dataBuffer);
-                  	logger.info("Gate Time Info: "+gateTimeInfo);
-                     break;
+            case GATE_TIME_INFO:
+                gateTimeInfo = GateTimeInfo.parse(dataBuffer);
+                logger.info("Gate Time Info: "+gateTimeInfo);
+                break;
                 //adding GATE_USAGE_INFO
-                case GATE_USAGE_INFO:
-                	 gateUsageInfo = GateUsageInfo.parse(dataBuffer);
-                	 logger.info("Gate Usage Info: "+gateUsageInfo);
-                     break;
+            case GATE_USAGE_INFO:
+                gateUsageInfo = GateUsageInfo.parse(dataBuffer);
+                logger.info("Gate Usage Info: "+gateUsageInfo);
+                break;
             default:
                 logger.warn("Unhandled Object skept : S-NUM=" + sNum
-                                   + "  S-TYPE=" + sType + "  LEN=" + len);
+                            + "  S-TYPE=" + sType + "  LEN=" + len);
             }
             offset += len;
         }

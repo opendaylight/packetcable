@@ -36,10 +36,10 @@ import java.util.concurrent.Future;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -54,48 +54,60 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.DateAndTime;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.AppContext;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapContext;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapPollConnectionInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapPollConnectionOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapPollConnectionOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapSetConnectionInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapSetConnectionOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.CcapSetConnectionOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.PacketcableService;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.Qos;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.QosPollGatesInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.QosPollGatesOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.QosPollGatesOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.ConnectionBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccaps.CcapBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gate.spec.GateSpecBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.Apps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.App;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.AppBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.AppKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.Subscribers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.SubscribersBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.Subscriber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.AppContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapPollConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapPollConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapPollConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapSetConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapSetConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.CcapSetConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.PacketcableService;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.Qos;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.QosPollGatesInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.QosPollGatesOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.QosPollGatesOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.ConnectionBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.CcapBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gate.spec.GateSpecBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.Apps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.App;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.AppBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.AppKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.Subscribers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.SubscribersBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
-import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.gates.IGateSpec.Direction;
+import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
+import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -685,29 +697,43 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             gateBuilder.setGateId(newGate.getGateId())
                     .setGatePath(newGatePathStr)
                     .setCcapId(ccap.getCcapId())
-                    .setTrafficProfile(newGate.getTrafficProfile())
                     .setClassifiers(newGate.getClassifiers())
                     .setGateSpec(newGate.getGateSpec())
                     .setCopsGateState("")
                     .setCopsGateTimeInfo("")
                     .setCopsGateUsageInfo("");
 
-            //
-            // Right now only ServiceClassName traffic Profile is supported. This logic needs to
-            // be updated when the yang traffic-profile is extended to support new types
-            // Override requested Direction using the Ccap configuration information about SCNs and
-            // their configured direction.
-            //
-            final ServiceClassName scn = newGate.getTrafficProfile().getServiceClassName();
-            final ServiceFlowDirection scnDirection = findScnOnCcap(scn, ccap);
-            if (scnDirection == null) {
-                final String msg =
+            ServiceFlowDirection scnDirection = null;
+            
+            if (newGate.getTrafficProfile().getTrafficProfileChoice() instanceof ServiceClassNameChoice) {    
+                final ServiceClassName scn =
+                    ((ServiceClassNameChoice)newGate.getTrafficProfile()
+                     .getTrafficProfileChoice())
+                    .getServiceClassNameProfile()
+                    .getServiceClassName();
+                scnDirection = findScnOnCcap(scn, ccap);
+                if (scnDirection == null) {
+                    final String msg =
                         String.format("SCN %s not found on CCAP %s for %s", scn, ccap.getCcapId(), newGatePathStr);
-                logger.error(msg);
-                saveGateError(gateIID, newGatePathStr, msg);
-                return;
+                    logger.error(msg);
+                    saveGateError(gateIID, newGatePathStr, msg);
+                    return;
+                }
+                ServiceClassNameProfileBuilder scnBuilder = new ServiceClassNameProfileBuilder();
+                scnBuilder.setServiceClassName(scn);
+                ServiceClassNameProfile scnProfile = scnBuilder.build();
+                ServiceClassNameChoiceBuilder scncBuilder = new ServiceClassNameChoiceBuilder();
+                scncBuilder.setServiceClassNameProfile(scnProfile);
+                ServiceClassNameChoice scnChoice = scncBuilder.build();
+                TrafficProfileBuilder trafficProfileBuilder = new TrafficProfileBuilder();
+                trafficProfileBuilder.setTrafficProfileChoice(scnChoice);
+                TrafficProfile trafficProfile = trafficProfileBuilder.build();
+                gateBuilder.setTrafficProfile(trafficProfile);
             }
-
+            else {
+                gateBuilder.setTrafficProfile(newGate.getTrafficProfile());
+            }
+            
             //
             // since we may be modifying the contents of the original request GateSpec
             // to update flow direction (based on the ccap SCN configuration) we need to
@@ -907,15 +933,15 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         }
 
         DateAndTime connectionDateAndTime = getNowTimeStamp();
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.set.connection.output.ccap.ConnectionBuilder
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.set.connection.output.ccap.ConnectionBuilder
                 connectionRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.set.connection.output.ccap.ConnectionBuilder()
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.set.connection.output.ccap.ConnectionBuilder()
                         .setConnected(effectiveIsConnected)
                         .setError(outputError)
                         .setTimestamp(connectionDateAndTime);
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.set.connection.output.CcapBuilder().setCcapId(
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.set.connection.output.CcapBuilder().setCcapId(
                         ccapId).setConnection(connectionRpcOutput.build());
 
 
@@ -952,9 +978,9 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         PCMMService pcmmService = pcmmServiceMap.get(ccapId);
         Boolean effectiveIsConnected = true;
         String response = null;
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.poll.connection.output.ccap.ConnectionBuilder
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.poll.connection.output.ccap.ConnectionBuilder
                 connectionRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.poll.connection.output.ccap.ConnectionBuilder();
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.poll.connection.output.ccap.ConnectionBuilder();
 
         if (pcmmService != null) {
             if (pcmmService.getPcmmPdpSocket()) {
@@ -984,7 +1010,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             CcapBuilder responseCcapBuilder = new CcapBuilder().setCcapId(ccapId).setConnection(connectionOps.build());
 
             connectionRpcOutput =
-                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.poll.connection.output.ccap.ConnectionBuilder()
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.poll.connection.output.ccap.ConnectionBuilder()
                             .setConnected(effectiveIsConnected)
                             .setError(outputError)
                             .setTimestamp(connectionDateAndTime);
@@ -998,8 +1024,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         DateAndTime rpcDateAndTime = getNowTimeStamp();
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.poll.connection.output.CcapBuilder().setCcapId(
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.poll.connection.output.CcapBuilder().setCcapId(
                         ccapId).setConnection(connectionRpcOutput.build());
 
         CcapPollConnectionOutputBuilder outputBuilder =
@@ -1065,8 +1091,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         String rpcResponse = null;
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.qos.poll.gates.output.GateBuilder gateOutputBuilder =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.qos.poll.gates.output.GateBuilder();
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.qos.poll.gates.output.GateBuilder();
 
         GateBuilder gateBuilder = new GateBuilder();
 
@@ -1230,8 +1256,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         @Override
         public void run() {
 
-            org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.qos.poll.gates.output.GateBuilder gateOutputBuilder =
-                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.qos.poll.gates.output.GateBuilder();
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.qos.poll.gates.output.GateBuilder();
 
             GateBuilder gateBuilder = new GateBuilder();
 
