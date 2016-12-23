@@ -16,7 +16,7 @@ import org.opendaylight.controller.packetcable.provider.validation.ValidationExc
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps.ConnectionValidator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.ccaps.ConnectionValidatorTest;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.Connection;
 
 /**
  * @author rvail

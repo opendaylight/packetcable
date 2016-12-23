@@ -10,6 +10,9 @@ module packetcable
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2016-12-19 {
+        description "Added support for flow-spec traffic profile";
+    }
     revision 2016-11-28 {
         description "Added support for activation-state, session-class-id and inactivity-timer";
     }
@@ -341,6 +344,19 @@ module packetcable
 
     grouping pcmm-qos-traffic-profile {
         container traffic-profile {
+      choice traffic-profile-choice {
+        case service-class-name-choice {
+          uses pcmm-serviceclass-name-profile;
+        } 
+        case flow-spec-choice {
+          uses pcmm-flow-spec-profile;
+        }
+      }
+    }
+  }
+    
+  grouping pcmm-serviceclass-name-profile {
+    container service-class-name-profile {
             leaf service-class-name {
                 type service-class-name;
                 description "The Service Class Name (SCN). This SCN must be pre-provisioned on the target CCAP";
@@ -349,7 +365,47 @@ module packetcable
         }
     }
 
-    grouping tp-port-match-ranges {
+  grouping pcmm-flow-spec-profile {
+    container flow-spec-profile {
+      leaf token-bucket-rate {
+        type int32;
+        description "Token Bucket Rate value [r]";
+        mandatory true;
+      }
+      leaf token-bucket-size {
+        type int32; 
+        description "Token Bucket Size value [b]";
+        mandatory true;
+      }
+      leaf peak-data-rate {
+        type int32;
+        description "Peak Data Rate value [p]";
+        mandatory true;
+      } 
+      leaf minimum-policed-unit {
+        type int32;
+        description "Minimum Policed Unit value [m]";
+        mandatory true;
+      }
+      leaf maximum-packet-size {
+        type int32;
+        description "Maximum Packet Size value [M]";
+        mandatory true;
+      }
+      leaf rate {
+        type int32;
+        description "Rate value [R]";
+        mandatory true;
+      }
+      leaf slack-term {
+        type int32;
+        description "Slack Term value [S]";
+        mandatory true;
+      }
+    }
+  }
+    
+  grouping tp-port-match-ranges {
         leaf srcPort-start {
             type inet:port-number;
             description "TCP/UDP source port range start.";

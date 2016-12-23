@@ -9,8 +9,8 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.Subscribers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.Subscribers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.Subscriber;
 
 /**
  * @author rvail

@@ -15,11 +15,11 @@ import org.opendaylight.controller.packetcable.provider.validation.ValidationExc
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv6Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.ClassifierActivationState;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161128.pcmm.qos.ipv6.classifier.Ipv6ClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ClassifierActivationState;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ipv6.classifier.Ipv6ClassifierBuilder;
 
 /**
  * @author rvail
