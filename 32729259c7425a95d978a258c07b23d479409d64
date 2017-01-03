@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a622d24_ba7dd2e9",
+        "filename": "packetcable-policy-model/src/main/yang/packetcable.yang",
+        "patchSetId": 1
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-01-03T20:56:35Z",
+      "side": 1,
+      "message": "minor issue but the indentation here is wrong",
+      "range": {
+        "startLine": 347,
+        "startChar": 6,
+        "endLine": 357,
+        "endChar": 4
+      },
+      "revId": "32729259c7425a95d978a258c07b23d479409d64",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
