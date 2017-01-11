@@ -6,19 +6,6 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-/* -----------------------------------------------------------------------------
- * This source code is provided under the terms of the Applied Broadband,
- * Inc End User License Agreement (EULA). Any other use of this source 
- * code is strictly prohibited.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *---------------------------------------------------------------------------*/
 package org.pcmm.gates.impl;
 
 import org.pcmm.base.impl.PCMMBaseObject;

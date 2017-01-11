@@ -344,16 +344,16 @@ module packetcable
 
     grouping pcmm-qos-traffic-profile {
         container traffic-profile {
-      choice traffic-profile-choice {
-        case service-class-name-choice {
-          uses pcmm-serviceclass-name-profile;
-        } 
-        case flow-spec-choice {
-          uses pcmm-flow-spec-profile;
+            choice traffic-profile-choice {
+                case service-class-name-choice {
+                    uses pcmm-serviceclass-name-profile;
+                } 
+                case flow-spec-choice {
+                    uses pcmm-flow-spec-profile;
+                }
+            }
         }
-      }
     }
-  }
     
   grouping pcmm-serviceclass-name-profile {
     container service-class-name-profile {
