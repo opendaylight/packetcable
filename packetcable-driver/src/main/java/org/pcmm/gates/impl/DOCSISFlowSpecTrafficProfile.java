@@ -154,49 +154,54 @@ public class DOCSISFlowSpecTrafficProfile extends PCMMBaseObject implements ITra
     @Override
     protected byte[] getBytes() {
         final byte[] data = new byte[4+(4*7*3)];
+        ByteBuffer buffer = ByteBuffer.wrap(data);
         
-        float fTokenBucketRate = tokenBucketRate;
-        float fTokenBucketSize = tokenBucketSize;
-        float fPeakDataRate = peakDataRate;
-        float fRate = rate;
-
         //
         // Ok I know this looks crazy but PCMM Flow Spec encodes some values as floats
         // even though they do not contain fractional values, so we 'integerize' them
         // in the constructor and class internals
         //
-        Arrays.fill(data, (byte) 0);
-        data[0] = envelope;
-        data[1] = SERVICE_NUMBER;
-        data[2] = 0; // reserved
-        data[3] = 0; // reserved
+        final float fTokenBucketRate = tokenBucketRate;
+        final float fTokenBucketSize = tokenBucketSize;
+        final float fPeakDataRate = peakDataRate;
+        final float fRate = rate;
+
+        buffer.put(envelope);
+        buffer.put(SERVICE_NUMBER);
+        buffer.put((byte)0); // reserved
+        buffer.put((byte)0); // reserved
         
         // Authorized Envelope
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fTokenBucketRate).array(), 0, data, 4, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fTokenBucketSize).array(), 0, data, 8, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fPeakDataRate).array(), 0, data, 12, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(minimumPolicedUnit).array(), 0, data, 16, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(maximumPacketSize).array(), 0, data, 20, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fRate).array(), 0, data, 24, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(slackTerm).array(), 0, data, 28, 4);
+        buffer.putFloat(fTokenBucketRate);
+        buffer.putFloat(fTokenBucketSize);
+        buffer.putFloat(fPeakDataRate);
+        buffer.putInt(minimumPolicedUnit);
+        buffer.putInt(maximumPacketSize);
+        buffer.putFloat(fRate);
+        buffer.putInt(slackTerm);
         
         // Reserved Envelope
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fTokenBucketRate).array(), 0, data, 32, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fTokenBucketSize).array(), 0, data, 36, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fPeakDataRate).array(), 0, data, 40, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(minimumPolicedUnit).array(), 0, data, 44, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(maximumPacketSize).array(), 0, data, 48, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fRate).array(), 0, data, 52, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(slackTerm).array(), 0, data, 56, 4);
+        buffer.putFloat(fTokenBucketRate);
+        buffer.putFloat(fTokenBucketSize);
+        buffer.putFloat(fPeakDataRate);
+        buffer.putInt(minimumPolicedUnit);
+        buffer.putInt(maximumPacketSize);
+        buffer.putFloat(fRate);
+        buffer.putInt(slackTerm);
         
         // Committed Envelope
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fTokenBucketRate).array(), 0, data, 60, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fTokenBucketSize).array(), 0, data, 64, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fPeakDataRate).array(), 0, data, 68, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(minimumPolicedUnit).array(), 0, data, 72, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(maximumPacketSize).array(), 0, data, 76, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putFloat(fRate).array(), 0, data, 80, 4);
-        System.arraycopy(ByteBuffer.allocate(4).putInt(slackTerm).array(), 0, data, 84, 4);
+        buffer.putFloat(fTokenBucketRate);
+        buffer.putFloat(fTokenBucketSize);
+        buffer.putFloat(fPeakDataRate);
+        buffer.putInt(minimumPolicedUnit);
+        buffer.putInt(maximumPacketSize);
+        buffer.putFloat(fRate);
+        buffer.putInt(slackTerm);
+        
+        if (buffer.hasRemaining()) {
+            System.err.println("Original buffer too large");
+        }
+        
         return data;
     }
 
