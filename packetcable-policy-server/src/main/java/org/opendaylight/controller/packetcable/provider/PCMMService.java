@@ -13,10 +13,10 @@ import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
 import org.pcmm.PCMMPdpAgent;
 import org.pcmm.PCMMPdpDataProcess;
 import org.pcmm.PCMMPdpMsgSender;
@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.umu.cops.prpdp.COPSPdpException;
 import org.umu.cops.stack.COPSError;
 import org.umu.cops.stack.COPSError.ErrorTypes;
+import java.nio.ByteBuffer;
+
 
 /**
  * Class responsible for managing the gates for a single CCAP.
@@ -136,6 +138,10 @@ public class PCMMService {
         }
     }
 
+    private static long getUnsignedInt(int x) {
+        return x & 0xFFFFFFFFL;
+    }
+
     public GateSendStatus sendGateSet(final String gatePathStr, final InetAddress subId, final Gate qosGate) {
 
         GateSendStatus status = new GateSendStatus();
@@ -146,10 +152,17 @@ public class PCMMService {
         final PCMMGateReqBuilder gateBuilder = new PCMMGateReqBuilder();
         gateBuilder.setAmId(ccap.getAmId());
         gateBuilder.setSubscriberId(subId);
-        gateBuilder.setGateSpec(qosGate.getGateSpec(), null);
+        gateBuilder.setGateSpec(qosGate.getGateSpec());
         gateBuilder.setTrafficProfile(qosGate.getTrafficProfile());
         gateBuilder.setClassifiers(qosGate.getClassifiers().getClassifierContainer());
 
+        if (qosGate.getCopsGateId() != null) {
+            long lgate = Long.parseLong(qosGate.getCopsGateId());
+            gateBuilder.setGateId((int)lgate);
+        }
+        
+        logger.debug("PCMMService: sendGateSet(): formatting gate");
+        
         // assemble the final gate request
         final PCMMGateReq gateReq = gateBuilder.build();
 
@@ -170,37 +183,34 @@ public class PCMMService {
                     logger.debug("Gate request ID - " + gateReq.getGateID());
                 }
             } catch (Exception e) {
-                logger.error(
-                        "PCMMService: sendGateSet(): gate response timeout exceeded for " + gatePathStr + '/' + gateReq,
-                        e);
+                logger.error("PCMMService: sendGateSet(): gate response timeout exceeded for " + gatePathStr + '/' + gateReq,
+                             e);
                 status.setDidSucceed(false);
                 status.setMessage(String.format("408 Request Timeout - gate response timeout exceeded for %s/%s", ccap.getCcapId(),
-                        gatePathStr));
+                                                gatePathStr));
                 return status;
             }
-
 
             if (gateReq.getError() != null) {
                 gateRequests.remove(gatePathStr);
                 status.setDidSucceed(false);
-                status.setMessage(
-                        String.format("404 Not Found - sendGateSet for %s/%s returned error - %s", ccap.getCcapId(),
-                                gatePathStr, gateReq.getError().toString()));
+                status.setMessage(String.format("404 Not Found - sendGateSet for %s/%s returned error - %s", ccap.getCcapId(),
+                                                gatePathStr, gateReq.getError().toString()));
 
                 logger.error("PCMMService: sendGateSet(): returned error: {}", gateReq.getError().toString());
             } else {
                 if (gateReq.getGateID() != null) {
                     status.setDidSucceed(true);
-                    status.setCopsGateId(String.format("%08x", gateReq.getGateID().getGateID()));
-                    status.setMessage(String.format("200 OK - sendGateSet for %s/%s returned GateId %08x",
-                            ccap.getCcapId(), gatePathStr, gateReq.getGateID().getGateID()) );
-                    logger.info(String.format("PCMMService: sendGateSet(): returned GateId %08x: ",
-                            gateReq.getGateID().getGateID()));
+                    status.setCopsGateId(String.format("%d", getUnsignedInt(gateReq.getGateID().getGateID())));
+                    status.setMessage(String.format("200 OK - sendGateSet for %s/%s returned GateId %d",
+                                                    ccap.getCcapId(), gatePathStr, getUnsignedInt(gateReq.getGateID().getGateID())) );
+                    logger.info(String.format("PCMMService: sendGateSet(): returned GateId %d: ",
+                                              getUnsignedInt(gateReq.getGateID().getGateID())));
                 } else {
                     status.setDidSucceed(false);
                     status.setMessage(
-                            String.format("404 Not Found - sendGateSet for %s/%s no gateId returned", ccap.getCcapId(),
-                                    gatePathStr));
+                                      String.format("404 Not Found - sendGateSet for %s/%s no gateId returned", ccap.getCcapId(),
+                                                    gatePathStr));
 
                     logger.info("PCMMService: sendGateSet(): no gateId returned:");
                 }
@@ -235,8 +245,8 @@ public class PCMMService {
                 return false;
             } else {
                 if (gateReq.getGateID() != null) {
-                    logger.info(String.format("PCMMService: sendGateDelete(): deleted GateId %08x: ",
-                            gateReq.getGateID().getGateID()));
+                    logger.info(String.format("PCMMService: sendGateDelete(): deleted GateId %d: ",
+                                              getUnsignedInt(gateReq.getGateID().getGateID())));
                 } else {
                     logger.error("PCMMService: sendGateDelete(): deleted but no gateId returned");
                 }
@@ -316,17 +326,15 @@ public class PCMMService {
                 } else {
                     if (gateReq.getGateID() != null) {
                         status.setDidSucceed(true);
-                        status.setCopsGateId(String.format("%08x", gateReq.getGateID().getGateID()));
-                        //status.setMessage(String.format("200 OK - sendGateInfo for %s/%s returned GateId %08x",
-                        //        ccap.getCcapId(), gatePathStr, gateReq.getGateID().getGateID()) );
+                        status.setCopsGateId(String.format("%d", getUnsignedInt(gateReq.getGateID().getGateID())));
 
                         final IGateState gateState = gateReq.getGateState();
                         status.setCopsGateState(gateState.getGateState().toString());
                         status.setCopsGateStateReason(gateState.getGateStateReason().toString());
                         status.setCopsGateTimeInfo(String.format("%d", gateReq.getGateTimeInfo().getGateTimeInfo()));
                         status.setCopsGateUsageInfo(String.format("%d", gateReq.getGateUsageInfo().getGateUsageInfo()));
-                        logger.info(String.format("PCMMService: sendGateInfo(): returned GateId %08x: ",
-                                gateReq.getGateID().getGateID()));
+                        logger.info(String.format("PCMMService: sendGateInfo(): returned GateId %d: ",
+                                getUnsignedInt(gateReq.getGateID().getGateID())));
                     } else {
                         status.setDidSucceed(false);
                         status.setMessage(
@@ -421,41 +429,56 @@ public class PCMMService {
             logger.info("CcapClient: sendGateSet(): {}:{} => {}", ipv4, port, gateReq);
             try {
                 pcmmSender.sendGateSet(gateReq);
-
-                // TODO - determine if this is the correct place to perform this operation as this currently is the
-                // TODO - place where the gate ID can be set on the gateReq object
-                //                pcmmSender.handleGateReport(pcmmPdp.getSocket());
-            } catch (COPSPdpException e) {
-                logger.error("CcapClient: sendGateSet(): {}:{} => {} FAILED:", ipv4, port, gateReq, e);
-            }
             // and save it back to the gateRequest object for gate delete later
             gateReq.setGateID(pcmmSender.getGateID());
-
-            // TODO - determine why this method is always returning true???
             return true;
+            } catch (COPSPdpException e) {
+                logger.error("CcapClient: sendGateSet(): {}:{} => {} FAILED: {}", ipv4, port, gateReq,
+                             e.getMessage());
+                return false;
+        }
+            catch (Exception e) {
+                logger.error("CcapClient: sendGateSet(): {}:{} => {} FAILED: {}", ipv4, port, gateReq,
+                             e.getMessage());
+                return false;
+            }
         }
 
         public Boolean sendGateDelete(final PCMMGateReq gateReq) {
             logger.info("CcapClient: sendGateDelete(): {}:{} => {}", ipv4, port, gateReq);
             try {
                 pcmmSender.sendGateDelete(gateReq);
+                return true;
             } catch (COPSPdpException e) {
-                logger.error("CcapClient: sendGateDelete(): {}:{} => {} FAILED: {}", ipv4, port, gateReq,
-                        e.getMessage());
+                logger.error("CcapClient: sendGateDelete(): {}:{} => {} FAILED: {}", ipv4, port,
+                             gateReq, e.getMessage());
+                return false;
             }
-            return true;
+            catch (Exception e) {
+                logger.error("CcapClient: sendGateDelete(): {}:{} => {} FAILED: {}", ipv4, port,
+                             gateReq, e.getMessage());
+                return false;
         }
+       }
 
         public Boolean sendGateInfo(final PCMMGateReq gateReq) {
             logger.info("CcapClient: sendGateInfo(): {}:{} => {}", ipv4, port);
             try {
                 pcmmSender.sendGateInfo(gateReq);
+                // and save it back to the gateRequest object for operational sal persistance
+                gateReq.setGateID(pcmmSender.getGateID());
+                return true;
             } catch (COPSPdpException e) {
                 logger.error("CcapClient: sendGateInfo(): {}:{} => {} FAILED: {}", ipv4, port,
-                        e.getMessage());
+                             gateReq, e.getMessage());
+                return false;
             }
-            return true;
+            catch (Exception e) {
+                logger.error("CcapClient: sendGateInfo(): {}:{} => {} FAILED: {}", ipv4, port,
+                             gateReq, e.getMessage());
+                return false;
         }
     }
+}
 }
 
