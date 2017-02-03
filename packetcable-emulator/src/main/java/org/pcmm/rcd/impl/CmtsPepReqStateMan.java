@@ -34,8 +34,10 @@ import org.pcmm.gates.IPCMMError.ErrorCode;
 import org.pcmm.gates.ISubscriberID;
 import org.pcmm.gates.ITransactionID;
 import org.pcmm.gates.impl.AMID;
-import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
+import org.pcmm.gates.impl.DOCSISRTPTrafficProfile;
+import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
+import org.pcmm.gates.impl.DOCSISUGSTrafficProfile;
 import org.pcmm.gates.impl.GateID;
 import org.pcmm.gates.impl.GateSpec;
 import org.pcmm.gates.impl.GateState;
@@ -52,8 +54,8 @@ import org.umu.cops.prpep.COPSPepReqStateMan;
 import org.umu.cops.stack.COPSClientSI;
 import org.umu.cops.stack.COPSContext;
 import org.umu.cops.stack.COPSData;
-import org.umu.cops.stack.COPSDecision;
 import org.umu.cops.stack.COPSDecision.DecisionFlag;
+import org.umu.cops.stack.COPSDecision;
 import org.umu.cops.stack.COPSDecisionMsg;
 import org.umu.cops.stack.COPSException;
 import org.umu.cops.stack.COPSHandle;
@@ -61,8 +63,8 @@ import org.umu.cops.stack.COPSMsgParser;
 import org.umu.cops.stack.COPSObjHeader.CNum;
 import org.umu.cops.stack.COPSObjHeader.CType;
 import org.umu.cops.stack.COPSReportMsg;
-import org.umu.cops.stack.COPSReportType;
 import org.umu.cops.stack.COPSReportType.ReportType;
+import org.umu.cops.stack.COPSReportType;
 
 /**
  * PEP State manager implementation for use in a CMTS.
@@ -345,14 +347,19 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
         }
         else {
             // Traffic profile type check
-            if (!(gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) &&
-                !(gateReq.getTrafficProfile() instanceof DOCSISFlowSpecTrafficProfile)) {
-                logger.error("Currently only DOCSIS Service Class Name and Flow Spec Traffic Profiles are supported: attempted ",
-                        gateReq.getTrafficProfile().getClass().getName());
+            if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
+            } else if (gateReq.getTrafficProfile() instanceof DOCSISFlowSpecTrafficProfile) {
+            } else if (gateReq.getTrafficProfile() instanceof DOCSISUGSTrafficProfile) {
+            } else if (gateReq.getTrafficProfile() instanceof DOCSISRTPTrafficProfile) {
+            } else {
+                logger.error("Currently only DOCSIS Service Class Name, Flow Spec, RTP or UGS Traffic Profiles are supported: attempted ",
+                             gateReq.getTrafficProfile().getClass().getName());
                 return new PCMMError(ErrorCode.OTHER_UNSPECIFIED);
             }
+
             // ServiceClassName match check
-            else if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
+
+            if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
                 final DOCSISServiceClassNameTrafficProfile scnTrafficProfile =
                         (DOCSISServiceClassNameTrafficProfile) gateReq.getTrafficProfile();
 
@@ -413,14 +420,20 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
 
         final String subId = gateReq.getSubscriberID().getSourceIPAddress().getHostAddress();
         final Direction gateDir = gateReq.getGateSpec().getDirection();
-
-        final String serviceClassName;
+        String serviceClassName = null;
+        
         if (gateReq.getTrafficProfile() instanceof DOCSISServiceClassNameTrafficProfile) {
             serviceClassName = ((DOCSISServiceClassNameTrafficProfile)gateReq.getTrafficProfile()).getScnName();
             logger.info("Processing ServiceClassName[" + serviceClassName + "] gate set with direction [" + gateDir + ']');
         } else if (gateReq.getTrafficProfile() instanceof DOCSISFlowSpecTrafficProfile) {
             serviceClassName = null;
             logger.info("Processing FlowSpec gate set with direction [" + gateDir + ']');
+        } else if (gateReq.getTrafficProfile() instanceof DOCSISUGSTrafficProfile) {
+            serviceClassName = null;
+            logger.info("Processing UGS gate set with direction [" + gateDir + ']');
+        } else if (gateReq.getTrafficProfile() instanceof DOCSISRTPTrafficProfile) {
+            serviceClassName = null;
+            logger.info("Processing RTP gate set with direction [" + gateDir + ']');
         } else {
             serviceClassName = null;
             logger.error("Unknown Traffic Profile type: " + gateReq.getTrafficProfile().getClass().getName());
@@ -428,8 +441,6 @@ public class CmtsPepReqStateMan extends COPSPepReqStateMan {
 
         final IPCMMError error = getGateError(gateReq);
         gateReq.setError(error);
-
-        logger.info("Processing gate set request [" + serviceClassName + "] with direction [" + gateDir + ']');
 
         // Set response
 

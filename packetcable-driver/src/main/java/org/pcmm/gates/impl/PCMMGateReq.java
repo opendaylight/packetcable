@@ -31,6 +31,7 @@ import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
 import org.pcmm.gates.impl.BestEffortService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.pcmm.utils.PCMMUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,12 +142,18 @@ public class PCMMGateReq implements IPCMMGate {
                 break;
             case TRAFFIC_PROFILE:
                 switch (sType) {
+        case DOCSISUGSTrafficProfile.STYPE:
+          trafficProfile = DOCSISUGSTrafficProfile.parse(dataBuffer);
+          break;
                 case DOCSISServiceClassNameTrafficProfile.STYPE:
                     trafficProfile = DOCSISServiceClassNameTrafficProfile.parse(dataBuffer);
                     break;
                 case DOCSISFlowSpecTrafficProfile.STYPE:
                     trafficProfile = DOCSISFlowSpecTrafficProfile.parse(dataBuffer);
                     break;
+        case DOCSISRTPTrafficProfile.STYPE:
+          trafficProfile = DOCSISRTPTrafficProfile.parse(dataBuffer);
+          break;
                 case BestEffortService.STYPE:
                     trafficProfile = BestEffortService.parse(dataBuffer);
                     break;

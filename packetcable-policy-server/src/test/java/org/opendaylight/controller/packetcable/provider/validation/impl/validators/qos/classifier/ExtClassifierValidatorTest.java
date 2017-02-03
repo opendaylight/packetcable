@@ -15,11 +15,11 @@ import org.opendaylight.controller.packetcable.provider.validation.ValidationExc
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ClassifierActivationState;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ext.classifier.ExtClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ClassifierActivationState;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.ext.classifier.ExtClassifierBuilder;
 
 /**
  * @author rvail
