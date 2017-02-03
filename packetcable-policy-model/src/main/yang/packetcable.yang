@@ -10,6 +10,9 @@ module packetcable
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2017-01-25 {
+        description "Added support for UGS and RTP traffic profiles";
+    }
     revision 2016-12-19 {
         description "Added support for flow-spec traffic profile";
     }
@@ -32,56 +35,78 @@ module packetcable
         description "Initial revision of PCMM CCAP definitions";
     }
 
-
     // Global typedefs
+
+    typedef s-type {
+        type uint8;
+        description "RSVP sub-type per PCMM specification.";
+    }
+    
     typedef service-class-name {
         type string { length "2..16"; }
         description "The Service Class Name is MUST be 2-16 bytes.";
     }
     typedef service-flow-direction {
         type enumeration {
-              enum ds {
+            enum ds {
                 value "0";
                 description "Downstream service flow.";
-              }
-              enum us {
+            }
+            enum us {
                 value "1";
                 description "Upstream service flow.";
-              }
-          }
+            }
+        }
         description "This value represents the service flow direction.";
-      }
+    }
     
-      typedef classifier-activation-state {
+    typedef classifier-activation-state {
         type enumeration {
-          enum inactive {
-            value 0;
-            description "Inactive";
-          }
-          enum active {
-            value 1;
-            description "Active";
-          }
+            enum inactive {
+                value 0;
+                description "Inactive";
+            }
+            enum active {
+                value 1;
+                description "Active";
+            }
         }
         description "Instructs the CMTS to either activate or inactivate the classifier";
-      }
+    }
      
+    typedef classifier-action {
+        type enumeration {
+            enum add {
+                value 0;
+                description "Add classifier";
+            }
+            enum replace {
+                value 1;
+                description "Replace classifier";
+            }
+            enum delete {
+                value 2;
+                description "Delete classifier";
+            }
+            enum nochange {
+                value 3;
+                description "No change to classifier";
+            }
+        }
+        description "Instructs the CMTS to add,replace,delete or leave the classifier";
+    }
 
-     typedef tp-protocol {
-         type uint16 {range "0..257";}
+    typedef tp-protocol {
+        type uint16 {range "0..257";}
         description "This value represents the IP transport protocol (or Next Header) where 256 is any protocol and 257 is TCP or UDP";
-     }
-     typedef tos-byte {
-         type uint8;
-         description "TOS/TC byte or mask";
-     }
+    }
+    typedef tos-byte {
+        type uint8;
+        description "TOS/TC byte or mask";
+    }
 
     identity ccap-context {
         description "Identity used to mark ccap context";
-    }
-
-    identity app-context {
-        description "Identity used to mark app context";
     }
 
     // CCAP devices
@@ -103,16 +128,31 @@ module packetcable
         }
     }
 
+    identity app-context {
+        description "Identity used to mark app context";
+    }
+
+    container apps {
+        list app {
+            key "id";
+            ext:context-instance "app-context";
+            leaf "id" {
+                type string;
+                mandatory true;
+            }
+        }
+    }
+
     grouping ccap-connection {
-         leaf ipAddress {
-               type inet:ip-address;
-               description "IP Address of CCAP";
-               mandatory true;
-           }
-           leaf port {
-               type inet:port-number;
+        leaf ipAddress {
+            type inet:ip-address;
+            description "IP Address of CCAP";
+            mandatory true;
+        }
+        leaf port {
+            type inet:port-number;
             description "COPS session TCP port number";
-             default 3918;
+            default 3918;
         }
         leaf connected {
             config false;
@@ -125,18 +165,6 @@ module packetcable
             type string;
             description "Operational errors";
         }
-//        leaf idle-detect {
-//            type uint8;
-//            description "COPS connection idle timer (seconds)";
-//          mandatory true;
-//        }
-//        leaf isIdle {
-//            config false;
-//            type boolean;
-//            description "COPS connection idle state";
-//          mandatory true;
-//        }
-
         leaf timestamp {
             config false;
             type yang:date-and-time;
@@ -161,7 +189,7 @@ module packetcable
                 mandatory true;
             }
             leaf am-type {
-                 type uint16;
+                type uint16;
                 description "Application Manager Type -- unique for this AM tag";
                 mandatory true;
             }
@@ -237,35 +265,35 @@ module packetcable
     }
 
     grouping gate-operational-attributes {
-		leaf gatePath {
-			config false;
-		    type string;
-		    description "FQ Gate path app/subscriber/gate";
-		    mandatory true;
-		}
-		leaf ccapId {
-			config false;
-		    type string;
-		    description "CCAP Identity";
-		    mandatory true;
-		}
-		leaf cops-gate-state {
-			config false;
-			type string;
-			description "Operational COPS Gate state";
-			mandatory true;
-		}
-		leaf cops-gate-time-info {
-			config false;
-			type string;
-			description "Operational COPS Gate time info";
-			mandatory true;
-		}
-		leaf cops-gate-usage-info {
-          config false;
-          type string;
-          description "Operational COPS gate usage info";
-          mandatory true;
+        leaf gatePath {
+            config false;
+            type string;
+            description "FQ Gate path app/subscriber/gate";
+            mandatory true;
+        }
+        leaf ccapId {
+            config false;
+            type string;
+            description "CCAP Identity";
+            mandatory true;
+        }
+        leaf cops-gate-state {
+            config false;
+            type string;
+            description "Operational COPS Gate state";
+            mandatory true;
+        }
+        leaf cops-gate-time-info {
+            config false;
+            type string;
+            description "Operational COPS Gate time info";
+            mandatory true;
+        }
+        leaf cops-gate-usage-info {
+            config false;
+            type string;
+            description "Operational COPS gate usage info";
+            mandatory true;
         }
         leaf cops-gateId {
             config false;
@@ -295,25 +323,25 @@ module packetcable
                     type uint8;
                     description "Classifier ID and Gate classifier priority";
                 }
-                   choice classifier-choice {
-                      case qos-classifier-choice {
+                choice classifier-choice {
+                    case qos-classifier-choice {
                         uses pcmm-qos-classifier;
                     }
                     case ext-classifier-choice {
                         uses pcmm-qos-ext-classifier;
-                     }
-                     case ipv6-classifier-choice {
-                         uses pcmm-qos-ipv6-classifier;
-                     }
-                 }
-             }
+                    }
+                    case ipv6-classifier-choice {
+                        uses pcmm-qos-ipv6-classifier;
+                    }
+                }
+            }
         }
     }
 
     grouping pcmm-qos-gate-attributes {
-         uses pcmm-qos-gate-spec;
-         uses pcmm-qos-traffic-profile;
-         uses classifier-attributes;
+        uses pcmm-qos-gate-spec;
+        uses pcmm-qos-traffic-profile;
+        uses classifier-attributes;
     }
 
     grouping pcmm-qos-gate-spec {
@@ -345,6 +373,12 @@ module packetcable
     grouping pcmm-qos-traffic-profile {
         container traffic-profile {
             choice traffic-profile-choice {
+                case ugs-choice {
+                    uses pcmm-ugs-profile;
+                }
+                case rtp-choice {
+                    uses pcmm-rtp-profile;
+                }
                 case service-class-name-choice {
                     uses pcmm-serviceclass-name-profile;
                 } 
@@ -355,8 +389,8 @@ module packetcable
         }
     }
     
-  grouping pcmm-serviceclass-name-profile {
-    container service-class-name-profile {
+    grouping pcmm-serviceclass-name-profile {
+        container service-class-name-profile {
             leaf service-class-name {
                 type service-class-name;
                 description "The Service Class Name (SCN). This SCN must be pre-provisioned on the target CCAP";
@@ -365,62 +399,205 @@ module packetcable
         }
     }
 
-  grouping pcmm-flow-spec-profile {
-    container flow-spec-profile {
-      leaf token-bucket-rate {
-        type int32;
-        description "Token Bucket Rate value [r]";
-        mandatory true;
-      }
-      leaf token-bucket-size {
-        type int32; 
-        description "Token Bucket Size value [b]";
-        mandatory true;
-      }
-      leaf peak-data-rate {
-        type int32;
-        description "Peak Data Rate value [p]";
-        mandatory true;
-      } 
-      leaf minimum-policed-unit {
-        type int32;
-        description "Minimum Policed Unit value [m]";
-        mandatory true;
-      }
-      leaf maximum-packet-size {
-        type int32;
-        description "Maximum Packet Size value [M]";
-        mandatory true;
-      }
-      leaf rate {
-        type int32;
-        description "Rate value [R]";
-        mandatory true;
-      }
-      leaf slack-term {
-        type int32;
-        description "Slack Term value [S]";
-        mandatory true;
-      }
+    grouping pcmm-flow-spec-profile {
+        container flow-spec-profile {
+            leaf token-bucket-rate {
+                type int32;
+                description "Token Bucket Rate value [r]";
+                mandatory true;
+            }
+            leaf token-bucket-size {
+                type int32; 
+                description "Token Bucket Size value [b]";
+                mandatory true;
+            }
+            leaf peak-data-rate {
+                type int32;
+                description "Peak Data Rate value [p]";
+                mandatory true;
+            } 
+            leaf minimum-policed-unit {
+                type int32;
+                description "Minimum Policed Unit value [m]";
+                mandatory true;
+            }
+            leaf maximum-packet-size {
+                type int32;
+                description "Maximum Packet Size value [M]";
+                mandatory true;
+            }
+            leaf rate {
+                type int32;
+                description "Rate value [R]";
+                mandatory true;
+            }
+            leaf slack-term {
+                type int32;
+                description "Slack Term value [S]";
+                mandatory true;
+            }
+        }
     }
-  }
     
-  grouping tp-port-match-ranges {
+    grouping pcmm-ugs-profile {
+        container ugs-profile {
+            leaf request-transmission-policy {
+                type uint32;
+                description "Request Transmission Policy";
+                mandatory true;
+            }
+            leaf unsolicited-grant-size {
+                type uint32;
+                description "Unsolicited Grant Size";
+                mandatory true;
+            }
+            leaf grants-per-interval {
+                type uint8;
+                description "Grants per Interval";
+                mandatory true;
+            }
+            leaf nominal-grant-interval {
+                type uint32;
+                description "Nominal Grant Interval";
+                mandatory true;
+            } 
+            leaf tolerated-grant-jitter {
+                type uint32;
+                description "Tolerated Grant Jitter";
+                mandatory true;
+            }
+            leaf upstream-peak-traffic-rate {
+                type uint32;
+                description "Upstream Peak Traffic Interval";
+                mandatory true;
+            }
+            leaf required-attribute-mask {
+                type uint32;
+                description "Required Attribute Mask";
+                mandatory true;
+            }
+            leaf forbidden-attribute-mask {
+                type uint32;
+                description "Forbidden Attribute Mask";
+                mandatory true;
+            }
+            leaf attribute-aggregation-rule-mask {
+                type uint32;
+                description "Attribute Aggregation Rule Mask";
+                mandatory true;
+            }
+            leaf minimum-buffer {
+                type uint32;
+                description "Minimum Buffer";
+            }
+            leaf target-buffer {
+                type uint32;
+                description "Forbidden Attribute Mask";
+            }
+            leaf maximum-buffer {
+                type uint32;
+                description "Forbidden Attribute Mask";
+            }
+        }
+    }
+
+    grouping pcmm-rtp-profile {
+        container rtp-profile {
+            leaf request-transmission-policy {
+                type uint32;
+                description "Request Transmission Policy";
+                mandatory true;
+            }
+            leaf maximum-sustained-traffic-rate {
+                type uint32;
+                description "Maximum Sustained Traffic Rate";
+                default 0;
+            }
+            leaf maximum-traffic-burst {
+                type uint32;
+                description "Maximum Traffic Burst";
+                default 3044;
+            }
+            leaf minimum-reserved-traffic-rate {
+                type uint32;
+                description "Minimum Reserved Traffic Rate";
+                default 0;
+            }
+            leaf amrtr-packet-size {
+                type uint16;
+                description "Assumed Minimum Reserved Traffic Rate Packet Size";
+                default 0;
+            }
+            leaf maximum-concatenated-burst {
+                type uint16;
+                description "Maximum Concatenated Burst";
+                default 1522;
+            }
+            leaf nominal-polling-interval {
+                type uint32;
+                description "Nominal Polling Interval";
+                mandatory true;
+            }
+            leaf tolerated-poll-jitter {
+                type uint32;
+                description "Tolerated Poll Jitter";
+                default 0;
+            }
+            leaf upstream-peak-traffic-rate {
+                type uint32;
+                description "Upstream Peak Traffic Rate";
+                mandatory true;
+            }
+            leaf required-attribute-mask {
+                type uint32;
+                description "Required Attribute Mask";
+                mandatory true;
+            }
+            leaf forbidden-attribute-mask {
+                type uint32;
+                description "Forbidden Attribute Mask";
+                mandatory true;
+            }
+            leaf attribute-aggregation-rule-mask {
+                type uint32;
+                description "Attribute Aggregation Rule Mask";
+                mandatory true;
+            }
+            leaf minimum-buffer {
+                type uint32;
+                description "Minimum Buffer";
+            }
+            leaf target-buffer {
+                type uint32;
+                description "Forbidden Attribute Mask";
+            }
+            leaf maximum-buffer {
+                type uint32;
+                description "Forbidden Attribute Mask";
+            }
+        }
+    }
+
+    grouping tp-port-match-ranges {
         leaf srcPort-start {
             type inet:port-number;
             description "TCP/UDP source port range start.";
+            mandatory true;
         }
         leaf srcPort-end {
             type inet:port-number;
             description "TCP/UDP source port range end.";
+            mandatory true;
         }
         leaf dstPort-start {
             type inet:port-number;
             description "TCP/UDP destination port range start.";
+            mandatory true;
         }
         leaf dstPort-end {
             type inet:port-number;
             description "TCP/UDP destination port range end.";
+            mandatory true;
         }
     }
 
@@ -429,37 +606,44 @@ module packetcable
             leaf srcIp {
                 type inet:ipv4-address;
                 description "Source IPv4 address (exact match)";
+                mandatory true;
             }
             leaf dstIp {
                 type inet:ipv4-address;
                 description "Destination IPv4 address (exact match)";
+                mandatory true;
             }
-             leaf tos-byte {
-                 type tos-byte;
-                 description "TOS/DSCP match";
-             }
-             leaf tos-mask {
-                 type tos-byte;
-                 description "TOS/DSCP mask";
-             }
-             leaf protocol {
+            leaf tos-byte {
+                type tos-byte;
+                description "TOS/DSCP match";
+                mandatory true;
+            }
+            leaf tos-mask {
+                type tos-byte;
+                description "TOS/DSCP mask";
+                mandatory true;
+            }
+            leaf protocol {
                 type tp-protocol;
                 description "IPv4 transport protocol";
+                mandatory true;
             }
-             leaf srcPort {
+            leaf srcPort {
                 type inet:port-number;
                 description "TCP/UDP source port (exact match).";
-               }
-             leaf dstPort {
+                mandatory true;
+            }
+            leaf dstPort {
                 type inet:port-number;
                 description "TCP/UDP destination port (exact match).";
-               }
-             leaf priority {
-               type uint8;
-               description "Priority";
-               default 64;
-             }
-           }
+                mandatory true;
+            }
+            leaf priority {
+                type uint8;
+                description "Priority";
+                default 64;
+            }
+        }
     }
 
     grouping pcmm-qos-ext-classifier {
@@ -467,44 +651,55 @@ module packetcable
             leaf srcIp {
                 type inet:ipv4-address;
                 description "Source IPv4 address match";
+                mandatory true;
             }
             leaf srcIpMask {
                 type inet:ipv4-address;
                 description "Source IPv4 mask";
+                mandatory true;
             }
             leaf dstIp {
                 type inet:ipv4-address;
                 description "Destination IPv4 address match";
+                mandatory true;
             }
             leaf dstIpMask {
                 type inet:ipv4-address;
                 description "Destination IPv4 mask";
+                mandatory true;
             }
-             leaf tos-byte {
-                 type tos-byte;
-                 description "TOS/DSCP match";
-             }
-             leaf tos-mask {
-                 type tos-byte;
-                 description "TOS/DSCP mask";
-             }
-             leaf protocol {
+            leaf tos-byte {
+                type tos-byte;
+                description "TOS/DSCP match";
+                mandatory true;
+            }
+            leaf tos-mask {
+                type tos-byte;
+                description "TOS/DSCP mask";
+                mandatory true;
+            }
+            leaf protocol {
                 type tp-protocol;
                 description "IPv4 transport protocol";
+                mandatory true;
+            }
+            leaf priority {
+                type uint8;
+                description "Priority";
+                default 64;
             }
             uses tp-port-match-ranges;
-            leaf priority {
-              type uint8;
-              description "Priority";
-              default 64;
-            }
             leaf activation-state {
-              type classifier-activation-state;
-              description "Activation state";
-              default active;
+                type classifier-activation-state;
+                description "Activation state";
+                default active;
             }
-
-           }
+            leaf action {
+                type classifier-action;
+                description "Action";
+                default add;
+            }
+        }
     }
 
     grouping pcmm-qos-ipv6-classifier {
@@ -512,136 +707,144 @@ module packetcable
             leaf srcIp6 {
                 type inet:ipv6-prefix;
                 description "Source IPv6 prefix match in  'address/len' notation";
+                mandatory true;
             }
             leaf dstIp6 {
                 type inet:ipv6-prefix;
                 description "Destination IPv6 prefix match in 'address/len' notation";
+                mandatory true;
             }
-             leaf tc-low {
-                 type tos-byte;
-                 description "TC low range match";
-             }
-             leaf tc-high {
-                 type tos-byte;
-                 description "TC high range match";
-             }
-             leaf tc-mask {
-                 type tos-byte;
-                 description "TC mask";
-             }
-             leaf next-hdr {
+            leaf tc-low {
+                type tos-byte;
+                description "TC low range match";
+                mandatory true;
+            }
+            leaf tc-high {
+                type tos-byte;
+                description "TC high range match";
+                mandatory true;
+            }
+            leaf tc-mask {
+                type tos-byte;
+                description "TC mask";
+                mandatory true;
+            }
+            leaf next-hdr {
                 type tp-protocol;
                 description "IPv6 Next Header";
+                mandatory true;
             }
             leaf flow-label {
                 type uint32 {
                     range "0 .. 1048575";
                 }
                 description "IPv6 Flow Label (20 bits)";
+                mandatory true;
+            }
+            leaf priority {
+                type uint8;
+                description "Priority";
+                default 64;
             }
             uses tp-port-match-ranges;
-            leaf priority {
-              type uint8;
-              description "Priority";
-              default 64;
-            }
             leaf activation-state {
-              type classifier-activation-state;
-              description "Activation state";
-              default active;
+                type classifier-activation-state;
+                description "Activation state";
+                default active;
             }
-           }
+            leaf action {
+                type classifier-action;
+                description "Action";
+                default add;
+            }
+        }
     }
 
-	    //RPCs
+    //RPCs
     rpc ccap-set-connection {
-   		input {
+        input {
             leaf ccapId {
-           		type instance-identifier;
-           		ext:context-reference ccap-context;
-           	}
-           	container connection {
-           		leaf connected {
-           			type boolean;
-           			description "COPS session state";
-           		}
-//           		leaf idle-detect {
-//					type uint8;		
-//					description "COPS connection idle timer";
-//				}
-           	}
-    	 }
-    	 output {
-    	 	container ccap {
-    	 		leaf ccapId {
-    	 			type string;
-    	 		}
-    	 		container connection {
-					uses ccap-connection;
-				}
-    	 	}
-    	 	leaf response {
-        		type string;
-        	}
-			leaf timestamp {
-       			type yang:date-and-time;
-				description "RPC timestamp";
-	     	}
-    	 }
+                type "instance-identifier";
+                ext:context-reference "ccap-context";
+            }
+            container connection {
+                leaf connected {
+                    type boolean;
+                    description "COPS session state";
+                }
+            }
+        }
+        output {
+            container ccap {
+                leaf ccapId {
+                    type string;
+                }
+                container connection {
+                    uses ccap-connection;
+                }
+            }
+            leaf response {
+                type string;
+            }
+            leaf timestamp {
+                type yang:date-and-time;
+                description "RPC timestamp";
+            }
+        }
     }
     
     rpc ccap-poll-connection {
-   		input {
+        input {
             leaf ccapId {
-           		type instance-identifier;
-           		ext:context-reference ccap-context;
-           	}
-    	 }
-    	 output {
-    	 	container ccap {
-    	 		leaf ccapId {
-    	 			type string;
-    	 		}
-    	 		container connection {
-					uses ccap-connection;
-				}
-    	 	}
-    	 	leaf response {
-        		type string;
-        	}
-			leaf timestamp {
-       			type yang:date-and-time;
-				description "RPC timestamp";
-	     	}
-    	 }
+                type "instance-identifier";
+                ext:context-reference "ccap-context";
+            }
+        }
+        output {
+            container ccap {
+                leaf ccapId {
+                    type string;
+                }
+                container connection {
+                    uses ccap-connection;
+                }
+            }
+            leaf response {
+                type string;
+            }
+            leaf timestamp {
+                type yang:date-and-time;
+                description "RPC timestamp";
+            }
+        }
     }
 
-	rpc qos-poll-gates {
-   		input {
+    rpc qos-poll-gates {
+        input {
             leaf appId {
-            	type instance-identifier;
-           		ext:context-reference app-context;
-           	}
-           	leaf subscriberId {
-            	type string;
-            	description "Subscriber Identity -- must be a CM or CPE IP address";
-           	}
-           	leaf gateId {
-            	type string;
-            	description "Qos Gate Identity";
-           	}
-    	 }
-    	 output {
-			container gate {
-				uses gate-operational-attributes;
-			}
-			leaf response {
-        		type string;
-        	}
-			leaf timestamp {
-        		type yang:date-and-time;
-        		description "RPC timestamp";
-         	}
-    	 }
+                type instance-identifier;
+                ext:context-reference app-context;
+            }
+            leaf subscriberId {
+                type string;
+                description "Subscriber Identity -- must be a CM or CPE IP address";
+            }
+            leaf gateId {
+                type string;
+                description "Qos Gate Identity";
+            }
+        }
+        output {
+            container gate {
+                uses gate-operational-attributes;
+            }
+            leaf response {
+                type string;
+            }
+            leaf timestamp {
+                type yang:date-and-time;
+                description "RPC timestamp";
+            }
+        }
     }
 }

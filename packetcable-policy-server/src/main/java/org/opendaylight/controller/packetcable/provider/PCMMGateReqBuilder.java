@@ -16,21 +16,23 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.ugs.profile.UgsProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.rtp.profile.RtpProfile;
 import org.pcmm.gates.IClassifier;
 import org.pcmm.gates.IClassifier.Protocol;
 import org.pcmm.gates.IExtendedClassifier;
@@ -41,6 +43,8 @@ import org.pcmm.gates.ITrafficProfile;
 import org.pcmm.gates.impl.AMID;
 import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
+import org.pcmm.gates.impl.DOCSISUGSTrafficProfile;
+import org.pcmm.gates.impl.DOCSISRTPTrafficProfile;
 import org.pcmm.gates.impl.GateID;
 import org.pcmm.gates.impl.GateState;
 import org.pcmm.gates.impl.GateTimeInfo;
@@ -50,12 +54,15 @@ import org.pcmm.gates.impl.PCMMGateReq;
 import org.pcmm.gates.impl.SessionClassID;
 import org.pcmm.gates.impl.SubscriberID;
 import org.pcmm.gates.impl.TransactionID;
+import org.pcmm.utils.PCMMUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.RtpChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.UgsChoice;
  
 /**
  * Build PCMM gate requests from API QoS Gate objects
@@ -89,20 +96,15 @@ public class PCMMGateReqBuilder {
         subscriberID = new SubscriberID(qosSubId);
     }
 
-    public void setGateSpec(final GateSpec qosGateSpec, final ServiceFlowDirection scnDirection) {
+    public void setGateId(int gateId) {
+        gateID = new GateID(gateId);
+    }
+    
+    public void setGateSpec(final GateSpec qosGateSpec) {
 
-        final ServiceFlowDirection qosDir;
-        if (scnDirection != null) {
-            qosDir = scnDirection;
-        } else {
-            if (qosGateSpec.getDirection() != null) {
-                qosDir = qosGateSpec.getDirection();
-            } else {
-                // TODO - determine if this is a valid default value
-                qosDir = ServiceFlowDirection.Ds;
-            }
-        }
+        final ServiceFlowDirection qosDir = qosGateSpec.getDirection();
 
+        // convert to PCMM API Type
         final Direction gateDir;
         if (qosDir == ServiceFlowDirection.Ds) {
             gateDir = Direction.DOWNSTREAM;
@@ -114,7 +116,7 @@ public class PCMMGateReqBuilder {
         final byte dscptos;
         final byte gateTosMask;
 
-        final TosByte tosOverwrite = qosGateSpec.getDscpTosOverwrite();
+        final TosByte tosOverwrite = null;
         if (tosOverwrite != null) {
             dscptos = 1;
             TosByte tosMask = qosGateSpec.getDscpTosMask();
@@ -128,20 +130,22 @@ public class PCMMGateReqBuilder {
             dscptos = 0;
             gateTosMask = 0;
         }
-
-        byte sessionClassId = 0;
-        if (qosGateSpec.getSessionClassId() != null) {
-           sessionClassId = (byte)(qosGateSpec.getSessionClassId() & 255);
+        
+        java.lang.Short scid = qosGateSpec.getSessionClassId();
+        byte bscid = 0;
+        if (scid != null) {
+            bscid = (byte)(qosGateSpec.getSessionClassId() & 0x00ff);
         }
-
-        short inactivityTimer = 300;
-        if (qosGateSpec.getInactivityTimer() != null) {
-            inactivityTimer = (short)(qosGateSpec.getInactivityTimer() & 65535);
+        
+        java.lang.Long inactivity = qosGateSpec.getInactivityTimer();
+        short sinactivity = 300;
+        if (inactivity != null) {
+            sinactivity = inactivity.shortValue();
         }
-
+        
         gateSpec = new org.pcmm.gates.impl.GateSpec(gateDir, dscptos, gateTosMask,
-                                                    new SessionClassID(sessionClassId),
-                                                    (short)1, (short)300, inactivityTimer, (short)0);
+                                                    new SessionClassID(bscid),
+                                                    (short)1,(short)300,sinactivity,(short)0);
    }
 
     public void setTrafficProfile(final TrafficProfile qosTrafficProfile) {
@@ -160,6 +164,33 @@ public class PCMMGateReqBuilder {
                                                               fsp.getMaximumPacketSize(),
                                                               fsp.getRate(),
                                                               fsp.getSlackTerm());     
+        }
+        else if (choice instanceof UgsChoice) {
+            UgsProfile ugsp = ((UgsChoice)choice).getUgsProfile();
+            trafficProfile = new DOCSISUGSTrafficProfile(ugsp.getRequestTransmissionPolicy(),
+                                                         ugsp.getUnsolicitedGrantSize(),
+                                                         ugsp.getGrantsPerInterval(),
+                                                         ugsp.getNominalGrantInterval(),
+                                                         ugsp.getToleratedGrantJitter(),
+                                                         ugsp.getUpstreamPeakTrafficRate(),
+                                                         ugsp.getRequiredAttributeMask(),
+                                                         ugsp.getForbiddenAttributeMask(),
+                                                         ugsp.getAttributeAggregationRuleMask());     
+        }
+        else if (choice instanceof RtpChoice) {
+            RtpProfile rtpp = ((RtpChoice)choice).getRtpProfile();
+            trafficProfile = new DOCSISRTPTrafficProfile(rtpp.getRequestTransmissionPolicy(),
+                                                         rtpp.getMaximumSustainedTrafficRate(),
+                                                         rtpp.getMaximumTrafficBurst(),
+                                                         rtpp.getMinimumReservedTrafficRate(),
+                                                         rtpp.getAmrtrPacketSize().longValue(),
+                                                         rtpp.getMaximumConcatenatedBurst().longValue(),
+                                                         rtpp.getNominalPollingInterval(),
+                                                         rtpp.getToleratedPollJitter(),
+                                                         rtpp.getUpstreamPeakTrafficRate(),
+                                                         rtpp.getRequiredAttributeMask(),
+                                                         rtpp.getForbiddenAttributeMask(),
+                                                         rtpp.getAttributeAggregationRuleMask());     
         }
         else {
             logger.debug("PCMMGateReq().setTrafficProfile() Unsupported Traffic Profile: " + choice.getClass().getName());

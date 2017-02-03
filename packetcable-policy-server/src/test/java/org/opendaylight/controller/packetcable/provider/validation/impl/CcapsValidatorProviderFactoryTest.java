@@ -14,10 +14,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
 import org.opendaylight.controller.packetcable.provider.validation.ValidatorProvider;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev161219.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccaps.Ccap;
 
 /**
  * @author rvail
