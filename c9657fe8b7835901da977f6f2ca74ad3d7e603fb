@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafc7978_671c8d78",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/impl/DOCSISRTPTrafficProfile.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-06T21:51:24Z",
+      "side": 1,
+      "message": "I know the same pattern has been used before but this is quite inefficient. Why not just wrap the actual destination with ByteBuffer.wrap(data) and store all the value directly instead of needlessly allocating dozens of buffers that are discarded on the very same line of code?",
+      "range": {
+        "startLine": 250,
+        "startChar": 8,
+        "endLine": 296,
+        "endChar": 99
+      },
+      "revId": "c9657fe8b7835901da977f6f2ca74ad3d7e603fb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_c713b964",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/impl/DOCSISUGSTrafficProfile.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-06T21:51:24Z",
+      "side": 1,
+      "message": "same buffer inefficiency as in DOCSISRTPTrafficProfile",
+      "range": {
+        "startLine": 203,
+        "startChar": 8,
+        "endLine": 231,
+        "endChar": 110
+      },
+      "revId": "c9657fe8b7835901da977f6f2ca74ad3d7e603fb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_47a0699f",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMGateReqBuilder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-06T21:51:24Z",
+      "side": 1,
+      "message": "this is always true. If/else can be removed",
+      "range": {
+        "startLine": 120,
+        "startChar": 8,
+        "endLine": 120,
+        "endChar": 35
+      },
+      "revId": "c9657fe8b7835901da977f6f2ca74ad3d7e603fb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_a7eb15af",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMService.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-06T21:51:24Z",
+      "side": 1,
+      "message": "Perhaps I am missing something but this seems far too complex for what it is trying to do.\nreturn x \u0026 0xFFFFFFFFL; will do exactly the same thing without allocating a new byte buffer.",
+      "range": {
+        "startLine": 141,
+        "startChar": 2,
+        "endLine": 146,
+        "endChar": 5
+      },
+      "revId": "c9657fe8b7835901da977f6f2ca74ad3d7e603fb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_c73c59e5",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMService.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-06T21:51:24Z",
+      "side": 1,
+      "message": "buf is never used in a meaningful way",
+      "range": {
+        "startLine": 210,
+        "startChar": 16,
+        "endLine": 211,
+        "endChar": 78
+      },
+      "revId": "c9657fe8b7835901da977f6f2ca74ad3d7e603fb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_a73f95d5",
+        "filename": "packetcable-policy-server/src/main/java/org/opendaylight/controller/packetcable/provider/PCMMService.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-06T21:51:24Z",
+      "side": 1,
+      "message": "indentation is off",
+      "range": {
+        "startLine": 210,
+        "startChar": 16,
+        "endLine": 216,
+        "endChar": 92
+      },
+      "revId": "c9657fe8b7835901da977f6f2ca74ad3d7e603fb",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
