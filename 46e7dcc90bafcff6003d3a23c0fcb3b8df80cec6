@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafc7978_cf48c089",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/impl/DOCSISFlowSpecTrafficProfile.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-16T20:57:15Z",
+      "side": 1,
+      "message": "This should be changed to use a logger",
+      "range": {
+        "startLine": 202,
+        "startChar": 12,
+        "endLine": 202,
+        "endChar": 30
+      },
+      "revId": "46e7dcc90bafcff6003d3a23c0fcb3b8df80cec6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_8f4eb894",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/impl/DOCSISRTPTrafficProfile.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-16T20:57:15Z",
+      "side": 1,
+      "message": "This should be changed to use a logger",
+      "range": {
+        "startLine": 284,
+        "startChar": 12,
+        "endLine": 284,
+        "endChar": 30
+      },
+      "revId": "46e7dcc90bafcff6003d3a23c0fcb3b8df80cec6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_ef45c470",
+        "filename": "packetcable-driver/src/main/java/org/pcmm/gates/impl/DOCSISUGSTrafficProfile.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 4770
+      },
+      "writtenOn": "2017-02-16T20:57:15Z",
+      "side": 1,
+      "message": "should use a logger",
+      "range": {
+        "startLine": 230,
+        "startChar": 12,
+        "endLine": 230,
+        "endChar": 30
+      },
+      "revId": "46e7dcc90bafcff6003d3a23c0fcb3b8df80cec6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
