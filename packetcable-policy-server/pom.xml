@@ -10,9 +10,11 @@
     </parent>
     <artifactId>packetcable-policy-server</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
-    <name>${project.artifactId}</name>
     <version>1.5.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+    <!-- <name> formatting is used by autorelease to parse and notify projects on
+         build failure. Please do not modify this unless you have a good reason. -->
+    <name>ODL :: packetcable :: ${project.artifactId}</name>
     <properties>
         <sal-binding-api.version>1.5.0-SNAPSHOT</sal-binding-api.version>
     </properties>

@@ -9,11 +9,15 @@
         <artifactId>feature-repo-parent</artifactId>
         <version>1.8.0-SNAPSHOT</version>
     </parent>
-    
+
     <groupId>org.opendaylight.packetcable</groupId>
     <artifactId>features4-packetcable-policy</artifactId>
     <version>1.5.0-SNAPSHOT</version>
     <packaging>feature</packaging>
+    
+    <!-- <name> formatting is used by autorelease to parse and notify projects on
+         build failure. Please do not modify this unless you have a good reason. -->
+    <name>ODL :: packetcable :: ${project.artifactId}</name>
 
     <dependencies>
         <dependency>
