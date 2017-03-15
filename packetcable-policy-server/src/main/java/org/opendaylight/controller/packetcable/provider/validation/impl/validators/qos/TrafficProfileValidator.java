@@ -9,14 +9,14 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.RtpChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.UgsChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.flow.spec.profile.FlowSpecProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.RtpChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.UgsChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
 
 /**
  * @author rvail

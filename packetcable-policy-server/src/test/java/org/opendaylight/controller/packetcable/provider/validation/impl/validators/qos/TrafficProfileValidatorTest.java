@@ -13,13 +13,13 @@ import org.junit.Test;
 import org.opendaylight.controller.packetcable.provider.test.rules.Params;
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfileBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
 
 /**
  * @author rvail

@@ -10,6 +10,9 @@ module packetcable
     description "This module contains the PCMM Converged Cable Access Platform (CCAP) definitions";
     organization "OpenDaylight Project";
 
+    revision 2017-02-24 {
+        description "Added RPC operations for set/delete/info on gates";
+    }
     revision 2017-01-25 {
         description "Added support for UGS and RTP traffic profiles";
     }
@@ -760,6 +763,61 @@ module packetcable
         }
     }
 
+    typedef failure-type {
+        description "Enumeration of the distinct types of operational failure modes
+                 that can occur while servicing a southbound PCMM request";  
+        type enumeration {
+            enum unsent {
+                description "The request failed before it was sent to the CMTS.";
+            }
+            enum no-ack {
+                description "The request was not acknowledged by the CMTS.";
+            }
+            enum failed {
+                description "The request was sent to the CMTS and an error response was returned";
+            }
+        }
+    }
+  
+
+    grouping failure-response {
+        description "The structure of a failure response from a PCMM request";
+        leaf failure {
+            type failure-type;
+        }
+        leaf message {
+            type string;
+        }
+    }
+    
+    grouping qos-set-gate-response {
+        choice set-response-type {
+            case set-failure {
+                uses failure-response;
+            }
+            case set-successful {
+                leaf cops-gateId {
+                    type uint32;
+                    description "Unique identifier assigned by CMTS for the requested gate";
+                }
+            }
+        }
+    }
+    
+    grouping qos-delete-gate-response {
+        choice delete-response-type {
+            case delete-failure {
+                uses failure-response;
+            }
+            case delete-successful {
+                leaf cops-gateId {
+                    type uint32;
+                    description "Unique identifier assigned by CMTS for the requested gate";
+                }
+            }
+        }
+    }
+  
     //RPCs
     rpc ccap-set-connection {
         input {
@@ -844,6 +902,103 @@ module packetcable
             leaf timestamp {
                 type yang:date-and-time;
                 description "RPC timestamp";
+            }
+        }
+    }
+    
+    rpc qos-set-gate {
+        input {
+            leaf "appId" {
+                type string;
+                description "Application Identity";
+                mandatory true;
+            }
+            leaf subscriberId {
+                type string;
+                description "Subscriber Identity -- must be a CM or CPE IP address";
+                mandatory true;
+            }
+            container gates {
+                list gate {
+                    key "gateId";
+                    leaf gateId {
+                        type string;
+                        description "Qos Gate Identity";
+                        mandatory true;
+                    }
+                    uses gate-operational-attributes;
+                    uses pcmm-qos-gate-attributes;
+                }
+            }
+        }
+        output {
+            uses qos-set-gate-response;
+        }
+    }
+
+    rpc qos-delete-gate {
+        input {
+            leaf "appId" {
+                type string;
+                description "Application Identity";
+                mandatory true;
+            }
+            leaf subscriberId {
+                type string;
+                description "Subscriber Identity -- must be a CM or CPE IP address";
+                mandatory true;
+            }
+            leaf gateId {
+                type string;
+                description "Qos Gate Identity";
+                mandatory true;
+            }
+        }
+        output {
+            uses qos-delete-gate-response;
+        }
+    }
+
+    rpc qos-gate-info {
+        input {
+            leaf "appId" {
+                type string;
+                description "Application Identity";
+                mandatory true;
+            }
+            leaf subscriberId {
+                type string;
+                description "Subscriber Identity -- must be a CM or CPE IP address";
+                mandatory true;
+            }
+            leaf gateId {
+                type string;
+                description "Qos Gate Identity";
+                mandatory true;
+            }
+        }
+        output {
+            uses qos-gate-info-response;
+        }
+    }
+  
+    grouping qos-gate-info-response {
+        choice info-response-type {
+            case info-failure {
+                uses failure-response;
+            }
+            case info-successful {
+                container gates {
+                    list gate {
+                        key "gateId";
+                        leaf gateId {
+                            type string;
+                            description "Qos Gate Identity";
+                        }
+                        uses gate-operational-attributes;
+                        uses pcmm-qos-gate-attributes;
+                    }
+                }
             }
         }
     }

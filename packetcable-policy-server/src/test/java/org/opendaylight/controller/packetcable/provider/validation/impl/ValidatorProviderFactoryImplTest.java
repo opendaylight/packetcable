@@ -14,23 +14,23 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
 import org.opendaylight.controller.packetcable.provider.validation.ValidatorProvider;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.attributes.AmId;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.attributes.Connection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.Classifiers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.ClassifierContainer;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.ext.classifier.ExtClassifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.Apps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.App;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.Subscribers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.Subscriber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.ipv6.classifier.Ipv6Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.attributes.AmId;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.attributes.Connection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.classifier.attributes.Classifiers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.classifier.attributes.classifiers.ClassifierContainer;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.ext.classifier.ExtClassifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.Apps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.App;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.Subscribers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.ipv6.classifier.Ipv6Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfile;
 
 /**
  * @author rvail
