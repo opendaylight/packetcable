@@ -50,56 +50,81 @@ import org.opendaylight.controller.packetcable.provider.validation.impl.CcapsVal
 import org.opendaylight.controller.packetcable.provider.validation.impl.QosValidatorProviderFactory;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.DateAndTime;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.AppContext;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapContext;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapPollConnectionInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapPollConnectionOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapPollConnectionOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapSetConnectionInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapSetConnectionOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.CcapSetConnectionOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.Ccaps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.PacketcableService;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.Qos;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.QosPollGatesInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.QosPollGatesOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.QosPollGatesOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ServiceClassName;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ServiceFlowDirection;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.attributes.ConnectionBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccaps.Ccap;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccaps.CcapBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gate.spec.GateSpec;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gate.spec.GateSpecBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.Apps;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.App;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.AppBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.AppKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.Subscribers;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.SubscribersBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.Subscriber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.TrafficProfileBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.flow.spec.profile.FlowSpecProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.AppContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapContext;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapPollConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapPollConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapPollConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapSetConnectionInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapSetConnectionOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapSetConnectionOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.PacketcableService;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.Qos;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosDeleteGateInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosDeleteGateOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosDeleteGateOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosGateInfoInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosGateInfoOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosGateInfoOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ServiceClassName;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ServiceFlowDirection;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.attributes.ConnectionBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccaps.Ccap;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccaps.CcapBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gate.spec.GateSpec;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gate.spec.GateSpecBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.Apps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.App;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.AppBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.AppKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.Subscribers;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.SubscribersBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.Subscriber;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.SubscriberBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.SubscriberKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.Gates;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.GatesBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.Gate;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfileBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.SetResponseType;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetSuccessful;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetSuccessfulBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetFailure;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetFailureBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteSuccessful;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteSuccessfulBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteFailure;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteFailureBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoSuccessful;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoSuccessfulBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoFailure;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoFailureBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.packetcable.packetcable.policy.server.impl.rev140131.PacketcableProviderModule;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.FailureType;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -150,7 +175,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
     private MdsalUtils mdsalUtils;
 
     //Routed RPC Registration
-    private RoutedRpcRegistration<PacketcableService> rpcRegistration;
+    private RoutedRpcRegistration<PacketcableService> routedRpcRegistration;
+
+    // unrouted RPC Registration
+    private RpcRegistration rpcRegistration;
 
     // Data change listeners/registrations
     private final CcapsDataTreeChangeListener ccapsDataTreeChangeListener = new CcapsDataTreeChangeListener();
@@ -163,13 +191,15 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
      * Constructor
      */
     public PacketcableProvider() {
-        logger.info("Starting provider");
+        logger.info("Starting Packetcable Provider");
     }
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
         logger.info("Packetcable Session Initiated");
-        logger.info("logging levels: error={}, warn={}, info={}, debug={}, trace={}", logger.isErrorEnabled(), logger.isWarnEnabled(), logger.isInfoEnabled(), logger.isDebugEnabled(), logger.isTraceEnabled());
+        logger.info("logging levels: error={}, warn={}, info={}, debug={}, trace={}",
+                    logger.isErrorEnabled(), logger.isWarnEnabled(),
+                    logger.isInfoEnabled(), logger.isDebugEnabled(), logger.isTraceEnabled());
 
         dataBroker = session.getSALService(DataBroker.class);
 
@@ -186,8 +216,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         qosDataTreeChangeListenerRegistration = dataBroker.registerDataTreeChangeListener(appDataTreeIid, new QosDataTreeChangeListener());
 
-        rpcRegistration = session.addRoutedRpcImplementation(PacketcableService.class, this);
-        logger.info("onSessionInitiated().rpcRgistration: {}", rpcRegistration);
+        rpcRegistration = session.addRpcImplementation(PacketcableService.class, this);
+        logger.info("onSessionInitiated().rpcRegistration: {}", rpcRegistration);
+        routedRpcRegistration = session.addRoutedRpcImplementation(PacketcableService.class, this);
+        logger.info("onSessionInitiated().routedRpcRegistration: {}", routedRpcRegistration);
 
     }
 
@@ -202,6 +234,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         if (qosDataTreeChangeListenerRegistration != null) {
             qosDataTreeChangeListenerRegistration.close();
+        }
+        
+        if (rpcRegistration != null) {
+            rpcRegistration.close();
         }
     }
 
@@ -434,7 +470,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         void postRemove(final InstanceIdentifier<App> appIID) {
             //unregister app rpc path
             logger.info("Un-Registering App Routed RPC Path...");
-            rpcRegistration.unregisterPath(AppContext.class, appIID);
+            routedRpcRegistration.unregisterPath(AppContext.class, appIID);
             executor.execute(new AppsCleaner(appIID));
         }
     }
@@ -568,7 +604,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
             //register rpc
             logger.info("Registering CCAP Routed RPC Path...");
-            rpcRegistration.registerPath(CcapContext.class, iid);
+            routedRpcRegistration.registerPath(CcapContext.class, iid);
 
             Optional<Ccap> optionalCcap = mdsalUtils.read(LogicalDatastoreType.OPERATIONAL, iid);
 
@@ -587,10 +623,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         @Override
         protected void handleUpdatedData(final DataTreeModification<Ccap> change) {
-            //final Ccap ccap = (Ccap) change.getRootNode().getIdentifier();
             InstanceIdentifier<Ccap> iid = change.getRootPath().getRootIdentifier();
-            // TODO actually support updates
-            // update operation not allowed -- restore the original config object and complain
 
             // If this notification is coming from our modification ignore it.
             if (updateQueue.contains(iid)) {
@@ -598,17 +631,15 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                 return;
             }
 
-            final Ccap originalCcap = change.getRootNode().getDataBefore();
-            //final Ccap updatedCcap = entry.getValue();
+            final Ccap updatedCcap = change.getRootNode().getDataAfter();
 
             //register rpc
             logger.info("Registering CCAP Routed RPC Path...");
-            rpcRegistration.registerPath(CcapContext.class, iid);
+            routedRpcRegistration.registerPath(CcapContext.class, iid);
 
             // restore the original data
             updateQueue.add(iid);
-            mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, iid, originalCcap);
-            logger.error("CCAP update not permitted {}", iid);
+            mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, iid, updatedCcap);
         }
 
         @Override
@@ -620,7 +651,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
             //unregister ccap rpc path
             logger.info("Un-Registering CCAP Routed RPC Path...");
-            rpcRegistration.unregisterPath(CcapContext.class, iid);
+            routedRpcRegistration.unregisterPath(CcapContext.class, iid);
 
             mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, iid);
 
@@ -658,7 +689,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
             //register appID RPC path
             logger.info("Registering App Routed RPC Path...");
-            rpcRegistration.registerPath(AppContext.class, appIID);
+            routedRpcRegistration.registerPath(AppContext.class, appIID);
 
             final InstanceIdentifier<Subscriber> subscriberIID = gateIID.firstIdentifierOf(Subscriber.class);
             final SubscriberKey subscriberKey = InstanceIdentifier.keyOf(subscriberIID);
@@ -819,10 +850,6 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         @Override
         protected void handleUpdatedData(final DataTreeModification<Gate> change) {
             InstanceIdentifier<Gate> gateIID = change.getRootPath().getRootIdentifier();
-            //final Gate newGate = (Gate) change.getRootNode().getIdentifier();
-            // TODO actually support updates
-
-            // update operation not allowed -- restore the original config object and complain
 
             // If this notification is coming from our modification ignore it.
             if (updateQueue.contains(gateIID)) {
@@ -830,12 +857,11 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                 return;
             }
 
-            final Gate originalGate = change.getRootNode().getDataBefore();
+            final Gate updatedGate = change.getRootNode().getDataAfter();
 
             // restores the original data
             updateQueue.add(gateIID);
-            mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, gateIID, originalGate);
-            logger.error("Update not permitted {}", gateIID);
+            mdsalUtils.put(LogicalDatastoreType.CONFIGURATION, gateIID, updatedGate);
         }
 
         @Override
@@ -933,15 +959,15 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         }
 
         DateAndTime connectionDateAndTime = getNowTimeStamp();
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.set.connection.output.ccap.ConnectionBuilder
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.set.connection.output.ccap.ConnectionBuilder
                 connectionRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.set.connection.output.ccap.ConnectionBuilder()
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.set.connection.output.ccap.ConnectionBuilder()
                         .setConnected(effectiveIsConnected)
                         .setError(outputError)
                         .setTimestamp(connectionDateAndTime);
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.set.connection.output.CcapBuilder().setCcapId(
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.set.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.set.connection.output.CcapBuilder().setCcapId(
                         ccapId).setConnection(connectionRpcOutput.build());
 
 
@@ -978,9 +1004,9 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         PCMMService pcmmService = pcmmServiceMap.get(ccapId);
         Boolean effectiveIsConnected = true;
         String response = null;
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.poll.connection.output.ccap.ConnectionBuilder
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.poll.connection.output.ccap.ConnectionBuilder
                 connectionRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.poll.connection.output.ccap.ConnectionBuilder();
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.poll.connection.output.ccap.ConnectionBuilder();
 
         if (pcmmService != null) {
             if (pcmmService.getPcmmPdpSocket()) {
@@ -1010,7 +1036,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             CcapBuilder responseCcapBuilder = new CcapBuilder().setCcapId(ccapId).setConnection(connectionOps.build());
 
             connectionRpcOutput =
-                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.poll.connection.output.ccap.ConnectionBuilder()
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.poll.connection.output.ccap.ConnectionBuilder()
                             .setConnected(effectiveIsConnected)
                             .setError(outputError)
                             .setTimestamp(connectionDateAndTime);
@@ -1024,8 +1050,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         DateAndTime rpcDateAndTime = getNowTimeStamp();
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.ccap.poll.connection.output.CcapBuilder().setCcapId(
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.poll.connection.output.CcapBuilder ccapRpcOutput =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.poll.connection.output.CcapBuilder().setCcapId(
                         ccapId).setConnection(connectionRpcOutput.build());
 
         CcapPollConnectionOutputBuilder outputBuilder =
@@ -1071,6 +1097,452 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
 
     @Override
+    public Future<RpcResult<QosSetGateOutput>> qosSetGate(QosSetGateInput input) {
+        logger.debug("RPC call to qosSetGate()");
+
+        String inputAppIid = input.getAppId();
+        String inputSubscriberId = input.getSubscriberId();
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.input.Gates gates = input.getGates();
+        List<org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.input.gates.Gate> gate = gates.getGate();
+        QosSetGateOutputBuilder outputBuilder = new QosSetGateOutputBuilder();
+
+        String inputGateId = gate.get(0).getGateId();
+        Boolean retryOption = false;
+        InstanceIdentifier<Gate> gateIID = qosIID.builder()
+            .child(Apps.class)
+            .child(App.class, new AppKey(inputAppIid))
+            .child(Subscribers.class)
+            .child(Subscriber.class, new SubscriberKey(inputSubscriberId))
+            .child(Gates.class)
+            .child(Gate.class, new GateKey(inputGateId))
+            .build();
+
+        Gate newGate = readGateFromOperationalDatastore(gateIID);
+        final String newGatePathStr = "/" + inputAppIid + "/" + inputSubscriberId + "/" + inputGateId;
+
+        final InetAddress subscriberAddr = getInetAddress(inputSubscriberId);
+        if (subscriberAddr == null) {
+            final String msg = String.format("SubscriberId must be a valid ipaddress: %s",
+                                             inputSubscriberId);
+            logger.error(msg);
+            SetFailureBuilder fb = new SetFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final SetFailure f = fb.build();
+            outputBuilder.setSetResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        final Ccap ccap = findCcapForSubscriberId(subscriberAddr);
+        if (ccap == null) {
+            final String msg =
+                String.format("qosSetGate(): Error finding CCAP for %s", newGatePathStr);
+            logger.error(msg);
+            SetFailureBuilder fb = new SetFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final SetFailure f = fb.build();
+            outputBuilder.setSetResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        logger.debug("Mapped {} to {}", inputSubscriberId, ccap.getCcapId());
+
+        final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
+        if (pcmmService == null) {
+            final String msg =
+            String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s", ccap, inputSubscriberId);
+            logger.error(msg);
+            SetFailureBuilder fb = new SetFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final SetFailure f = fb.build();
+            outputBuilder.setSetResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        final GateBuilder gateBuilder = new GateBuilder();
+        gateBuilder.setGateId(inputGateId)
+            .setGatePath(newGatePathStr)
+            .setCcapId(ccap.getCcapId())
+            .setCopsGateId(gate.get(0).getCopsGateId())
+            .setTimestamp(getNowTimeStamp())
+            .setTimestamp(getNowTimeStamp())
+            .setGateSpec(gate.get(0).getGateSpec())
+            .setTrafficProfile(gate.get(0).getTrafficProfile())
+            .setClassifiers(gate.get(0).getClassifiers());
+
+        newGate = gateBuilder.build();
+
+        if (gate.get(0).getCopsGateId() != null) {
+            retryOption = true;
+        }
+        
+        PCMMService.GateSendStatus status = null;
+        synchronized (pcmmService) {
+            logger.info("Sending gate: Path {} inputSubscriberId {} cops-gate-id {}",
+                        newGatePathStr, inputSubscriberId, gate.get(0).getCopsGateId());
+            
+            status = pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate);
+        }
+
+        if (status.didSucceed()) {
+
+            gateMap.put(newGatePathStr, newGate);
+            gateCcapMap.put(newGatePathStr, ccap.getCcapId());
+            Long copsGateId = 0L;
+            SetSuccessfulBuilder sb = new SetSuccessfulBuilder();
+
+            if (status.getCopsGateId() != null) {
+                logger.debug("newGate.getCopsGateId() = {} ", status.getCopsGateId());
+                copsGateId = Long.decode(status.getCopsGateId());
+                sb.setCopsGateId(copsGateId);
+                if (status.getCopsGateId() != null) {
+                    gateBuilder.setCopsGateId(status.getCopsGateId());
+                }
+                if (status.getCopsGateState() != null) {
+                    gateBuilder.setCopsGateState(status.getCopsGateState());
+                }
+                if (status.getCopsGateTimeInfo() != null) {
+                    gateBuilder.setCopsGateTimeInfo(status.getCopsGateTimeInfo());
+                }
+                if (status.getCopsGateUsageInfo() != null) {
+                    gateBuilder.setCopsGateUsageInfo(status.getCopsGateUsageInfo());
+                }
+            }
+
+            mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIID, gateBuilder.build());
+
+            final SetSuccessful s = sb.build();
+            outputBuilder.setSetResponseType(s);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+        else {
+            if (retryOption == true) {
+                // Try one more time with blank Cops Gate Id in case the gate has timed out unexpectedly
+                logger.info("qosSetGate error msg: {} reason: {}", status.getMessage(), status.getCopsGateStateReason());
+                final GateBuilder retryGateBuilder = new GateBuilder();
+                retryGateBuilder.setGateId(inputGateId)
+                    .setGatePath(newGatePathStr)
+                    .setCcapId(ccap.getCcapId())
+                    .setTimestamp(getNowTimeStamp())
+                    .setTimestamp(getNowTimeStamp())
+                    .setGateSpec(gate.get(0).getGateSpec())
+                    .setTrafficProfile(gate.get(0).getTrafficProfile())
+                    .setClassifiers(gate.get(0).getClassifiers());
+
+                newGate = retryGateBuilder.build();
+
+                synchronized (pcmmService) {
+                    logger.info("Sending gate: Path {} inputSubscriberId {} with cops-gate-id undefined",
+                                newGatePathStr);
+
+                    status = pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate);
+                }
+
+                if (status.didSucceed()) {
+
+                    gateMap.put(newGatePathStr, newGate);
+                    gateCcapMap.put(newGatePathStr, ccap.getCcapId());
+                    Long copsGateId = 0L;
+                    SetSuccessfulBuilder sb = new SetSuccessfulBuilder();
+
+                    if (status.getCopsGateId() != null) {
+                        logger.debug("newGate.getCopsGateId() = {} ", status.getCopsGateId());
+                        copsGateId = Long.decode(status.getCopsGateId());
+                        sb.setCopsGateId(copsGateId);
+                        if (status.getCopsGateId() != null) {
+                            gateBuilder.setCopsGateId(status.getCopsGateId());
+                        }
+                        if (status.getCopsGateState() != null) {
+                            gateBuilder.setCopsGateState(status.getCopsGateState());
+                        }
+                        if (status.getCopsGateTimeInfo() != null) {
+                            gateBuilder.setCopsGateTimeInfo(status.getCopsGateTimeInfo());
+                        }
+                        if (status.getCopsGateUsageInfo() != null) {
+                            gateBuilder.setCopsGateUsageInfo(status.getCopsGateUsageInfo());
+                        }
+                    }
+
+                    mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIID, gateBuilder.build());
+
+                    final SetSuccessful s = sb.build();
+                    outputBuilder.setSetResponseType(s);
+                    return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+                }
+            }
+            SetFailureBuilder fb = new SetFailureBuilder();
+            final FailureType ft = FailureType.Failed;
+            fb.setFailure(ft);
+            fb.setMessage(status.getMessage());
+            final SetFailure f = fb.build();
+            outputBuilder.setSetResponseType(f);
+            logger.error("qosSetGate error msg: {} reason: {}", status.getMessage(), status.getCopsGateStateReason());
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+    }
+
+    @Override
+    public Future<RpcResult<QosDeleteGateOutput>> qosDeleteGate(QosDeleteGateInput input) {
+        logger.debug("RPC call to qosDeleteGate()");
+
+
+        String inputAppIid = input.getAppId();
+        String inputSubscriberId = input.getSubscriberId();
+        String inputGateId = input.getGateId();
+        String strGateId = null;
+
+        InstanceIdentifier<Gate> gateIID = qosIID.builder()
+            .child(Apps.class)
+            .child(App.class, new AppKey(inputAppIid))
+            .child(Subscribers.class)
+            .child(Subscriber.class, new SubscriberKey(inputSubscriberId))
+            .child(Gates.class)
+            .child(Gate.class, new GateKey(inputGateId))
+            .build();
+
+        Gate newGate = readGateFromOperationalDatastore(gateIID);
+        QosDeleteGateOutputBuilder outputBuilder = new QosDeleteGateOutputBuilder();
+        final String newGatePathStr = "/" + inputAppIid + "/" + inputSubscriberId + "/" + inputGateId;
+
+        if (newGate != null) {
+            strGateId = newGate.getCopsGateId();
+            if ((strGateId == null) || (strGateId.length() == 0) || (strGateId.equals("null"))){
+                final String msg =
+                    String.format("qosDeleteGate(): Unknown CopsGateId %s", newGatePathStr);
+                logger.error(msg);
+                DeleteFailureBuilder fb = new DeleteFailureBuilder();
+                final FailureType ft = FailureType.Unsent;
+                fb.setFailure(ft);
+                fb.setMessage(msg);
+                final DeleteFailure f = fb.build();
+                outputBuilder.setDeleteResponseType(f);
+                return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+            }
+            else {
+                logger.debug("PacketcableProvider: gateId = {} ", strGateId);
+            }
+        }
+        else {
+            final String msg =
+                String.format("qosDeleteGate(): Error deleting gate %s", newGatePathStr);
+            logger.error(msg);
+            DeleteFailureBuilder fb = new DeleteFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final DeleteFailure f = fb.build();
+            outputBuilder.setDeleteResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        final InetAddress subscriberAddr = getInetAddress(inputSubscriberId);
+        if (subscriberAddr == null) {
+            final String msg = String.format("SubscriberId must be a valid ipaddress: %s",
+                                             inputSubscriberId);
+            logger.error(msg);
+            DeleteFailureBuilder fb = new DeleteFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final DeleteFailure f = fb.build();
+            outputBuilder.setDeleteResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        final Ccap ccap = findCcapForSubscriberId(subscriberAddr);
+        if (ccap == null) {
+            final String msg = String.format("Unable to find Ccap for subscriber %s:",
+                                             inputSubscriberId);
+            logger.error(msg);
+            DeleteFailureBuilder fb = new DeleteFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final DeleteFailure f = fb.build();
+            outputBuilder.setDeleteResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        logger.debug("Mapped {} to {}", inputSubscriberId, ccap.getCcapId());
+
+        final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
+        if (pcmmService == null) {
+            final String msg =
+            String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s", ccap, inputSubscriberId);
+            logger.error(msg);
+            DeleteFailureBuilder fb = new DeleteFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final DeleteFailure f = fb.build();
+            outputBuilder.setDeleteResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        Boolean status = false;
+        synchronized (pcmmService) {
+            status = pcmmService.sendGateDelete(newGatePathStr);
+        }
+
+        if (status == true) {
+            Long copsGateId = 0L;
+            copsGateId = Long.decode(strGateId);
+
+            logger.info("qosDeleteGate(): Successfully deleted gate {}", newGatePathStr);
+            mdsalUtils.delete(LogicalDatastoreType.OPERATIONAL, gateIID);
+            DeleteSuccessfulBuilder sb = new DeleteSuccessfulBuilder();
+            sb.setCopsGateId(copsGateId);
+            final DeleteSuccessful s = sb.build();
+            outputBuilder.setDeleteResponseType(s);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+        else {
+            final String msg = String.format("qosDeleteGate(): Error deleting gate %s", newGatePathStr);
+            logger.error(msg);
+            DeleteFailureBuilder fb = new DeleteFailureBuilder();
+            final FailureType ft = FailureType.Failed;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final DeleteFailure f = fb.build();
+            outputBuilder.setDeleteResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+    }
+
+    @Override
+    public Future<RpcResult<QosGateInfoOutput>> qosGateInfo(QosGateInfoInput input) {
+        logger.debug("RPC call to qosGateInfo()");
+
+        String inputAppIid = input.getAppId();
+        String inputSubscriberId = input.getSubscriberId();
+        String inputGateId = input.getGateId();
+        QosGateInfoOutputBuilder outputBuilder = new QosGateInfoOutputBuilder();
+        InstanceIdentifier<Gate> gateIID = qosIID.builder()
+            .child(Apps.class)
+            .child(App.class, new AppKey(inputAppIid))
+            .child(Subscribers.class)
+            .child(Subscriber.class, new SubscriberKey(inputSubscriberId))
+            .child(Gates.class)
+            .child(Gate.class, new GateKey(inputGateId))
+            .build();
+
+        Gate infoGate = readGateFromOperationalDatastore(gateIID);
+        final String newGatePathStr = "/" + inputAppIid + "/" + inputSubscriberId + "/" + inputGateId;
+
+        final InetAddress subscriberAddr = getInetAddress(inputSubscriberId);
+        if (subscriberAddr == null) {
+            final String msg = String.format("SubscriberId must be a valid ipaddress: %s",
+                                             inputSubscriberId);
+            logger.error(msg);
+            InfoFailureBuilder fb = new InfoFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final InfoFailure f = fb.build();
+            outputBuilder.setInfoResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        final Ccap ccap = findCcapForSubscriberId(subscriberAddr);
+        if (ccap == null) {
+            final String msg = String.format("Unable to find Ccap for subscriber %s:",
+                                             inputSubscriberId);
+            logger.error(msg);
+            InfoFailureBuilder fb = new InfoFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final InfoFailure f = fb.build();
+            outputBuilder.setInfoResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+
+        logger.debug("Mapped {} to {}", inputSubscriberId, ccap.getCcapId());
+
+        final PCMMService pcmmService = pcmmServiceMap.get(ccap.getCcapId());
+        if (pcmmService == null) {
+            final String msg =
+                String.format("Unable to locate PCMM Service for CCAP: %s ; with subscriber: %s",
+                              ccap, inputSubscriberId);
+            logger.error(msg);
+            InfoFailureBuilder fb = new InfoFailureBuilder();
+            final FailureType ft = FailureType.Unsent;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final InfoFailure f = fb.build();
+            outputBuilder.setInfoResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+        
+        PCMMService.GateSendStatus status = null;
+
+        synchronized (pcmmService) {
+            status = pcmmService.sendGateInfo(newGatePathStr);
+        }
+
+        if (status.didSucceed()) {
+            DateAndTime gateDateAndTime = getNowTimeStamp();
+            List<String> gateOutputError = Collections.emptyList();
+            gateOutputError = Collections.singletonList(status.getMessage());
+            GateBuilder gateBuilder = new GateBuilder();
+
+            gateBuilder.setGateId(inputGateId)
+                .setGatePath(newGatePathStr)
+                .setCcapId(ccap.getCcapId())
+                .setCopsGateState(status.getCopsGateState() + "/" + status.getCopsGateStateReason())
+                .setCopsGateTimeInfo(status.getCopsGateTimeInfo())
+                .setCopsGateUsageInfo(status.getCopsGateUsageInfo())
+                .setCopsGateId(status.getCopsGateId())
+                .setError(gateOutputError)
+                .setTimestamp(gateDateAndTime);
+
+            infoGate = gateBuilder.build();
+
+            mdsalUtils.put(LogicalDatastoreType.OPERATIONAL, gateIID, infoGate);
+
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.GateBuilder responseGateBuilder
+                = new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.GateBuilder();
+            responseGateBuilder.fieldsFrom(infoGate);
+            responseGateBuilder.setGateId(inputGateId);
+            responseGateBuilder.setGatePath(newGatePathStr);
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.Gate responseGate =
+                responseGateBuilder.build();
+            List<org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.Gate> responseGateList =
+                new ArrayList<org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.Gate>();
+            responseGateList.add(responseGate);
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.GatesBuilder responseGatesBuilder =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.GatesBuilder();
+            responseGatesBuilder.setGate(responseGateList);
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.Gates responseGates =
+                responseGatesBuilder.build();
+
+            InfoSuccessfulBuilder sb = new InfoSuccessfulBuilder();
+            sb.setGates(responseGates);
+            final InfoSuccessful s = sb.build();
+            outputBuilder.setInfoResponseType(s);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+        else {
+            final String msg =
+                String.format("qosGateInfo(): error msg: %s reason: %s", status.getMessage(), status.getCopsGateStateReason());
+            logger.error(msg);
+            InfoFailureBuilder fb = new InfoFailureBuilder();
+            final FailureType ft = FailureType.Failed;
+            fb.setFailure(ft);
+            fb.setMessage(msg);
+            final InfoFailure f = fb.build();
+            outputBuilder.setInfoResponseType(f);
+            return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
+        }
+    }
+
+    @Override
     public Future<RpcResult<QosPollGatesOutput>> qosPollGates(QosPollGatesInput input) {
         // TODO refactor this method into smaller parts
 
@@ -1091,8 +1563,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         String rpcResponse = null;
 
-        org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.qos.poll.gates.output.GateBuilder gateOutputBuilder =
-                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.qos.poll.gates.output.GateBuilder();
+        org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.poll.gates.output.GateBuilder();
 
         GateBuilder gateBuilder = new GateBuilder();
 
@@ -1256,8 +1728,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         @Override
         public void run() {
 
-            org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.qos.poll.gates.output.GateBuilder gateOutputBuilder =
-                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.qos.poll.gates.output.GateBuilder();
+            org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.poll.gates.output.GateBuilder gateOutputBuilder =
+                    new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.poll.gates.output.GateBuilder();
 
             GateBuilder gateBuilder = new GateBuilder();
 

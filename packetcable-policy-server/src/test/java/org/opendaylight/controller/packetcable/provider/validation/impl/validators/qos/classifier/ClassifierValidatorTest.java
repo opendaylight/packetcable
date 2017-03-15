@@ -15,10 +15,10 @@ import org.opendaylight.controller.packetcable.provider.validation.ValidationExc
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.TosByte;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.TpProtocol;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.classifier.Classifier;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.pcmm.qos.classifier.ClassifierBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.TosByte;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.TpProtocol;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.classifier.Classifier;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.classifier.ClassifierBuilder;
 
 /**
  * @author rvail

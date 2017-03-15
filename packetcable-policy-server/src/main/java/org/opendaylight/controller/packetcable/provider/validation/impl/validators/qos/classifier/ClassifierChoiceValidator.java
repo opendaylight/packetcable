@@ -9,10 +9,10 @@
 package org.opendaylight.controller.packetcable.provider.validation.impl.validators.qos.classifier;
 
 import org.opendaylight.controller.packetcable.provider.validation.impl.validators.AbstractValidator;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170125.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.classifier.attributes.classifiers.classifier.container.ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.classifier.attributes.classifiers.classifier.container.classifier.choice.ExtClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.classifier.attributes.classifiers.classifier.container.classifier.choice.Ipv6ClassifierChoice;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.classifier.attributes.classifiers.classifier.container.classifier.choice.QosClassifierChoice;
 
 /**
  * @author rvail
