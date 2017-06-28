@@ -4,17 +4,15 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
-        <artifactId>karaf-parent</artifactId>
-        <version>1.9.0</version>
+        <artifactId>karaf4-parent</artifactId>
+        <version>2.0.0</version>
         <relativePath />
     </parent>
     <artifactId>packetcable-policy-karaf</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
     <name>${project.artifactId}</name>
     <version>1.6.0-SNAPSHOT</version>
-    <prerequisites>
-        <maven>3.1.1</maven>
-    </prerequisites>
+
     <properties>
         <karaf.localFeature>odl-packetcable-policy-server-all</karaf.localFeature>
     </properties>
@@ -26,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>org.opendaylight.packetcable</groupId>
-            <artifactId>features-packetcable-policy</artifactId>
+            <artifactId>features4-packetcable-policy</artifactId>
             <classifier>features</classifier>
             <version>${project.version}</version>
             <type>xml</type>
