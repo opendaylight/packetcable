@@ -7,9 +7,9 @@
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>feature-repo-parent</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.2</version>
     </parent>
-    
+
     <groupId>org.opendaylight.packetcable</groupId>
     <artifactId>features4-packetcable-policy</artifactId>
     <version>1.6.0-SNAPSHOT</version>
