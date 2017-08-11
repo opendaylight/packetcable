@@ -11,11 +11,9 @@ package org.opendaylight.controller.packetcable.provider;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.Futures;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
@@ -32,10 +30,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
-
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
@@ -45,18 +41,14 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.packetcable.provider.validation.DataValidator;
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
-import org.opendaylight.controller.packetcable.provider.validation.Validator;
 import org.opendaylight.controller.packetcable.provider.validation.impl.CcapsValidatorProviderFactory;
 import org.opendaylight.controller.packetcable.provider.validation.impl.QosValidatorProviderFactory;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
-import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.DateAndTime;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.AppContext;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapContext;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapPollConnectionInput;
@@ -66,20 +58,21 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapSetConnectionI
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapSetConnectionOutput;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.CcapSetConnectionOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.Ccaps;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.FailureType;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.PacketcableService;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.Qos;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateInput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateOutput;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosDeleteGateInput;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosDeleteGateOutput;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosDeleteGateOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosGateInfoInput;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosGateInfoOutput;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosGateInfoOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosPollGatesOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateInput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateOutput;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.QosSetGateOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ServiceClassName;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ServiceFlowDirection;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.ccap.attributes.ConnectionBuilder;
@@ -103,36 +96,27 @@ import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.app
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.gates.apps.app.subscribers.subscriber.gates.GateKey;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfile;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.TrafficProfileBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.TrafficProfileChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.FlowSpecChoice;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoice;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.flow.spec.profile.FlowSpecProfile;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.qos.traffic.profile.traffic.profile.traffic.profile.choice.ServiceClassNameChoiceBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfile;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.SetResponseType;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetSuccessful;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetSuccessfulBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetFailure;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetFailureBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteSuccessful;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteSuccessfulBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.pcmm.serviceclass.name.profile.ServiceClassNameProfileBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteFailure;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteFailureBuilder;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoSuccessful;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoSuccessfulBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteSuccessful;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.delete.gate.response.delete.response.type.DeleteSuccessfulBuilder;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoFailure;
 import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoFailureBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.packetcable.packetcable.policy.server.impl.rev140131.PacketcableProviderModule;
-import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.FailureType;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoSuccessful;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.InfoSuccessfulBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetFailure;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetFailureBuilder;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetSuccessful;
+import org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.set.gate.response.set.response.type.SetSuccessfulBuilder;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
-import org.pcmm.gates.IGateSpec.Direction;
-import org.pcmm.gates.impl.DOCSISFlowSpecTrafficProfile;
-import org.pcmm.gates.impl.DOCSISServiceClassNameTrafficProfile;
 import org.pcmm.rcd.IPCMMClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,7 +129,7 @@ import org.slf4j.LoggerFactory;
  * TODO Don't implement PacketcableService, move that into an inner class
  */
 @ThreadSafe
-public class PacketcableProvider implements BindingAwareProvider, AutoCloseable, PacketcableService {
+public class PacketcableProvider implements AutoCloseable, PacketcableService {
 
     private static final Logger logger = LoggerFactory.getLogger(PacketcableProvider.class);
 
@@ -171,14 +155,14 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
     /**
      * The ODL object used to broker messages throughout the framework
      */
-    private DataBroker dataBroker;
-    private MdsalUtils mdsalUtils;
+    private final DataBroker dataBroker;
+    private final MdsalUtils mdsalUtils;
 
     //Routed RPC Registration
     private RoutedRpcRegistration<PacketcableService> routedRpcRegistration;
 
     // unrouted RPC Registration
-    private RpcRegistration rpcRegistration;
+    private RpcRegistration<PacketcableService> rpcRegistration;
 
     // Data change listeners/registrations
     private final CcapsDataTreeChangeListener ccapsDataTreeChangeListener = new CcapsDataTreeChangeListener();
@@ -187,23 +171,23 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
     private ListenerRegistration<DataTreeChangeListener> ccapsDataTreeChangeListenerRegistration;
     private ListenerRegistration<DataTreeChangeListener> qosDataTreeChangeListenerRegistration;
 
+    private final RpcProviderRegistry rpcProviderRegistry;
+
     /**
      * Constructor
      */
-    public PacketcableProvider() {
+    public PacketcableProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcProviderRegistry) {
         logger.info("Starting Packetcable Provider");
+        this.dataBroker = dataBroker;
+        this.rpcProviderRegistry = rpcProviderRegistry;
+        mdsalUtils = new MdsalUtils(dataBroker);
     }
 
-    @Override
-    public void onSessionInitiated(ProviderContext session) {
-        logger.info("Packetcable Session Initiated");
+    public void init() {
         logger.info("logging levels: error={}, warn={}, info={}, debug={}, trace={}",
                     logger.isErrorEnabled(), logger.isWarnEnabled(),
                     logger.isInfoEnabled(), logger.isDebugEnabled(), logger.isTraceEnabled());
 
-        dataBroker = session.getSALService(DataBroker.class);
-
-        mdsalUtils = new MdsalUtils(dataBroker);
         final DataTreeIdentifier<Ccap> ccapsDataTreeIid =
                 new DataTreeIdentifier<>(LogicalDatastoreType.CONFIGURATION, ccapsIID.child(Ccap.class));
 
@@ -216,11 +200,10 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         qosDataTreeChangeListenerRegistration = dataBroker.registerDataTreeChangeListener(appDataTreeIid, new QosDataTreeChangeListener());
 
-        rpcRegistration = session.addRpcImplementation(PacketcableService.class, this);
-        logger.info("onSessionInitiated().rpcRegistration: {}", rpcRegistration);
-        routedRpcRegistration = session.addRoutedRpcImplementation(PacketcableService.class, this);
-        logger.info("onSessionInitiated().routedRpcRegistration: {}", routedRpcRegistration);
+        rpcRegistration = rpcProviderRegistry.addRpcImplementation(PacketcableService.class, this);
+        routedRpcRegistration = rpcProviderRegistry.addRoutedRpcImplementation(PacketcableService.class, this);
 
+        logger.info("Packetcable Session Initiated");
     }
 
     /**
@@ -235,9 +218,13 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         if (qosDataTreeChangeListenerRegistration != null) {
             qosDataTreeChangeListenerRegistration.close();
         }
-        
+
         if (rpcRegistration != null) {
             rpcRegistration.close();
+        }
+
+        if (routedRpcRegistration != null) {
+            routedRpcRegistration.close();
         }
     }
 
@@ -735,8 +722,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                     .setCopsGateUsageInfo("");
 
             ServiceFlowDirection scnDirection = null;
-            
-            if (newGate.getTrafficProfile().getTrafficProfileChoice() instanceof ServiceClassNameChoice) {    
+
+            if (newGate.getTrafficProfile().getTrafficProfileChoice() instanceof ServiceClassNameChoice) {
                 final ServiceClassName scn =
                     ((ServiceClassNameChoice)newGate.getTrafficProfile()
                      .getTrafficProfileChoice())
@@ -764,7 +751,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             else {
                 gateBuilder.setTrafficProfile(newGate.getTrafficProfile());
             }
-            
+
             //
             // since we may be modifying the contents of the original request GateSpec
             // to update flow direction (based on the ccap SCN configuration) we need to
@@ -916,7 +903,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         // TODO refactor this method into smaller parts
 
         InstanceIdentifier<Ccap> ccapIid = (InstanceIdentifier<Ccap>) input.getCcapId();
-        List<String> outputError = new ArrayList<String>();
+        List<String> outputError = new ArrayList<>();
         String rpcResponse = null;
         Boolean inputIsConnected = input.getConnection().isConnected();
         Boolean effectiveIsConnected = null;
@@ -998,7 +985,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         // TODO refactor this method into smaller parts
 
         InstanceIdentifier<Ccap> ccapIid = (InstanceIdentifier<Ccap>) input.getCcapId();
-        List<String> outputError = new ArrayList<String>();
+        List<String> outputError = new ArrayList<>();
 
         String ccapId = input.getCcapId().firstIdentifierOf(Ccap.class).firstKeyOf(Ccap.class).getCcapId();
         PCMMService pcmmService = pcmmServiceMap.get(ccapId);
@@ -1180,12 +1167,12 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
         if (gate.get(0).getCopsGateId() != null) {
             retryOption = true;
         }
-        
+
         PCMMService.GateSendStatus status = null;
         synchronized (pcmmService) {
             logger.info("Sending gate: Path {} inputSubscriberId {} cops-gate-id {}",
                         newGatePathStr, inputSubscriberId, gate.get(0).getCopsGateId());
-            
+
             status = pcmmService.sendGateSet(newGatePathStr, subscriberAddr, newGate);
         }
 
@@ -1312,7 +1299,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
 
         if (newGate != null) {
             strGateId = newGate.getCopsGateId();
-            if ((strGateId == null) || (strGateId.length() == 0) || (strGateId.equals("null"))){
+            if (strGateId == null || strGateId.length() == 0 || strGateId.equals("null")){
                 final String msg =
                     String.format("qosDeleteGate(): Unknown CopsGateId %s", newGatePathStr);
                 logger.error(msg);
@@ -1479,7 +1466,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             outputBuilder.setInfoResponseType(f);
             return Futures.immediateFuture(RpcResultBuilder.success(outputBuilder.build()).build());
         }
-        
+
         PCMMService.GateSendStatus status = null;
 
         synchronized (pcmmService) {
@@ -1514,7 +1501,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
             org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.Gate responseGate =
                 responseGateBuilder.build();
             List<org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.Gate> responseGateList =
-                new ArrayList<org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.gates.Gate>();
+                new ArrayList<>();
             responseGateList.add(responseGate);
             org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.GatesBuilder responseGatesBuilder =
                 new org.opendaylight.yang.gen.v1.urn.packetcable.rev170224.qos.gate.info.response.info.response.type.info.successful.GatesBuilder();
@@ -1591,7 +1578,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                     opsCopsGateId = opsGate.getCopsGateId();
                     gatePathStr = opsGate.getGatePath();
 
-                    if ((!Objects.equals(opsCopsGateId, "")) && (!Objects.equals(opsCopsGateId, null))) {
+                    if (!Objects.equals(opsCopsGateId, "") && !Objects.equals(opsCopsGateId, null)) {
                         ccapId = findCcapForSubscriberId(getInetAddress(inputSubscriberId)).getCcapId();
                         PCMMService pcmmService = pcmmServiceMap.get(ccapId);
                         //is the CCAP socket open?
@@ -1657,7 +1644,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                         //generate active gatePathStr
                         gatePathStr = appKey.getAppId() + "/" + subscriberId + "/" + gateId;
 
-                        if ((!Objects.equals(opsCopsGateId, "")) && (!Objects.equals(opsCopsGateId, null))) {
+                        if (!Objects.equals(opsCopsGateId, "") && !Objects.equals(opsCopsGateId, null)) {
                             ccapId = findCcapForSubscriberId(getInetAddress(subscriberId)).getCcapId();
                             PCMMService pcmmService = pcmmServiceMap.get(ccapId);
                             //is the CCAP socket open?
@@ -1717,8 +1704,8 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
     }
     private class PollAllGatesForApp implements Runnable {
 
-        private InstanceIdentifier <App> appIid;
-        private App app;
+        private final InstanceIdentifier <App> appIid;
+        private final App app;
 
         private PollAllGatesForApp (InstanceIdentifier <App> appIid, App app) {
             this.app = app;
@@ -1766,7 +1753,7 @@ public class PacketcableProvider implements BindingAwareProvider, AutoCloseable,
                     //generate active gatePathStr
                     String gatePathStr = appKey.getAppId() + "/" + subscriberId + "/" + gateId;
 
-                    if ((!Objects.equals(opsCopsGateId, "")) && (!Objects.equals(opsCopsGateId, null))) {
+                    if (!Objects.equals(opsCopsGateId, "") && !Objects.equals(opsCopsGateId, null)) {
                         String ccapId = findCcapForSubscriberId(getInetAddress(subscriberId)).getCcapId();
                         PCMMService pcmmService = pcmmServiceMap.get(ccapId);
                         //is the CCAP socket open?
