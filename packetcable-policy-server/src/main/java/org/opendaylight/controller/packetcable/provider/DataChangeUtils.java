@@ -12,10 +12,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Map;
 import java.util.Set;
-import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.slf4j.Logger;
 
 /**
  * @author rvail
@@ -71,49 +69,5 @@ public class DataChangeUtils {
         }
 
         return result;
-    }
-
-
-
-    public static void logChange(final Logger logger, final AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> change) {
-        if (!logger.isDebugEnabled()) {
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        appendMap(sb, "CREATED", change.getCreatedData());
-        appendSet(sb, "REMOVED", change.getRemovedPaths());
-        appendMap(sb, "UPDATED", change.getUpdatedData());
-        appendMap(sb, "ORIGINAL", change.getOriginalData());
-
-        logger.debug("onDataChanged data:\n{}", sb.toString());
-    }
-
-
-    private static <E> void appendSet(StringBuilder sb, String name, Set<E> set) {
-        sb.append("====").append(name).append("====\n");
-        if (set == null || set.isEmpty()) {
-            sb.append("None\n");
-        } else {
-            for (E data : set) {
-                sb.append(data).append("\n");
-                sb.append("----------\n");
-            }
-        }
-        sb.append("===============\n");
-    }
-
-    private static void appendMap(StringBuilder sb, String name, Map<InstanceIdentifier<?>, DataObject> dataMap) {
-        sb.append("====").append(name).append("====\n");
-        if (dataMap == null || dataMap.isEmpty()) {
-            sb.append("None\n");
-        } else {
-            for (Map.Entry<InstanceIdentifier<?>, DataObject> entry : dataMap.entrySet()) {
-                sb.append(entry.getValue()).append("\n");
-                sb.append("----------\n");
-            }
-        }
-        sb.append("===============\n");
     }
 }

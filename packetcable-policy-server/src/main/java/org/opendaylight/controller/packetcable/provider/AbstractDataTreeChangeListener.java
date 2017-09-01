@@ -9,32 +9,22 @@
 package org.opendaylight.controller.packetcable.provider;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.opendaylight.controller.packetcable.provider.DataChangeUtils.collectTypeFromMap;
-import static org.opendaylight.controller.packetcable.provider.DataChangeUtils.collectTypeFromSet;
-import static org.opendaylight.controller.packetcable.provider.DataChangeUtils.logChange;
-import static org.opendaylight.controller.packetcable.provider.DataChangeUtils.relativeComplement;
 
 import com.google.common.collect.Maps;
+import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Collection;
-
-import org.eclipse.jdt.annotation.NonNull;
+import javax.annotation.Nonnull;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
-import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.packetcable.provider.validation.DataValidator;
 import org.opendaylight.controller.packetcable.provider.validation.ValidationException;
 import org.opendaylight.controller.packetcable.provider.validation.Validator;
-import org.opendaylight.controller.packetcable.provider.validation.ValidatorProvider;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 
 /**
  * @author rvail
