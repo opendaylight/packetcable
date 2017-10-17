@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>single-feature-parent</artifactId>
-        <version>1.8.2-SNAPSHOT</version>
+        <version>1.8.3-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <groupId>org.opendaylight.packetcable</groupId>
     <artifactId>odl-packetcable-policy-model</artifactId>
-    <version>1.5.2-SNAPSHOT</version>
+    <version>1.5.3-SNAPSHOT</version>
     <packaging>feature</packaging>
 
     <name>OpenDaylight :: packetcable :: policy :: Model</name>
@@ -23,7 +23,7 @@
             <dependency>
                 <groupId>org.opendaylight.mdsal.model</groupId>
                 <artifactId>mdsal-model-artifacts</artifactId>
-                <version>0.10.2-SNAPSHOT</version>
+                <version>0.10.3-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
