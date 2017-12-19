@@ -1,112 +1,114 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.opendaylight.packetcable</groupId>
-		<artifactId>packetcable</artifactId>
-		<version>1.7.0-SNAPSHOT</version>
-		<relativePath>..</relativePath>
-	</parent>
-	<artifactId>packetcable-driver</artifactId>
-	<packaging>bundle</packaging>
+    <parent>
+        <groupId>org.opendaylight.packetcable</groupId>
+        <artifactId>packetcable</artifactId>
+        <version>1.7.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <artifactId>packetcable-driver</artifactId>
+    <packaging>bundle</packaging>
 
-	<description>
+    <description>
         A lightweight implementation of PCMM COPS PDP client
     </description>
 
-	<url></url>
-	<inceptionYear>2013</inceptionYear>
+    <url></url>
+    <inceptionYear>2013</inceptionYear>
 
-	<licenses>
-		<license>
-		</license>
-	</licenses>
+    <licenses>
+        <license>
+        </license>
+    </licenses>
 
-	<mailingLists>
-		<mailingList>
-		</mailingList>
-	</mailingLists>
+    <mailingLists>
+        <mailingList>
+        </mailingList>
+    </mailingLists>
 
-	<developers>
-		<developer>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+        </developer>
+    </developers>
 
-	<contributors>
-		<contributor>
-		</contributor>
-	</contributors>
+    <contributors>
+        <contributor>
+        </contributor>
+    </contributors>
 
-	<scm>
-		<connection></connection>
-		<developerConnection></developerConnection>
-		<url></url>
-	</scm>
+    <scm>
+        <connection></connection>
+        <developerConnection></developerConnection>
+        <url></url>
+    </scm>
 
-	<issueManagement>
-		<system></system>
-		<url></url>
-	</issueManagement>
+    <issueManagement>
+        <system></system>
+        <url></url>
+    </issueManagement>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<yangtools.version>1.2.0</yangtools.version>
-		<salGeneratorPath>src/main/yang-gen-sal</salGeneratorPath>
-		<nexus.repository.snapshot>opendaylight.snapshot</nexus.repository.snapshot>
-		<nexus.repository.release>opendaylight.release</nexus.repository.release>
-	</properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <yangtools.version>2.0.0</yangtools.version>
+        <salGeneratorPath>src/main/yang-gen-sal</salGeneratorPath>
+        <nexus.repository.snapshot>opendaylight.snapshot</nexus.repository.snapshot>
+        <nexus.repository.release>opendaylight.release</nexus.repository.release>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+    </dependencies>
 
-	<modules></modules>
+    <modules></modules>
 
-	<build>
-		<directory>${project.basedir}/target</directory>
-		<outputDirectory>${project.build.directory}/classes</outputDirectory>
-		<finalName>${project.artifactId}-${project.version}</finalName>
-		<testOutputDirectory>${project.build.directory}/test-classes</testOutputDirectory>
-		<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-		<testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
-		<resources>
-			<resource>
-				<directory>${project.basedir}/src/main/resources</directory>
-			</resource>
-		</resources>
-		<testResources>
-			<testResource>
-				<directory>${project.basedir}/src/test/resources</directory>
-			</testResource>
-		</testResources>
-		<plugins>
+    <build>
+        <directory>${project.basedir}/target</directory>
+        <outputDirectory>${project.build.directory}/classes</outputDirectory>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <testOutputDirectory>${project.build.directory}/test-classes</testOutputDirectory>
+        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resources</directory>
+            </testResource>
+        </testResources>
+        <plugins>
 
-		<plugin>
+        <plugin>
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>${checkstyle.version}</version>
           <dependencies>
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>${odl.checkstyle.version}</version>
+              <version>3.0.2</version>
             </dependency>
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>odl-license</artifactId>
-              <version>2.0.5</version>
+              <version>3.0.2</version>
             </dependency>
           </dependencies>
+
           <executions>
             <execution>
               <id>check-license</id>
@@ -132,24 +134,24 @@
           </executions>
         </plugin>
 
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<configuration>
-					<instructions>
-						<Export-Package>org.pcmm*, org.umu.cops*</Export-Package>
-					</instructions>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.pcmm*, org.umu.cops*</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
   <profiles>
     <!-- Disable Java 8 linter since umu/cops fails it -->
