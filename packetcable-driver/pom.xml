@@ -52,8 +52,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <yangtools.version>2.0.0</yangtools.version>
-        <salGeneratorPath>src/main/yang-gen-sal</salGeneratorPath>
         <nexus.repository.snapshot>opendaylight.snapshot</nexus.repository.snapshot>
         <nexus.repository.release>opendaylight.release</nexus.repository.release>
         <maven.javadoc.skip>true</maven.javadoc.skip>
