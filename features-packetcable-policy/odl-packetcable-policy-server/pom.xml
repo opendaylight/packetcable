@@ -13,7 +13,7 @@
 
     <groupId>org.opendaylight.packetcable</groupId>
     <artifactId>odl-packetcable-policy-server</artifactId>
-    <version>1.6.2-SNAPSHOT</version>
+    <version>1.6.3-SNAPSHOT</version>
     <packaging>feature</packaging>
 
     <name>OpenDaylight :: packetcable :: policy :: Provider</name>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>odl-mdsal-broker</artifactId>
-            <version>1.6.2-SNAPSHOT</version>
+            <version>1.6.3-SNAPSHOT</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.opendaylight.netconf</groupId>
             <artifactId>odl-mdsal-apidocs</artifactId>
-            <version>1.6.2-SNAPSHOT</version>
+            <version>1.6.3-SNAPSHOT</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
