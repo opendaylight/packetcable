@@ -18,19 +18,48 @@
 
     <name>OpenDaylight :: packetcable :: policy :: Provider</name>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.opendaylight.controller</groupId>
+                <artifactId>mdsal-artifacts</artifactId>
+                <version>1.8.0-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.opendaylight.netconf</groupId>
+                <artifactId>restconf-artifacts</artifactId>
+                <version>1.8.0-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.opendaylight.openflowplugin</groupId>
+                <artifactId>openflowplugin-artifacts</artifactId>
+                <version>0.7.0-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>odl-mdsal-broker</artifactId>
-            <version>1.8.0-SNAPSHOT</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
-
         <dependency>
             <groupId>org.opendaylight.netconf</groupId>
             <artifactId>odl-mdsal-apidocs</artifactId>
-            <version>1.8.0-SNAPSHOT</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.openflowplugin</groupId>
+            <artifactId>odl-openflowplugin-nsf-model</artifactId>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
