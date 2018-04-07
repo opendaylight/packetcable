@@ -55,10 +55,22 @@
         <module>packetcable-policy-model</module>
         <module>packetcable-policy-server</module>
         <module>features-packetcable-policy</module>
-        <module>packetcable-policy-karaf</module>
         <!-- Jar module CMTS emulator for testing -->
         <module>packetcable-emulator</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>karaf</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>packetcable-policy-karaf</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <scm>
         <connection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</connection>
         <developerConnection>scm:git:ssh://git.opendaylight.org:29418/packetcable.git</developerConnection>
