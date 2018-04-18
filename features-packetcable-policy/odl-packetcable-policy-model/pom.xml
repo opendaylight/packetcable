@@ -11,7 +11,7 @@
 
     <groupId>org.opendaylight.packetcable</groupId>
     <artifactId>odl-packetcable-policy-model</artifactId>
-    <version>1.7.1-SNAPSHOT</version>
+    <version>1.7.1</version>
     <packaging>feature</packaging>
 
     <name>OpenDaylight :: packetcable :: policy :: Model</name>
@@ -21,7 +21,7 @@
             <dependency>
                 <groupId>org.opendaylight.mdsal.model</groupId>
                 <artifactId>mdsal-model-artifacts</artifactId>
-                <version>0.12.1-SNAPSHOT</version>
+                <version>0.12.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

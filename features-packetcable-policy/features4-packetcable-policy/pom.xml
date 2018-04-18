@@ -11,7 +11,7 @@
     
     <groupId>org.opendaylight.packetcable</groupId>
     <artifactId>features4-packetcable-policy</artifactId>
-    <version>1.7.1-SNAPSHOT</version>
+    <version>1.7.1</version>
     <packaging>feature</packaging>
 
     <dependencies>
