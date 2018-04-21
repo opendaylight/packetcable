@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.opendaylight.packetcable</groupId>
 		<artifactId>packetcable</artifactId>
-		<version>1.5.4-SNAPSHOT</version>
+		<version>1.5.4-Carbon</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>packetcable-driver</artifactId>
@@ -52,7 +52,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<yangtools.version>1.1.4-SNAPSHOT</yangtools.version>
+		<yangtools.version>1.1.4-Carbon</yangtools.version>
 		<salGeneratorPath>src/main/yang-gen-sal</salGeneratorPath>
 		<nexus.repository.snapshot>opendaylight.snapshot</nexus.repository.snapshot>
 		<nexus.repository.release>opendaylight.release</nexus.repository.release>
@@ -104,7 +104,7 @@
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>odl-license</artifactId>
-              <version>0.2.4-SNAPSHOT</version>
+              <version>0.2.4-Carbon</version>
             </dependency>
           </dependencies>
           <executions>
