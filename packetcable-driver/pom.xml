@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -16,7 +15,7 @@
         A lightweight implementation of PCMM COPS PDP client
     </description>
 
-	<url></url>
+	<url/>
 	<inceptionYear>2013</inceptionYear>
 
 	<licenses>
@@ -40,14 +39,14 @@
 	</contributors>
 
 	<scm>
-		<connection></connection>
-		<developerConnection></developerConnection>
-		<url></url>
+		<connection/>
+		<developerConnection/>
+		<url/>
 	</scm>
 
 	<issueManagement>
-		<system></system>
-		<url></url>
+		<system/>
+		<url/>
 	</issueManagement>
 
 	<properties>
@@ -71,7 +70,7 @@
 		</dependency>
 	</dependencies>
 
-	<modules></modules>
+	<modules/>
 
 	<build>
 		<directory>${project.basedir}/target</directory>
@@ -99,12 +98,12 @@
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>${odl.checkstyle.version}</version>
+              <version>2.0.7</version>
             </dependency>
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>odl-license</artifactId>
-              <version>2.0.5</version>
+              <version>2.0.7</version>
             </dependency>
           </dependencies>
           <executions>
