@@ -10,7 +10,7 @@
     <artifactId>packetcable-policy-karaf</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
     <name>${project.artifactId}</name>
-    <version>1.6.3-SNAPSHOT</version>
+    <version>1.6.3</version>
 
     <properties>
         <karaf.localFeature>odl-packetcable-policy-server-all</karaf.localFeature>
