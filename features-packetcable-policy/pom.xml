@@ -16,7 +16,7 @@
     </parent>
     <artifactId>features-packetcable-policy-aggregator</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
-    <version>1.7.2-SNAPSHOT</version>
+    <version>1.7.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
