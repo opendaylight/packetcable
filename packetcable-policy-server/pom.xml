@@ -5,16 +5,16 @@
     <parent>
         <groupId>org.opendaylight.mdsal</groupId>
         <artifactId>binding-parent</artifactId>
-        <version>0.12.4-SNAPSHOT</version>
+        <version>0.12.5-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>packetcable-policy-server</artifactId>
     <groupId>org.opendaylight.packetcable</groupId>
     <name>${project.artifactId}</name>
-    <version>1.7.4-SNAPSHOT</version>
+    <version>1.7.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <properties>
-        <sal-binding-api.version>1.7.4-SNAPSHOT</sal-binding-api.version>
+        <sal-binding-api.version>1.7.5-SNAPSHOT</sal-binding-api.version>
     </properties>
 
     <dependencyManagement>
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.opendaylight.packetcable</groupId>
             <artifactId>packetcable-emulator</artifactId>
-            <version>1.7.4-SNAPSHOT</version>
+            <version>1.7.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
