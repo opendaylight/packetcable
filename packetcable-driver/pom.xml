@@ -97,12 +97,12 @@
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>3.1.4</version>
+              <version>3.1.6</version>
             </dependency>
             <dependency>
               <groupId>org.opendaylight.odlparent</groupId>
               <artifactId>odl-license</artifactId>
-              <version>3.1.4</version>
+              <version>3.1.6</version>
             </dependency>
           </dependencies>
 
