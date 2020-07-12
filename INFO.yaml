@@ -1,0 +1,53 @@
+---
+project: 'packetcable'
+project_creation_date: '2015-08-06'
+project_category: ''
+lifecycle_state: 'Incubation'
+project_lead: &odl_packetcable_ptl
+    name: ''
+    email: ''
+    id: ''
+    company: ''
+    timezone: ''
+primary_contact: *odl_packetcable_ptl
+issue_tracking:
+    type: 'jira'
+    url: 'https://jira.opendaylight.org/projects/'
+    key: 'packetcable'
+mailing_list:
+    type: 'groups.io'
+    url: 'app-dev@lists.opendaylight.org'
+    tag: '[]'
+realtime_discussion:
+    type: 'irc'
+    server: 'freenode.net'
+    channel: '#opendaylight'
+meetings:
+    - type: 'gotomeeting+irc'
+      agenda: 'https://wiki.opendaylight.org'
+      url: ''
+      server: 'freenode.net'
+      channel: '#opendaylight'
+      repeats: ''
+      time: ''
+repositories:
+    - packetcable
+committers:
+    - <<: *odl_packetcable_ptl
+    - name: 'Steven Pisarski'
+      email: 's.pisarski@cablelabs.com'
+      company: 'cablelabs'
+      id: 'spisarski'
+      timezone: 'Unknown/Unknown'
+    - name: 'Kevin Kershaw'
+      email: 'k.kershaw@cablelabs.com'
+      company: 'cablelabs'
+      id: 'kjkershaw'
+      timezone: 'Unknown/Unknown'
+tsc:
+    # yamllint disable rule:line-length
+    approval: 'https://meetings.opendaylight.org/meetings/opendaylight-meeting/2015/tsc/opendaylight-meeting-tsc.2015-08-06-17.00.html'
+    changes:
+        - type: ''
+          name: ''
+          link: ''
