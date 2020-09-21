@@ -2,4 +2,3 @@
 #
 88e2e0ce03215a6d5359d6ae8c30b373dde15e29                                   	saml/odl-gerrit-packetcable-committers
 c9025ab9ddc1e3171919e085449f22c54f8f7b54                                   	GitHub Replication
-ldap:cn=odl-gerrit-packetcable-committers,ou=Groups,dc=freestandards,dc=org	ldap/odl-gerrit-packetcable-committers
